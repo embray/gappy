@@ -1,9 +1,17 @@
 # Python files
 __pycache__/
 
+## Python build files
+build/
+gappy/*.so
+
 ## Python packaging files
+*.dist-info/
 *.egg-info/
 .eggs/
 
 ## setuptools_scm files
 gappy/_version.py
+
+## Cython generated files
+gappy/*.c

@@ -1,5 +1,12 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "Cython", "setuptools_scm[toml]>=3.4"]
+requires = [
+    "Cython",
+    "cysignals",
+    "setuptools>=42",
+    "setuptools_scm[toml]>=3.4",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "gappy/_version.py"

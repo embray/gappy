@@ -8,6 +8,7 @@ elements. For general information about GAP, you should read the
 
 # ****************************************************************************
 #       Copyright (C) 2012 Volker Braun <vbraun.name@gmail.com>
+#       Copyright (C) 2021 E. Madison Bray <embray@lri.fr>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,17 +22,28 @@ from cysignals.signals cimport sig_on, sig_off
 
 from .gap_includes cimport *
 from .libgap import libgap
-from .util cimport *
+from .core cimport *
 from .util import GAPError
-from sage.cpython.string cimport str_to_bytes, char_to_str
+#from sage.cpython.string cimport str_to_bytes, char_to_str
+cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
+    return s.encode(encoding, errors)
+cdef char_to_str(char *s):
+    return s.decode('utf-8')
 from sage.misc.cachefunc import cached_method
-from sage.structure.sage_object cimport SageObject
+#from sage.structure.sage_object cimport SageObject
+cdef class SageObject:
+    pass
 from sage.structure.parent import Parent
 from sage.rings.all import ZZ, QQ, RDF
 
-from sage.groups.perm_gps.permgroup_element cimport PermutationGroupElement
+#from sage.groups.perm_gps.permgroup_element cimport PermutationGroupElement
+cdef class PermutationGroupElement:
+    pass
 from sage.combinat.permutation import Permutation
-from sage.structure.coerce cimport coercion_model as cm
+#from sage.structure.coerce cimport coercion_model as cm
+cdef class cm:
+    def common_parent(self, *args, **kwargs):
+        pass
 
 decode_type_number = {
     0: 'T_INT (integer)',

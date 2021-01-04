@@ -2,6 +2,7 @@
 ###############################################################################
 #       Copyright (C) 2009, William Stein <wstein@gmail.com>
 #       Copyright (C) 2012, Volker Braun <vbraun.name@gmail.com>
+#       Copyright (C) 2021 E. Madison Bray <embray@lri.fr>
 #
 #   Distributed under the terms of the GNU General Public License (GPL)
 #   as published by the Free Software Foundation; either version 2 of

@@ -1,5 +1,6 @@
 #*****************************************************************************
 #       Copyright (C) 2012 Volker Braun <vbraun.name@gmail.com>
+#       Copyright (C) 2021 E. Madison Bray <embray@lri.fr>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,8 +10,19 @@
 #*****************************************************************************
 
 from .gap_includes cimport Obj, UInt
-from sage.structure.sage_object cimport SageObject
-from sage.structure.element cimport Element, ModuleElement, RingElement
+#from sage.structure.sage_object cimport SageObject
+#from sage.structure.element cimport Element, ModuleElement, RingElement
+cdef class SageObject:
+    pass
+
+cdef class Element:
+    pass
+
+cdef class ModuleElement:
+    pass
+
+cdef class RingElement:
+    pass
 
 cdef Obj make_gap_list(sage_list) except NULL
 cdef Obj make_gap_matrix(sage_list, gap_ring) except NULL
@@ -50,9 +62,13 @@ cdef class GapElement(RingElement):
     cpdef _type_number(self)
     cpdef is_bool(self)
     cpdef _add_(self, other)
+    cpdef _div_(self, other)
+    cpdef _sub_(self, other)
     cpdef _mul_(self, other)
     cpdef _mod_(self, other)
     cpdef _pow_(self, other)
+    cpdef _pow_int(self, other)
+    cpdef _richcmp_(self, other, int op)
 
     cpdef GapElement deepcopy(self, bint mut)
 

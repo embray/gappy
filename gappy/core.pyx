@@ -4,6 +4,7 @@ Utility functions for GAP
 
 #*****************************************************************************
 #       Copyright (C) 2012 Volker Braun <vbraun.name@gmail.com>
+#       Copyright (C) 2021 E. Madison Bray <embray@lri.fr>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +28,12 @@ import sage.env
 from .gap_includes cimport *
 from .element cimport *
 from sage.cpython.string import FS_ENCODING
-from sage.cpython.string cimport str_to_bytes, char_to_str
+#from sage.cpython.string cimport str_to_bytes, char_to_str
+cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
+    return s.encode(encoding, errors)
+cdef char_to_str(char *s):
+    return s.decode('utf-8')
+
 from sage.interfaces.gap_workspace import prepare_workspace_dir
 
 
