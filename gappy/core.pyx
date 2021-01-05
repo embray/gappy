@@ -27,7 +27,7 @@ import warnings
 from .gap_includes cimport *
 from .element cimport *
 from .utils import get_gap_memory_pool_size
-from sage.cpython.string import FS_ENCODING
+
 #from sage.cpython.string cimport str_to_bytes, char_to_str
 cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
     return s.encode(encoding, errors)

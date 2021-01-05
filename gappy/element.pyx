@@ -21,25 +21,33 @@ from cpython.object cimport Py_EQ, Py_NE, Py_LE, Py_GE, Py_LT, Py_GT
 from cysignals.signals cimport sig_on, sig_off
 
 from .gap_includes cimport *
-from .libgap import libgap
 from .core cimport *
-from .util import GAPError
+from .core import libgap, GAPError
 #from sage.cpython.string cimport str_to_bytes, char_to_str
 cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
     return s.encode(encoding, errors)
 cdef char_to_str(char *s):
     return s.decode('utf-8')
-from sage.misc.cachefunc import cached_method
+#from sage.misc.cachefunc import cached_method
+def cached_method(func):
+    return func
 #from sage.structure.sage_object cimport SageObject
 cdef class SageObject:
     pass
-from sage.structure.parent import Parent
-from sage.rings.all import ZZ, QQ, RDF
+#from sage.structure.parent import Parent
+cdef class Parent:
+    pass
+#from sage.rings.all import ZZ, QQ, RDF
+ZZ = object()
+QQ = object()
+RDF = object()
 
 #from sage.groups.perm_gps.permgroup_element cimport PermutationGroupElement
 cdef class PermutationGroupElement:
     pass
-from sage.combinat.permutation import Permutation
+#from sage.combinat.permutation import Permutation
+cdef class Permutation:
+    pass
 #from sage.structure.coerce cimport coercion_model as cm
 cdef class cm:
     def common_parent(self, *args, **kwargs):
