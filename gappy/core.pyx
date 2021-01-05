@@ -23,7 +23,6 @@ from cysignals.signals cimport sig_on, sig_off
 
 import os
 import warnings
-import sage.env
 
 from .gap_includes cimport *
 from .element cimport *
@@ -227,14 +226,14 @@ cdef initialize():
     # Note: we could use RTLD_NOLOAD and avoid the subsequent dlclose() but
     # this isn't portable
 
-    cdef void* handle
-    libgapname = str_to_bytes(sage.env.GAP_SO)
-    handle = dlopen(libgapname, RTLD_NOW | RTLD_GLOBAL)
-    if handle is NULL:
-        raise RuntimeError(
-                "Could not dlopen() libgap even though it should already "
-                "be loaded!")
-    dlclose(handle)
+    #cdef void* handle
+    #libgapname = str_to_bytes(sage.env.GAP_SO)
+    #handle = dlopen(libgapname, RTLD_NOW | RTLD_GLOBAL)
+    #if handle is NULL:
+    #    raise RuntimeError(
+    #            "Could not dlopen() libgap even though it should already "
+    #            "be loaded!")
+    #dlclose(handle)
 
     # Define argv variable, which we will pass in to
     # initialize GAP. Note that we must pass define the memory pool
