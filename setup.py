@@ -45,21 +45,11 @@ class build_ext(_build_ext):
         if self.gap_root is not None:
             self._using_gap_root = True
 
-        if self.gap_include is None:
-            if self.gap_root is None:
-                raise DistutilsOptionError(
-                    'one of --gap-root or --gap-include must be specified '
-                    'to determine the path to the GAP headers')
+            if self.gap_include is None:
+                self.gap_include = os.path.join(self.gap_root, 'src')
 
-            self.gap_include = os.path.join(self.gap_root, 'src')
-
-        if self.gap_lib is None:
-            if self.gap_root is None:
-                raise DistutilsOptionError(
-                    'one of --gap-root or --gap-lib must be specified to '
-                    'determine the path to the libgap library')
-
-            self.gap_lib = os.path.join(self.gap_root, '.libs')
+            if self.gap_lib is None:
+                self.gap_lib = os.path.join(self.gap_root, '.libs')
 
 
     def run(self):
@@ -91,6 +81,7 @@ class build_ext(_build_ext):
 
         if self.gap_lib is not None:
             self.library_dirs.insert(0, self.gap_lib)
+            self.rpath.insert(0, self.gap_lib)
 
         if self.extensions:
             nthreads = getattr(self, 'parallel', None)  # -j option in Py3.5+
