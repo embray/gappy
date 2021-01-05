@@ -179,6 +179,7 @@ AUTHORS:
 ###############################################################################
 #       Copyright (C) 2009, William Stein <wstein@gmail.com>
 #       Copyright (C) 2012, Volker Braun <vbraun.name@gmail.com>
+#       Copyright (C) 2021, E. Madison Bray <embray@lri.fr>
 #
 #   Distributed under the terms of the GNU General Public License (GPL)
 #   as published by the Free Software Foundation; either version 2 of
@@ -211,15 +212,24 @@ AUTHORS:
 #
 ##############################################################################
 
-from .gap_includes cimport *
-from .util cimport *
+from .core cimport *
 from .element cimport *
+from .gap_includes cimport *
 
-from sage.structure.parent cimport Parent
-from sage.structure.element cimport Vector
+#from sage.structure.parent cimport Parent
+cdef class Parent:
+    def __init__(self, *args, **kwargs):
+        pass
+
+#from sage.structure.element cimport Vector
+cdef class Vector:
+    pass
+
 from sage.rings.all import ZZ
 from sage.misc.cachefunc import cached_method
-from sage.misc.randstate cimport current_randstate
+#from sage.misc.randstate cimport current_randstate
+def current_randstate():
+    pass
 
 
 ############################################################################
