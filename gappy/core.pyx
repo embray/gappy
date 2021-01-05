@@ -26,6 +26,7 @@ import warnings
 
 from .gap_includes cimport *
 from .element cimport *
+from .exceptions import GAPError
 from .utils import get_gap_memory_pool_size
 
 #from sage.cpython.string cimport str_to_bytes, char_to_str
@@ -454,12 +455,6 @@ cdef void hold_reference(Obj obj):
 ############################################################################
 ### Error handler ##########################################################
 ############################################################################
-
-class GAPError(ValueError):  # ValueError for historical reasons
-    """
-    Exceptions raised by the GAP library
-    """
-
 
 cdef str extract_libgap_errout():
     """

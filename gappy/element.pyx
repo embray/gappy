@@ -22,7 +22,8 @@ from cysignals.signals cimport sig_on, sig_off
 
 from .gap_includes cimport *
 from .core cimport *
-from .core import libgap, GAPError
+from .exceptions import GAPError
+
 #from sage.cpython.string cimport str_to_bytes, char_to_str
 cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
     return s.encode(encoding, errors)
