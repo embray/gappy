@@ -26,6 +26,7 @@ import warnings
 
 from .gap_includes cimport *
 from .element cimport *
+from .utils import get_gap_memory_pool_size
 from sage.cpython.string import FS_ENCODING
 #from sage.cpython.string cimport str_to_bytes, char_to_str
 cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
@@ -244,8 +245,7 @@ cdef initialize():
     #s = str_to_bytes(gap_root(), FS_ENCODING, "surrogateescape")
     #argv[2] = s
 
-    from sage.interfaces.gap import _get_gap_memory_pool_size_MB
-    memory_pool = str_to_bytes(_get_gap_memory_pool_size_MB())
+    memory_pool = get_gap_memory_pool_size().encode('ascii')
     argv[1] = "-o"
     argv[2] = memory_pool
     argv[3] = "-s"
