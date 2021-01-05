@@ -291,23 +291,23 @@ cdef initialize():
 
     cdef int argc = 14   # argv[argc] must be NULL
 
-    from .saved_workspace import workspace
-    workspace, workspace_is_up_to_date = workspace()
-    ws = str_to_bytes(workspace, FS_ENCODING, "surrogateescape")
-    if workspace_is_up_to_date:
-        argv[argc] = "-L"
-        argv[argc + 1] = ws
-        argc += 2
+    #from .saved_workspace import workspace
+    #workspace, workspace_is_up_to_date = workspace()
+    #ws = str_to_bytes(workspace, FS_ENCODING, "surrogateescape")
+    #if workspace_is_up_to_date:
+    #    argv[argc] = "-L"
+    #    argv[argc + 1] = ws
+    #    argc += 2
 
     # Get the path to the sage.gaprc file and check that it exists
-    sage_gaprc = os.path.join(os.path.dirname(__file__), 'sage.gaprc')
-    if not os.path.exists(sage_gaprc):
-        warnings.warn(f"Sage's GAP initialization file {sage_gaprc} is "
-                       "is missing; some functionality may be limited")
-    else:
-        sage_gaprc = str_to_bytes(sage_gaprc, FS_ENCODING, "surrogateescape")
-        argv[argc] = sage_gaprc
-        argc += 1
+    #sage_gaprc = os.path.join(os.path.dirname(__file__), 'sage.gaprc')
+    #if not os.path.exists(sage_gaprc):
+    #    warnings.warn(f"Sage's GAP initialization file {sage_gaprc} is "
+    #                   "is missing; some functionality may be limited")
+    #else:
+    #    sage_gaprc = str_to_bytes(sage_gaprc, FS_ENCODING, "surrogateescape")
+    #    argv[argc] = sage_gaprc
+    #    argc += 1
 
     argv[argc] = NULL
 
@@ -333,12 +333,12 @@ cdef initialize():
     _gap_is_initialized = True
 
     # Save a new workspace if necessary
-    if not workspace_is_up_to_date:
-        prepare_workspace_dir()
-        from sage.misc.temporary_file import atomic_write
-        with atomic_write(workspace) as f:
-            f.close()
-            gap_eval('SaveWorkspace("{0}")'.format(f.name))
+    #if not workspace_is_up_to_date:
+    #    prepare_workspace_dir()
+    #    from sage.misc.temporary_file import atomic_write
+    #    with atomic_write(workspace) as f:
+    #        f.close()
+    #        gap_eval('SaveWorkspace("{0}")'.format(f.name))
 
 
 ############################################################################
