@@ -616,9 +616,9 @@ class Gap(Parent):
         if isinstance(x, GapElement):
             return x
         elif isinstance(x, (list, tuple, Vector)):
-            return make_GapElement_List(self, make_gap_list(x))
+            return make_GapElement_List(self, make_gap_list(self, x))
         elif isinstance(x, dict):
-            return make_GapElement_Record(self, make_gap_record(x))
+            return make_GapElement_Record(self, make_gap_record(self, x))
         elif isinstance(x, bool):
             # attention: must come before int
             return make_GapElement_Boolean(self, GAP_True if x else GAP_False)
@@ -686,7 +686,7 @@ class Gap(Parent):
         except ValueError:
             raise TypeError('base ring is not supported by GAP')
         M_list = map(list, M.rows())
-        return make_GapElement_List(self, make_gap_matrix(M_list, gap_ring))
+        return make_GapElement_List(self, make_gap_matrix(self, M_list, gap_ring))
 
     def eval(self, gap_command):
         """

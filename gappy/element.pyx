@@ -81,7 +81,7 @@ decode_type_number = {
 ### helper functions to construct lists and records ########################
 ############################################################################
 
-cdef Obj make_gap_list(sage_list) except NULL:
+cdef Obj make_gap_list(parent, sage_list) except NULL:
     """
     Convert Sage lists into Gap lists
 
@@ -93,11 +93,11 @@ cdef Obj make_gap_list(sage_list) except NULL:
 
     The list of the elements in ``a`` as a Gap ``Obj``.
     """
-    cdef GapElement l = libgap.eval('[]')
+    cdef GapElement l = parent.eval('[]')
     cdef GapElement elem
     for x in sage_list:
         if not isinstance(x, GapElement):
-            elem = <GapElement>libgap(x)
+            elem = <GapElement>parent(x)
         else:
             elem = <GapElement>x
 
@@ -105,7 +105,7 @@ cdef Obj make_gap_list(sage_list) except NULL:
     return l.value
 
 
-cdef Obj make_gap_matrix(sage_list, gap_ring) except NULL:
+cdef Obj make_gap_matrix(parent, sage_list, gap_ring) except NULL:
     """
     Convert Sage lists into Gap matrices
 
@@ -123,16 +123,16 @@ cdef Obj make_gap_matrix(sage_list, gap_ring) except NULL:
 
     The list of the elements in ``sage_list`` as a Gap ``Obj``.
     """
-    cdef GapElement l = libgap.eval('[]')
+    cdef GapElement l = parent.eval('[]')
     cdef GapElement elem
     cdef GapElement one
     if gap_ring is not None:
         one = <GapElement>gap_ring.One()
     else:
-        one = <GapElement>libgap(1)
+        one = <GapElement>parent(1)
     for x in sage_list:
         if not isinstance(x, GapElement):
-            elem = <GapElement>libgap(x)
+            elem = <GapElement>parent(x)
             elem = elem * one
         else:
             elem = <GapElement>x
@@ -203,7 +203,7 @@ cdef char *gap_element_str(Obj obj):
     return capture_stdout(func, obj)
 
 
-cdef Obj make_gap_record(sage_dict) except NULL:
+cdef Obj make_gap_record(parent, sage_dict) except NULL:
     """
     Convert Sage lists into Gap lists
 
@@ -220,7 +220,7 @@ cdef Obj make_gap_record(sage_dict) except NULL:
         sage: libgap({'a': 1, 'b':123})   # indirect doctest
         rec( a := 1, b := 123 )
     """
-    data = [ (str(key), libgap(value)) for key, value in sage_dict.iteritems() ]
+    data = [ (str(key), parent(value)) for key, value in sage_dict.iteritems() ]
 
     cdef Obj rec
     cdef GapElement val
@@ -416,7 +416,7 @@ cdef GapElement make_GapElement(parent, Obj obj):
     return r
 
 
-cpdef _from_sage(elem):
+cpdef _from_sage(libgap, elem):
     """
     Currently just used for unpickling; equivalent to calling ``libgap(elem)``
     to convert a Sage object to a `GapElement` where possible.
@@ -652,7 +652,9 @@ cdef class GapElement(RingElement):
         except NotImplementedError:
             elem = str(self)
 
-        return (_from_sage, (elem,))
+        # TODO: This might be broken, since I'm not sure the Gap instance
+        # itself can be successfully pickled.  Will come back to this later.
+        return (_from_sage, (self.parent(), elem))
 
     def __contains__(self, other):
         r"""
@@ -673,7 +675,7 @@ cdef class GapElement(RingElement):
             ...
             GAPError: Error, no method found! Error, no 1st choice method found for `in' on 2 arguments
         """
-        GAP_IN = libgap.eval(r'\in')
+        GAP_IN = self.parent().eval(r'\in')
         return GAP_IN(other, self).sage()
 
     cpdef _type_number(self):
@@ -2537,8 +2539,9 @@ cdef class GapElement_Function(GapElement):
         cdef Obj arg_list
         cdef int i, n = len(args)
 
+        libgap = self.parent()
+
         if n > 0:
-            libgap = self.parent()
             a = [x if isinstance(x, GapElement) else libgap(x) for x in args]
 
         try:
@@ -2580,7 +2583,7 @@ cdef class GapElement_Function(GapElement):
                                            (<GapElement>a[4]).value,
                                            (<GapElement>a[5]).value)
             elif n >= 7:
-                arg_list = make_gap_list(args)
+                arg_list = make_gap_list(libgap, args)
                 result = CALL_XARGS(self.value, arg_list)
             sig_off()
         finally:
@@ -2588,7 +2591,7 @@ cdef class GapElement_Function(GapElement):
         if result == NULL:
             # We called a procedure that does not return anything
             return None
-        return make_any_gap_element(self.parent(), result)
+        return make_any_gap_element(libgap, result)
 
 
 

@@ -24,9 +24,9 @@ cdef class ModuleElement:
 cdef class RingElement:
     pass
 
-cdef Obj make_gap_list(sage_list) except NULL
-cdef Obj make_gap_matrix(sage_list, gap_ring) except NULL
-cdef Obj make_gap_record(sage_dict) except NULL
+cdef Obj make_gap_list(parent, sage_list) except NULL
+cdef Obj make_gap_matrix(parent, sage_list, gap_ring) except NULL
+cdef Obj make_gap_record(parent, sage_dict) except NULL
 cdef Obj make_gap_integer(sage_dict) except NULL
 cdef Obj make_gap_string(sage_string) except NULL
 
