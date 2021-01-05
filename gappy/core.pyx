@@ -36,6 +36,25 @@ cdef char_to_str(char *s):
 
 from sage.interfaces.gap_workspace import prepare_workspace_dir
 
+#from sage.structure.parent cimport Parent
+cdef class Parent:
+    def __init__(self, *args, **kwargs):
+        pass
+
+ZZ = object()
+
+#from sage.structure.element cimport Vector
+cdef class Vector:
+    pass
+
+
+def cached_method(func):
+    return func
+
+
+def current_randstate():
+    pass
+
 
 ############################################################################
 ### Hooking into the GAP memory management #################################
@@ -550,3 +569,567 @@ cdef void error_handler() with gil:
 
 cdef void error_handler_check_exception() except *:
     error_handler()
+
+
+############################################################################
+### Gap  ###################################################################
+############################################################################
+# The libGap interpreter object Gap is the parent of the GapElements
+
+
+class Gap(Parent):
+    r"""
+    The libgap interpreter object.
+
+    .. NOTE::
+
+        This object must be instantiated exactly once by the
+        libgap. Always use the provided ``libgap`` instance, and never
+        instantiate :class:`Gap` manually.
+
+    EXAMPLES::
+
+        sage: libgap.eval('SymmetricGroup(4)')
+        Sym( [ 1 .. 4 ] )
+
+    TESTS::
+
+        sage: TestSuite(libgap).run(skip=['_test_category', '_test_elements', '_test_pickling'])
+    """
+
+    Element = GapElement
+
+    def _coerce_map_from_(self, S):
+        """
+        Whether a coercion from `S` exists.
+
+        INPUT / OUTPUT:
+
+        See :mod:`sage.structure.parent`.
+
+        EXAMPLES::
+
+            sage: libgap.has_coerce_map_from(ZZ)
+            True
+            sage: libgap.has_coerce_map_from(CyclotomicField(5)['x','y'])
+            True
+        """
+        return True
+
+    def _element_constructor_(self, x):
+        r"""
+        Construct elements of this parent class.
+
+        INPUT:
+
+        - ``x`` -- anything that defines a GAP object.
+
+        OUTPUT:
+
+        A :class:`GapElement`.
+
+        EXAMPLES::
+
+            sage: libgap(0)   # indirect doctest
+            0
+            sage: libgap(ZZ(0))
+            0
+            sage: libgap(int(0))
+            0
+            sage: libgap(vector((0,1,2)))
+            [ 0, 1, 2 ]
+            sage: libgap(vector((1/3,2/3,4/5)))
+            [ 1/3, 2/3, 4/5 ]
+            sage: libgap(vector((1/3, 0.8, 3)))
+            [ 0.333333, 0.8, 3. ]
+
+        """
+        initialize()
+        if isinstance(x, GapElement):
+            return x
+        elif isinstance(x, (list, tuple, Vector)):
+            return make_GapElement_List(self, make_gap_list(x))
+        elif isinstance(x, dict):
+            return make_GapElement_Record(self, make_gap_record(x))
+        elif isinstance(x, bool):
+            # attention: must come before int
+            return make_GapElement_Boolean(self, GAP_True if x else GAP_False)
+        elif isinstance(x, int):
+            return make_GapElement_Integer(self, make_gap_integer(x))
+        elif isinstance(x, basestring):
+            return make_GapElement_String(self, make_gap_string(x))
+        else:
+            try:
+                return x._libgap_()
+            except AttributeError:
+                pass
+            x = str(x._libgap_init_())
+            return make_any_gap_element(self, gap_eval(x))
+
+    def _construct_matrix(self, M):
+        """
+        Construct a LibGAP matrix.
+
+        INPUT:
+
+        - ``M`` -- a matrix.
+
+        OUTPUT:
+
+        A GAP matrix, that is, a list of lists with entries over a
+        common ring.
+
+        EXAMPLES::
+
+            sage: M = libgap._construct_matrix(identity_matrix(ZZ,2)); M
+            [ [ 1, 0 ], [ 0, 1 ] ]
+            sage: M.IsMatrix()
+            true
+
+            sage: M = libgap(identity_matrix(ZZ,2)); M  # syntactic sugar
+            [ [ 1, 0 ], [ 0, 1 ] ]
+            sage: M.IsMatrix()
+            true
+
+            sage: M = libgap(matrix(GF(3),2,2,[4,5,6,7])); M
+            [ [ Z(3)^0, Z(3) ], [ 0*Z(3), Z(3)^0 ] ]
+            sage: M.IsMatrix()
+            true
+
+            sage: x = polygen(QQ, 'x')
+            sage: M = libgap(matrix(QQ['x'],2,2,[x,5,6,7])); M
+            [ [ x, 5 ], [ 6, 7 ] ]
+            sage: M.IsMatrix()
+            true
+
+        TESTS:
+
+        We gracefully handle the case that the conversion fails (:trac:`18039`)::
+
+            sage: F.<a> = GF(9, modulus="first_lexicographic")
+            sage: libgap(Matrix(F, [[a]]))
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: conversion of (Givaro) finite field element to GAP not implemented except for fields defined by Conway polynomials.
+        """
+        ring = M.base_ring()
+        try:
+            gap_ring = self(ring)
+        except ValueError:
+            raise TypeError('base ring is not supported by GAP')
+        M_list = map(list, M.rows())
+        return make_GapElement_List(self, make_gap_matrix(M_list, gap_ring))
+
+    def eval(self, gap_command):
+        """
+        Evaluate a gap command and wrap the result.
+
+        INPUT:
+
+        - ``gap_command`` -- a string containing a valid gap command
+          without the trailing semicolon.
+
+        OUTPUT:
+
+        A :class:`GapElement`.
+
+        EXAMPLES::
+
+            sage: libgap.eval('0')
+            0
+            sage: libgap.eval('"string"')
+            "string"
+        """
+        cdef GapElement elem
+
+        if not isinstance(gap_command, basestring):
+            gap_command = str(gap_command._libgap_init_())
+
+        initialize()
+        elem = make_any_gap_element(self, gap_eval(gap_command))
+
+        # If the element is NULL just return None instead
+        if elem.value == NULL:
+            return None
+
+        return elem
+
+    def load_package(self, pkg):
+        """
+        If loading fails, raise a RuntimeError exception.
+
+        TESTS::
+
+            sage: libgap.load_package("chevie")
+            Traceback (most recent call last):
+            ...
+            RuntimeError: Error loading GAP package chevie. You may want to
+            install gap_packages SPKG.
+        """
+        load_package = self.function_factory('LoadPackage')
+        # Note: For some reason the default package loading error messages are
+        # controlled with InfoWarning and not InfoPackageLoading
+        prev_infolevel = libgap.InfoLevel(libgap.InfoWarning)
+        libgap.SetInfoLevel(libgap.InfoWarning, 0)
+        ret = load_package(pkg)
+        libgap.SetInfoLevel(libgap.InfoWarning, prev_infolevel)
+        if str(ret) == 'fail':
+            raise RuntimeError(f"Error loading GAP package {pkg}.  "
+                               f"You may want to install gap_packages SPKG.")
+        return ret
+
+    @cached_method
+    def function_factory(self, function_name):
+        """
+        Return a GAP function wrapper
+
+        This is almost the same as calling
+        ``libgap.eval(function_name)``, but faster and makes it
+        obvious in your code that you are wrapping a function.
+
+        INPUT:
+
+        - ``function_name`` -- string. The name of a GAP function.
+
+        OUTPUT:
+
+        A function wrapper
+        :class:`~sage.libs.gap.element.GapElement_Function` for the
+        GAP function. Calling it from Sage is equivalent to calling
+        the wrapped function from GAP.
+
+        EXAMPLES::
+
+            sage: libgap.function_factory('Print')
+            <Gap function "Print">
+        """
+        initialize()
+        return make_GapElement_Function(self, gap_eval(function_name))
+
+    def set_global(self, variable, value):
+        """
+        Set a GAP global variable
+
+        INPUT:
+
+        - ``variable`` -- string. The variable name.
+
+        - ``value`` -- anything that defines a GAP object.
+
+        EXAMPLES::
+
+            sage: libgap.set_global('FooBar', 1)
+            sage: libgap.get_global('FooBar')
+            1
+            sage: libgap.unset_global('FooBar')
+            sage: libgap.get_global('FooBar')
+            Traceback (most recent call last):
+            ...
+            GAPError: Error, VAL_GVAR: No value bound to FooBar
+        """
+        is_bound = self.function_factory('IsBoundGlobal')
+        bind_global = self.function_factory('BindGlobal')
+        if is_bound(variable):
+            self.unset_global(variable)
+        bind_global(variable, value)
+
+    def unset_global(self, variable):
+        """
+        Remove a GAP global variable
+
+        INPUT:
+
+        - ``variable`` -- string. The variable name.
+
+        EXAMPLES::
+
+            sage: libgap.set_global('FooBar', 1)
+            sage: libgap.get_global('FooBar')
+            1
+            sage: libgap.unset_global('FooBar')
+            sage: libgap.get_global('FooBar')
+            Traceback (most recent call last):
+            ...
+            GAPError: Error, VAL_GVAR: No value bound to FooBar
+        """
+        is_readonlyglobal = self.function_factory('IsReadOnlyGlobal')
+        make_readwrite = self.function_factory('MakeReadWriteGlobal')
+        unbind_global = self.function_factory('UnbindGlobal')
+        if is_readonlyglobal(variable):
+            make_readwrite(variable)
+        unbind_global(variable)
+
+    def get_global(self, variable):
+        """
+        Get a GAP global variable
+
+        INPUT:
+
+        - ``variable`` -- string. The variable name.
+
+        OUTPUT:
+
+        A :class:`~sage.libs.gap.element.GapElement` wrapping the GAP
+        output. A ``ValueError`` is raised if there is no such
+        variable in GAP.
+
+        EXAMPLES::
+
+            sage: libgap.set_global('FooBar', 1)
+            sage: libgap.get_global('FooBar')
+            1
+            sage: libgap.unset_global('FooBar')
+            sage: libgap.get_global('FooBar')
+            Traceback (most recent call last):
+            ...
+            GAPError: Error, VAL_GVAR: No value bound to FooBar
+        """
+        value_global = self.function_factory('ValueGlobal')
+        return value_global(variable)
+
+    def global_context(self, variable, value):
+        """
+        Temporarily change a global variable
+
+        INPUT:
+
+        - ``variable`` -- string. The variable name.
+
+        - ``value`` -- anything that defines a GAP object.
+
+        OUTPUT:
+
+        A context manager that sets/reverts the given global variable.
+
+        EXAMPLES::
+
+            sage: libgap.set_global('FooBar', 1)
+            sage: with libgap.global_context('FooBar', 2):
+            ....:     print(libgap.get_global('FooBar'))
+            2
+            sage: libgap.get_global('FooBar')
+            1
+        """
+        from sage.libs.gap.context_managers import GlobalVariableContext
+        initialize()
+        return GlobalVariableContext(variable, value)
+
+    def set_seed(self, seed=None):
+        """
+        Reseed the standard GAP pseudo-random sources with the given seed.
+
+        Uses a random seed given by ``current_randstate().ZZ_seed()`` if
+        ``seed=None``.  Otherwise the seed should be an integer.
+
+        EXAMPLES::
+
+            sage: libgap.set_seed(0)
+            0
+            sage: [libgap.Random(1, 10) for i in range(5)]
+            [2, 3, 3, 4, 2]
+        """
+        if seed is None:
+            seed = current_randstate().ZZ_seed()
+
+        Reset = self.function_factory("Reset")
+        Reset(self.GlobalMersenneTwister, seed)
+        Reset(self.GlobalRandomSource, seed)
+        return seed
+
+    def _an_element_(self):
+        r"""
+        Return a :class:`GapElement`.
+
+        OUTPUT:
+
+        A :class:`GapElement`.
+
+        EXAMPLES::
+
+            sage: libgap.an_element()   # indirect doctest
+            0
+        """
+        return self(0)
+
+    def zero(self):
+        """
+        Return (integer) zero in GAP.
+
+        OUTPUT:
+
+        A :class:`GapElement`.
+
+        EXAMPLES::
+
+            sage: libgap.zero()
+            0
+        """
+        return self(0)
+
+    def one(self):
+        r"""
+        Return (integer) one in GAP.
+
+        EXAMPLES::
+
+            sage: libgap.one()
+            1
+            sage: parent(_)
+            C library interface to GAP
+        """
+        return self(1)
+
+    def __init__(self):
+        r"""
+        The Python constructor.
+
+        EXAMPLES::
+
+            sage: type(libgap)
+            <type 'sage.misc.lazy_import.LazyImport'>
+            sage: type(libgap._get_object())
+            <class 'sage.libs.gap.libgap.Gap'>
+        """
+        Parent.__init__(self, base=ZZ)
+
+    def __repr__(self):
+        r"""
+        Return a string representation of ``self``.
+
+        OUTPUT:
+
+        String.
+
+        EXAMPLES::
+
+            sage: libgap
+            C library interface to GAP
+        """
+        return 'C library interface to GAP'
+
+    @cached_method
+    def __dir__(self):
+        """
+        Customize tab completion
+
+        EXAMPLES::
+
+           sage: 'OctaveAlgebra' in dir(libgap)
+           True
+        """
+        from sage.libs.gap.gap_globals import common_gap_globals
+        return dir(self.__class__) + sorted(common_gap_globals)
+
+    def __getattr__(self, name):
+        r"""
+        The attributes of the Gap object are the Gap functions, and in some
+        cases other global variables from GAP.
+
+        INPUT:
+
+        - ``name`` -- string. The name of the GAP function you want to
+          call.
+
+        OUTPUT:
+
+        A :class:`GapElement`. A ``AttributeError`` is raised
+        if there is no such function or global variable.
+
+        EXAMPLES::
+
+            sage: libgap.List
+            <Gap function "List">
+            sage: libgap.GlobalRandomSource
+            <RandomSource in IsGlobalRandomSource>
+        """
+        if name in dir(self.__class__):
+            return getattr(self.__class__, name)
+
+        try:
+            g = self.eval(name)
+        except ValueError:
+            raise AttributeError(f'No such attribute: {name}.')
+
+        self.__dict__[name] = g
+        return g
+
+    def show(self):
+        """
+        Return statistics about the GAP owned object list
+
+        This includes the total memory allocated by GAP as returned by
+        ``libgap.eval('TotalMemoryAllocated()'), as well as garbage collection
+        / object count statistics as returned by
+        ``libgap.eval('GasmanStatistics')``, and finally the total number of
+        GAP objects held by Sage as :class:`~sage.libs.gap.element.GapElement`
+        instances.
+
+        The value ``livekb + deadkb`` will roughly equal the total memory
+        allocated for GAP objects (see
+        ``libgap.eval('TotalMemoryAllocated()')``).
+
+        .. note::
+
+            Slight complication is that we want to do it without accessing
+            libgap objects, so we don't create new GapElements as a side
+            effect.
+
+        EXAMPLES::
+
+            sage: a = libgap(123)
+            sage: b = libgap(456)
+            sage: c = libgap(789)
+            sage: del b
+            sage: libgap.collect()
+            sage: libgap.show()  # random output
+            {'gasman_stats': {'full': {'cumulative': 110,
+               'deadbags': 321400,
+               'deadkb': 12967,
+               'freekb': 15492,
+               'livebags': 396645,
+               'livekb': 37730,
+               'time': 110,
+               'totalkb': 65536},
+              'nfull': 1,
+              'npartial': 1},
+             'nelements': 23123,
+             'total_alloc': 3234234}
+        """
+        d = {'nelements': self.count_GAP_objects()}
+        d['total_alloc'] = self.eval('TotalMemoryAllocated()').sage()
+        d['gasman_stats'] = self.eval('GasmanStatistics()').sage()
+        return d
+
+    def count_GAP_objects(self):
+        """
+        Return the number of GAP objects that are being tracked by
+        GAP.
+
+        OUTPUT:
+
+        An integer
+
+        EXAMPLES::
+
+            sage: libgap.count_GAP_objects()   # random output
+            5
+        """
+        return len(get_owned_objects())
+
+    def collect(self):
+        """
+        Manually run the garbage collector
+
+        EXAMPLES::
+
+            sage: a = libgap(123)
+            sage: del a
+            sage: libgap.collect()
+        """
+        initialize()
+        rc = CollectBags(0, 1)
+        if rc != 1:
+            raise RuntimeError('Garbage collection failed.')
+
+
+libgap = Gap()
