@@ -34,7 +34,7 @@ cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
 cdef char_to_str(char *s):
     return s.decode('utf-8')
 
-from sage.interfaces.gap_workspace import prepare_workspace_dir
+#from sage.interfaces.gap_workspace import prepare_workspace_dir
 
 #from sage.structure.parent cimport Parent
 cdef class Parent:
@@ -189,32 +189,6 @@ cdef void gasman_callback() with gil:
 ### Initialization of GAP ##################################################
 ############################################################################
 
-def gap_root():
-    """
-    Find the location of the GAP root install which is stored in the gap
-    startup script.
-
-    EXAMPLES::
-
-        sage: from sage.libs.gap.util import gap_root
-        sage: gap_root()   # random output
-        '/home/vbraun/opt/sage-5.3.rc0/local/gap/latest'
-    """
-    if os.path.exists(sage.env.GAP_ROOT_DIR):
-        return sage.env.GAP_ROOT_DIR
-
-    # Attempt to figure out the appropriate GAP_ROOT by reading the
-    # local/bin/gap shell script; this is an ugly hack that exists for
-    # historical reasons; the best approach to setting where Sage looks for
-    # the appropriate GAP_ROOT is to set the GAP_ROOT_DIR variable
-    SAGE_LOCAL = sage.env.SAGE_LOCAL
-    with open(os.path.join(SAGE_LOCAL, 'bin', 'gap')) as f:
-        gap_sh = f.read().splitlines()
-    gapdir = next(x for x in gap_sh if x.strip().startswith('GAP_ROOT'))
-    gapdir = gapdir.split('"')[1]
-    gapdir = gapdir.replace('$SAGE_LOCAL', SAGE_LOCAL)
-    return gapdir
-
 
 # To ensure that we call initialize_libgap only once.
 cdef bint _gap_is_initialized = False
@@ -266,30 +240,30 @@ cdef initialize():
     # initialize GAP. Note that we must pass define the memory pool
     # size!
     cdef char* argv[18]
-    argv[0] = "sage"
-    argv[1] = "-l"
-    s = str_to_bytes(gap_root(), FS_ENCODING, "surrogateescape")
-    argv[2] = s
+    argv[0] = ""
+    #argv[1] = "-l"
+    #s = str_to_bytes(gap_root(), FS_ENCODING, "surrogateescape")
+    #argv[2] = s
 
     from sage.interfaces.gap import _get_gap_memory_pool_size_MB
     memory_pool = str_to_bytes(_get_gap_memory_pool_size_MB())
-    argv[3] = "-o"
+    argv[1] = "-o"
+    argv[2] = memory_pool
+    argv[3] = "-s"
     argv[4] = memory_pool
-    argv[5] = "-s"
-    argv[6] = memory_pool
 
-    argv[7] = "-m"
-    argv[8] = "64m"
+    argv[5] = "-m"
+    argv[6] = "64m"
 
-    argv[9] = "-q"    # no prompt!
-    argv[10] = "-E"   # don't use readline as this will interfere with Python
-    argv[11] = "--nointeract"  # Implies -T
-    argv[12] = "-x"    # set the "screen" width so that GAP is less likely to
-    argv[13] = "4096"  # insert newlines when printing objects
+    argv[7] = "-q"    # no prompt!
+    argv[8] = "-E"   # don't use readline as this will interfere with Python
+    argv[9] = "--nointeract"  # Implies -T
+    argv[10] = "-x"    # set the "screen" width so that GAP is less likely to
+    argv[11] = "4096"  # insert newlines when printing objects
                        # 4096 unfortunately is the hard-coded max, but should
                        # be long enough for most cases
 
-    cdef int argc = 14   # argv[argc] must be NULL
+    cdef int argc = 12   # argv[argc] must be NULL
 
     #from .saved_workspace import workspace
     #workspace, workspace_is_up_to_date = workspace()
