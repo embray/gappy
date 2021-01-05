@@ -8,8 +8,13 @@
 #                  https://www.gnu.org/licenses/
 # ****************************************************************************
 
+import resource
+import sys
 
-def get_gap_memory_pool_size():
+import psutil
+
+
+def get_gap_memory_pool_size(unit='m'):
     """
     Get the gap memory pool size for new GAP processes.
 
@@ -19,12 +24,12 @@ def get_gap_memory_pool_size():
         sage: get_gap_memory_pool_size()   # random output
         1534059315
     """
-    global gap_memory_pool_size
-    if gap_memory_pool_size is not None:
-        return gap_memory_pool_size
+    allowed_units = ('k', 'm', 'g')
+    unit = unit.lower()
 
-    import psutil
-    from sage.misc.getusage import virtual_memory_limit
+    if unit not in allowed_units:
+        raise ValueError(f'unit must be one of {", ".join(allowed_units)}')
+
     mem = psutil.virtual_memory()
     swap = psutil.swap_memory()
     vmax = virtual_memory_limit()
@@ -34,7 +39,9 @@ def get_gap_memory_pool_size():
     suggested_size = min(suggested_size, vmax // 10)
     # ~220MB is the minimum for long doctests
     suggested_size = max(suggested_size, 400 * 1024**2)
-    return suggested_size
+    unit_bytes = 1024**(allowed_units.index(unit) + 1)
+    suggested_size //= unit_bytes
+    return str(suggested_size) + unit
 
 
 def virtual_memory_limit():
@@ -57,12 +64,10 @@ def virtual_memory_limit():
         sage: virtual_memory_limit() <= sys.maxsize
         True
     """
-    import resource
     try:
         vmax = resource.getrlimit(resource.RLIMIT_AS)[0]
     except resource.error:
         vmax = resource.RLIM_INFINITY
     if vmax == resource.RLIM_INFINITY:
-        import psutil
         vmax = psutil.virtual_memory().total + psutil.swap_memory().total
     return min(vmax, sys.maxsize)
