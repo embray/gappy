@@ -1123,7 +1123,7 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
-    def __div__(self, right):
+    def __truediv__(self, right):
         return self._div_(self.parent(right))
 
     cpdef _div_(self, right):
