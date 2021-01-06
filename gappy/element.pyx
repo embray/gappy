@@ -32,9 +32,6 @@ cdef char_to_str(char *s):
 #from sage.misc.cachefunc import cached_method
 def cached_method(func):
     return func
-#from sage.structure.parent import Parent
-cdef class Parent:
-    pass
 #from sage.rings.all import ZZ, QQ, RDF
 ZZ = object()
 QQ = object()

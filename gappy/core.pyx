@@ -38,11 +38,6 @@ cdef char_to_str(char *s):
 
 #from sage.interfaces.gap_workspace import prepare_workspace_dir
 
-#from sage.structure.parent cimport Parent
-cdef class Parent:
-    def __init__(self, *args, **kwargs):
-        pass
-
 ZZ = object()
 
 #from sage.structure.element cimport Vector
@@ -578,10 +573,8 @@ cdef void error_handler_check_exception() except *:
 ############################################################################
 ### Gap  ###################################################################
 ############################################################################
-# The libGap interpreter object Gap is the parent of the GapObjs
 
-
-class Gap(Parent):
+class Gap:
     r"""
     The GAP interpreter object.
 
@@ -622,9 +615,15 @@ class Gap(Parent):
         """
         return True
 
-    def _element_constructor_(self, x):
+    def __call__(self, x):
         r"""
-        Construct elements of this parent class.
+        Construct GapObj elements from a given object that either has a
+        registered converter or a ``_gap_`` or ``_gap_init_`` method.
+
+        .. todo::
+
+            Actually implement the converter registry interface.  For now some
+            of the hand-coded conversions from Sage are implemented.
 
         INPUT:
 
@@ -636,18 +635,36 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> gap(0)   # indirect doctest
+            >>> gap(0)
             0
-            >>> gap(ZZ(0))
-            0
-            >>> gap(int(0))
-            0
-            >>> gap(vector((0,1,2)))
-            [ 0, 1, 2 ]
-            >>> gap(vector((1/3,2/3,4/5)))
-            [ 1/3, 2/3, 4/5 ]
-            >>> gap(vector((1/3, 0.8, 3)))
-            [ 0.333333, 0.8, 3. ]
+            >>> gap([])
+            [ ]
+            >>> gap({})
+            rec( )
+            >>> gap(False)
+            false
+            >>> gap('')
+            ""
+
+            A class with a ``_gap_`` method to convert itself to an equivalent
+            `~gappy.element.GapObj`:
+
+            >>> class MyGroup:
+            ...     def _gap_(self):
+            ...         return gap.SymmetricGroup(3)
+            ...
+            >>> gap(MyGroup())
+            Sym( [ 1 .. 3 ] )
+
+            A class with a ``_gap_init_`` method; same concept but returns a string
+            containing any arbitrary GAP code for initializing the object:
+
+            >>> class MyGroup2:
+            ...     def _gap_init_(self):
+            ...         return 'SymmetricGroup(3)'
+            ...
+            >>> gap(MyGroup2())
+            Sym( [ 1 .. 3 ] )
 
         """
         initialize()
@@ -662,14 +679,15 @@ class Gap(Parent):
             return make_GapBoolean(self, GAP_True if x else GAP_False)
         elif isinstance(x, int):
             return make_GapInteger(self, make_gap_integer(x))
-        elif isinstance(x, basestring):
+        elif isinstance(x, str):
             return make_GapString(self, make_gap_string(x))
+        # TODO: Add support for bytes
         else:
             try:
-                return x._libgap_()
+                return x._gap_()
             except AttributeError:
                 pass
-            x = str(x._libgap_init_())
+            x = str(x._gap_init_())
             return make_any_gap_element(self, gap_eval(x))
 
     def _construct_matrix(self, M):
@@ -984,19 +1002,6 @@ class Gap(Parent):
             C library interface to GAP
         """
         return self(1)
-
-    def __init__(self):
-        r"""
-        The Python constructor.
-
-        EXAMPLES::
-
-            >>> type(gap)
-            <type 'sage.misc.lazy_import.LazyImport'>
-            >>> type(gap._get_object())
-            <class 'sage.libs.gap.gap.Gap'>
-        """
-        Parent.__init__(self, base=ZZ)
 
     def __repr__(self):
         r"""
