@@ -1200,6 +1200,18 @@ cdef class GapObj:
 
         return self._pow_(self.parent(right))
 
+    def __xor__(self, right):
+        """
+        Exponentiation of a GapObj by the given power.
+
+        In GAP the ``^`` operator is used for exponentiation as opposed to
+        Python's ``**``, so for compatibility/familiarity, `GapObj` also
+        supports exponentiation with ``^`` which does *not* in this case mean
+        logical "xor".
+        """
+
+        return self._pow_(self.parent(right))
+
     cpdef _pow_(self, other):
         r"""
         Exponentiation of two GapObj objects.
