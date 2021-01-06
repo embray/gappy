@@ -10,18 +10,11 @@
 #*****************************************************************************
 
 from .gap_includes cimport Obj, UInt
-#from sage.structure.sage_object cimport SageObject
-#from sage.structure.element cimport Element, ModuleElement, RingElement
-cdef class SageObject:
-    pass
-
+#from sage.structure.element cimport Element, ModuleElement
 cdef class Element:
     pass
 
 cdef class ModuleElement:
-    pass
-
-cdef class RingElement:
     pass
 
 cdef Obj make_gap_list(parent, sage_list) except NULL
@@ -30,23 +23,27 @@ cdef Obj make_gap_record(parent, sage_dict) except NULL
 cdef Obj make_gap_integer(sage_dict) except NULL
 cdef Obj make_gap_string(sage_string) except NULL
 
-cdef GapElement make_any_gap_element(parent, Obj obj)
-cdef GapElement make_GapElement(parent, Obj obj)
-cdef GapElement_List make_GapElement_List(parent, Obj obj)
-cdef GapElement_Record make_GapElement_Record(parent, Obj obj)
-cdef GapElement_Integer make_GapElement_Integer(parent, Obj obj)
-cdef GapElement_Rational make_GapElement_Rational(parent, Obj obj)
-cdef GapElement_String make_GapElement_String(parent, Obj obj)
-cdef GapElement_Boolean make_GapElement_Boolean(parent, Obj obj)
-cdef GapElement_Function make_GapElement_Function(parent, Obj obj)
-cdef GapElement_Permutation make_GapElement_Permutation(parent, Obj obj)
+cdef GapObj make_any_gap_element(parent, Obj obj)
+cdef GapObj make_GapObj(parent, Obj obj)
+cdef GapList make_GapList(parent, Obj obj)
+cdef GapRecord make_GapRecord(parent, Obj obj)
+cdef GapInteger make_GapInteger(parent, Obj obj)
+cdef GapRational make_GapRational(parent, Obj obj)
+cdef GapString make_GapString(parent, Obj obj)
+cdef GapBoolean make_GapBoolean(parent, Obj obj)
+cdef GapFunction make_GapFunction(parent, Obj obj)
+cdef GapPermutation make_GapPermutation(parent, Obj obj)
 
 cdef char *capture_stdout(Obj, Obj)
 cdef char *gap_element_str(Obj)
 cdef char *gap_element_repr(Obj)
 
 
-cdef class GapElement(RingElement):
+cdef class GapObj:
+    # the instance of the Gap interpreter class; currently for compatibility
+    # with Sage's Element class though not clear yet if it will make entire
+    # sense to keep.
+    cdef object _parent
 
     # the pointer to the GAP object (memory managed by GASMAN)
     cdef Obj value
@@ -70,47 +67,47 @@ cdef class GapElement(RingElement):
     cpdef _pow_int(self, other)
     cpdef _richcmp_(self, other, int op)
 
-    cpdef GapElement deepcopy(self, bint mut)
+    cpdef GapObj deepcopy(self, bint mut)
 
-cdef class GapElement_Integer(GapElement):
+cdef class GapInteger(GapObj):
     pass
 
-cdef class GapElement_Rational(GapElement):
+cdef class GapRational(GapObj):
     pass
 
-cdef class GapElement_IntegerMod(GapElement):
-    cpdef GapElement_Integer lift(self)
+cdef class GapIntegerMod(GapObj):
+    cpdef GapInteger lift(self)
 
-cdef class GapElement_FiniteField(GapElement):
-    cpdef GapElement_Integer lift(self)
+cdef class GapFiniteField(GapObj):
+    cpdef GapInteger lift(self)
 
-cdef class GapElement_Cyclotomic(GapElement):
+cdef class GapCyclotomic(GapObj):
     pass
 
-cdef class GapElement_Ring(GapElement):
+cdef class GapRing(GapObj):
     pass
 
-cdef class GapElement_String(GapElement):
+cdef class GapString(GapObj):
     pass
 
-cdef class GapElement_Boolean(GapElement):
+cdef class GapBoolean(GapObj):
     pass
 
-cdef class GapElement_Function(GapElement):
+cdef class GapFunction(GapObj):
     pass
 
-cdef class GapElement_MethodProxy(GapElement_Function):
-    cdef GapElement first_argument
+cdef class GapMethodProxy(GapFunction):
+    cdef GapObj first_argument
 
-cdef class GapElement_Record(GapElement):
+cdef class GapRecord(GapObj):
     cpdef UInt record_name_to_index(self, name)
 
-cdef class GapElement_RecordIterator(object):
-    cdef GapElement_Record rec
+cdef class GapRecordIterator:
+    cdef GapRecord rec
     cdef UInt i
 
-cdef class GapElement_List(GapElement):
+cdef class GapList(GapObj):
     pass
 
-cdef class GapElement_Permutation(GapElement):
+cdef class GapPermutation(GapObj):
     pass

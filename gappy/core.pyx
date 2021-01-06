@@ -578,7 +578,7 @@ cdef void error_handler_check_exception() except *:
 ############################################################################
 ### Gap  ###################################################################
 ############################################################################
-# The libGap interpreter object Gap is the parent of the GapElements
+# The libGap interpreter object Gap is the parent of the GapObjs
 
 
 class Gap(Parent):
@@ -604,8 +604,6 @@ class Gap(Parent):
 
         >>> TestSuite(gap).run(skip=['_test_category', '_test_elements', '_test_pickling'])
     """
-
-    Element = GapElement
 
     def _coerce_map_from_(self, S):
         """
@@ -634,7 +632,7 @@ class Gap(Parent):
 
         OUTPUT:
 
-        A :class:`GapElement`.
+        A :class:`GapObj`.
 
         EXAMPLES::
 
@@ -653,19 +651,19 @@ class Gap(Parent):
 
         """
         initialize()
-        if isinstance(x, GapElement):
+        if isinstance(x, GapObj):
             return x
         elif isinstance(x, (list, tuple, Vector)):
-            return make_GapElement_List(self, make_gap_list(self, x))
+            return make_GapList(self, make_gap_list(self, x))
         elif isinstance(x, dict):
-            return make_GapElement_Record(self, make_gap_record(self, x))
+            return make_GapRecord(self, make_gap_record(self, x))
         elif isinstance(x, bool):
             # attention: must come before int
-            return make_GapElement_Boolean(self, GAP_True if x else GAP_False)
+            return make_GapBoolean(self, GAP_True if x else GAP_False)
         elif isinstance(x, int):
-            return make_GapElement_Integer(self, make_gap_integer(x))
+            return make_GapInteger(self, make_gap_integer(x))
         elif isinstance(x, basestring):
-            return make_GapElement_String(self, make_gap_string(x))
+            return make_GapString(self, make_gap_string(x))
         else:
             try:
                 return x._libgap_()
@@ -726,7 +724,7 @@ class Gap(Parent):
         except ValueError:
             raise TypeError('base ring is not supported by GAP')
         M_list = map(list, M.rows())
-        return make_GapElement_List(self, make_gap_matrix(self, M_list, gap_ring))
+        return make_GapList(self, make_gap_matrix(self, M_list, gap_ring))
 
     def eval(self, gap_command):
         """
@@ -739,7 +737,7 @@ class Gap(Parent):
 
         OUTPUT:
 
-        A :class:`GapElement`.
+        A :class:`GapObj`.
 
         EXAMPLES::
 
@@ -748,7 +746,7 @@ class Gap(Parent):
             >>> gap.eval('"string"')
             "string"
         """
-        cdef GapElement elem
+        cdef GapObj elem
 
         if not isinstance(gap_command, basestring):
             gap_command = str(gap_command._libgap_init_())
@@ -802,7 +800,7 @@ class Gap(Parent):
         OUTPUT:
 
         A function wrapper
-        :class:`~sage.libs.gap.element.GapElement_Function` for the
+        :class:`~sage.libs.gap.element.GapFunction` for the
         GAP function. Calling it from Sage is equivalent to calling
         the wrapped function from GAP.
 
@@ -812,7 +810,7 @@ class Gap(Parent):
             <Gap function "Print">
         """
         initialize()
-        return make_GapElement_Function(self, gap_eval(function_name))
+        return make_GapFunction(self, gap_eval(function_name))
 
     def set_global(self, variable, value):
         """
@@ -877,7 +875,7 @@ class Gap(Parent):
 
         OUTPUT:
 
-        A :class:`~sage.libs.gap.element.GapElement` wrapping the GAP
+        A :class:`~sage.libs.gap.element.GapObj` wrapping the GAP
         output. A ``ValueError`` is raised if there is no such
         variable in GAP.
 
@@ -946,11 +944,11 @@ class Gap(Parent):
 
     def _an_element_(self):
         r"""
-        Return a :class:`GapElement`.
+        Return a :class:`GapObj`.
 
         OUTPUT:
 
-        A :class:`GapElement`.
+        A :class:`GapObj`.
 
         EXAMPLES::
 
@@ -965,7 +963,7 @@ class Gap(Parent):
 
         OUTPUT:
 
-        A :class:`GapElement`.
+        A :class:`GapObj`.
 
         EXAMPLES::
 
@@ -1040,7 +1038,7 @@ class Gap(Parent):
 
         OUTPUT:
 
-        A :class:`GapElement`. A ``AttributeError`` is raised
+        A :class:`GapObj`. A ``AttributeError`` is raised
         if there is no such function or global variable.
 
         EXAMPLES::
@@ -1069,7 +1067,7 @@ class Gap(Parent):
         ``gap.eval('TotalMemoryAllocated()'), as well as garbage collection
         / object count statistics as returned by
         ``gap.eval('GasmanStatistics')``, and finally the total number of
-        GAP objects held by Sage as :class:`~sage.libs.gap.element.GapElement`
+        GAP objects held by Sage as :class:`~sage.libs.gap.element.GapObj`
         instances.
 
         The value ``livekb + deadkb`` will roughly equal the total memory
@@ -1079,8 +1077,7 @@ class Gap(Parent):
         .. note::
 
             Slight complication is that we want to do it without accessing
-            libgap objects, so we don't create new GapElements as a side
-            effect.
+            libgap objects, so we don't create new GapObjs as a side effect.
 
         EXAMPLES::
 
