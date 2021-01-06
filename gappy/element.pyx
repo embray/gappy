@@ -21,6 +21,7 @@ from cysignals.signals cimport sig_on, sig_off
 from .gap_includes cimport *
 from .core cimport *
 from .exceptions import GAPError
+from .operations import OperationInspector
 
 #from sage.cpython.string cimport str_to_bytes, char_to_str
 cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
@@ -733,7 +734,6 @@ cdef class GapObj:
             >>> len(dir(x)) > 100
             True
         """
-        from sage.libs.gap.operations import OperationInspector
         ops = OperationInspector(self).op_names()
         return dir(self.__class__) + ops
 
