@@ -14,15 +14,16 @@ Utility functions for GAP
 #*****************************************************************************
 
 from libc.signal cimport signal, SIGCHLD, SIG_DFL
-from posix.dlfcn cimport dlopen, dlclose, RTLD_NOW, RTLD_GLOBAL
-
+from posix.dlfcn cimport dlopen, dlclose, dlerror, RTLD_NOW, RTLD_GLOBAL
 from cpython.exc cimport PyErr_Fetch, PyErr_Restore
 from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from cpython.ref cimport PyObject, Py_XINCREF, Py_XDECREF
 from cysignals.signals cimport sig_on, sig_off
 
+import locale
 import os
 import warnings
+import sys
 
 from .gap_includes cimport *
 from .element cimport *
@@ -55,6 +56,27 @@ def cached_method(func):
 
 def current_randstate():
     pass
+
+
+cdef extern from "<dlfcn.h>" nogil:
+    # Missing from posix.dlfcn since it's a non-standard GNU extension
+    int dlinfo(void *, int, void *)
+
+
+cdef extern from "<link.h>" nogil:
+    int RTLD_DI_LINKMAP
+    cdef struct link_map:
+        char *l_name
+
+
+# TODO: Linux-specific for now, on MacOS it would by libgap.dylib etc., not
+# sure if dlopen on MacOS will make this replacement automatically or not.
+# It might be nice if libgap-api.h actually included the expected library
+# name as a macro.
+LIBGAP_SONAME = "libgap.so"
+
+_FS_ENCODING = sys.getfilesystemencoding()
+_LOC_ENCODING = locale.getpreferredencoding()
 
 
 ############################################################################
@@ -211,7 +233,8 @@ MakeImmutable(libgap_errout);
 """
 
 
-cdef initialize():
+# TODO: Change autoload=True by default
+cdef initialize(gap_root=None, libgap_soname=None, autoload=False):
     """
     Initialize the GAP library, if it hasn't already been
     initialized.  It is safe to call this multiple times.
@@ -221,6 +244,10 @@ cdef initialize():
         >>> libgap(123)   # indirect doctest
         123
     """
+    cdef link_map lm
+    cdef int ret
+    cdef char *error
+
     global _gap_is_initialized
     if _gap_is_initialized: return
     # Hack to ensure that all symbols provided by libgap are loaded into the
@@ -228,42 +255,80 @@ cdef initialize():
     # Note: we could use RTLD_NOLOAD and avoid the subsequent dlclose() but
     # this isn't portable
 
-    #cdef void* handle
-    #libgapname = str_to_bytes(sage.env.GAP_SO)
-    #handle = dlopen(libgapname, RTLD_NOW | RTLD_GLOBAL)
-    #if handle is NULL:
-    #    raise RuntimeError(
-    #            "Could not dlopen() libgap even though it should already "
-    #            "be loaded!")
-    #dlclose(handle)
+    if libgap_soname is None:
+        libgap_soname = LIBGAP_SONAME
+
+    cdef void* handle
+    handle = dlopen(libgap_soname.encode('ascii'), RTLD_NOW | RTLD_GLOBAL)
+    if handle is NULL:
+        raise RuntimeError(
+                f"Could not dlopen() {libgap_soname} even though it should "
+                "already be loaded!")
+
+    if gap_root is None:
+        gap_root = os.environ.get('GAP_ROOT')
+        if gap_root is None:
+            # Use dlinfo to try to determine the path to libgap.so.  If it is
+            # from within a GAP_ROOT we can use it; otherwise we will not
+            # be able to determine GAP_ROOT
+            ret = dlinfo(handle, RTLD_DI_LINKMAP, &lm)
+            if ret != 0:
+                error = dlerror()
+                raise RuntimeError(
+                    f'Could not dlinfo() {libgap_soname}: '
+                    f'{error.decode(_LOC_ENCODING, "surrogateescape")}; '
+                    f'cannot determine path to GAP_ROOT')
+
+            so_path = lm.l_name.decode(_FS_ENCODING, 'surrogateescape')
+            gap_root = os.path.dirname(os.path.dirname(so_path))
+
+    dlclose(handle)
+
+    # If gap_root is still None we cannot proceed because GAP actually crashes
+    # if we try to do anything without loading GAP's stdlib
+    hint = ('Either pass gap_root when initializing the Gap class, '
+            'or pass it via the GAP_ROOT environment variable.')
+    if gap_root is None:
+        raise RuntimeError(f"Could not determine path to GAP_ROOT.  {hint}")
+    elif not os.path.exists(os.path.join(gap_root, 'lib', 'init.g')):
+        raise RuntimeError(
+            f'GAP_ROOT path {gap_root} does not contain lib/init.g which is '
+            f'needed for GAP to work.  {hint}')
 
     # Define argv variable, which we will pass in to
     # initialize GAP. Note that we must pass define the memory pool
     # size!
-    cdef char* argv[18]
-    argv[0] = ""
-    #argv[1] = "-l"
-    #s = str_to_bytes(gap_root(), FS_ENCODING, "surrogateescape")
-    #argv[2] = s
+    cdef char* argv[16]
+    cdef int argc = 14
+
+    argv[0] = ''
+    argv[1] = '-l'
+    s = gap_root.encode(_FS_ENCODING, 'surrogateescape')
+    argv[2] = s
 
     memory_pool = get_gap_memory_pool_size().encode('ascii')
-    argv[1] = "-o"
-    argv[2] = memory_pool
-    argv[3] = "-s"
+    argv[3] = '-o'
     argv[4] = memory_pool
+    argv[5] = '-s'
+    argv[6] = memory_pool
 
-    argv[5] = "-m"
-    argv[6] = "64m"
+    argv[7] = '-m'
+    argv[8] = '64m'
 
-    argv[7] = "-q"    # no prompt!
-    argv[8] = "-E"   # don't use readline as this will interfere with Python
-    argv[9] = "--nointeract"  # Implies -T
-    argv[10] = "-x"    # set the "screen" width so that GAP is less likely to
-    argv[11] = "4096"  # insert newlines when printing objects
+    argv[9] = '-q'    # no prompt!
+    argv[10] = '-E'   # don't use readline as this will interfere with Python
+    argv[11] = '--nointeract'  # Implies -T
+    argv[12] = '-x'    # set the "screen" width so that GAP is less likely to
+    argv[13] = '4096'  # insert newlines when printing objects
                        # 4096 unfortunately is the hard-coded max, but should
                        # be long enough for most cases
 
-    cdef int argc = 12   # argv[argc] must be NULL
+    if not autoload:
+        argv[argc] = '-A'
+        argc += 1
+
+    # argv[argc] must be NULL
+    argv[argc] = NULL
 
     #from .saved_workspace import workspace
     #workspace, workspace_is_up_to_date = workspace()
@@ -282,8 +347,6 @@ cdef initialize():
     #    sage_gaprc = str_to_bytes(sage_gaprc, FS_ENCODING, "surrogateescape")
     #    argv[argc] = sage_gaprc
     #    argc += 1
-
-    argv[argc] = NULL
 
     sig_on()
     # Initialize GAP but disable their SIGINT handler
