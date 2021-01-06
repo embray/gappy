@@ -1025,6 +1025,9 @@ cdef class GapObj:
             GAP_Leave()
             sig_off()
 
+    def __add__(self, right):
+        return self._add_(self.parent(right))
+
     cpdef _add_(self, right):
         r"""
         Add two GapObj objects.
@@ -1054,6 +1057,9 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
+    def __sub__(self, right):
+        return self._sub_(self.parent(right))
+
     cpdef _sub_(self, right):
         r"""
         Subtract two GapObj objects.
@@ -1082,6 +1088,8 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
+    def __mul__(self, right):
+        return self._mul_(self.parent(right))
 
     cpdef _mul_(self, right):
         r"""
@@ -1111,6 +1119,9 @@ cdef class GapObj:
         finally:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
+
+    def __div__(self, right):
+        return self._div_(self.parent(right))
 
     cpdef _div_(self, right):
         r"""
@@ -1147,6 +1158,9 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
+    def __mod__(self, right):
+        return self._mod_(self.parent(right))
+
     cpdef _mod_(self, right):
         r"""
         Modulus of two GapObj objects.
@@ -1173,6 +1187,15 @@ cdef class GapObj:
         finally:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
+
+    def __pow__(self, right, mod):
+        if mod is not None:
+            raise NotImplementedError(
+                'pow with modulus not supported yet')
+
+        # TODO: Support pow() with the mod; GAP must have a function for that
+
+        return self._pow_(self.parent(right))
 
     cpdef _pow_(self, other):
         r"""
