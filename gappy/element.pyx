@@ -1466,6 +1466,8 @@ cdef class GapInteger(GapObj):
 
     def __int__(self):
         r"""
+        Convert a GAP integer to a Python `int`.
+
         TESTS::
 
             >>> int(gap(3))
@@ -1478,7 +1480,15 @@ cdef class GapInteger(GapObj):
             >>> type(_)
             <class 'int'>
         """
-        return self.sage(ring=int)
+
+        if self.is_C_int():
+            return INT_INTOBJ(self.value)
+        else:
+            # TODO: waste of time!
+            # gap integers are stored as a mp_limb_t and we have a much more direct
+            # conversion implemented in mpz_get_pylong(mpz_srcptr z)
+            # (see sage.libs.gmp.pylong)
+            return int(self.String())
 
     def __index__(self):
         r"""
