@@ -396,7 +396,7 @@ cdef Obj gap_eval(str gap_string) except? NULL:
         >>> gap.eval('if 4>3 thenPrint("hi");\nfi')
         Traceback (most recent call last):
         ...
-        GAPError: Syntax error: then expected in stream:1
+        gappy.exceptions.GAPError: Syntax error: then expected in stream:1
         if 4>3 thenPrint("hi");
                ^^^^^^^^^
         >>> gap.eval('1+1')   # testing that we have successfully recovered
@@ -411,7 +411,7 @@ cdef Obj gap_eval(str gap_string) except? NULL:
         >>> gap.eval('Complex Field with 53 bits of precision;')
         Traceback (most recent call last):
         ...
-        GAPError: Error, Variable: 'Complex' must have a value
+        gappy.exceptions.GAPError: Error, Variable: 'Complex' must have a value
         Syntax error: ; expected in stream:1
         Complex Field with 53 bits of precision;;
          ^^^^^^^^^^^^
@@ -431,7 +431,7 @@ cdef Obj gap_eval(str gap_string) except? NULL:
         >>> gap.eval('Complex Field with 53 bits of precision;')
         Traceback (most recent call last):
         ...
-        GAPError: Error, Variable: 'Complex' must have a value
+        gappy.exceptions.GAPError: Error, Variable: 'Complex' must have a value
         ...
         Error, Variable: 'precision' must have a value
 
@@ -851,7 +851,7 @@ class Gap:
             >>> gap.get_global('FooBar')
             Traceback (most recent call last):
             ...
-            GAPError: Error, VAL_GVAR: No value bound to FooBar
+            gappy.exceptions.GAPError: Error, VAL_GVAR: No value bound to FooBar
         """
         is_bound = self.function_factory('IsBoundGlobal')
         bind_global = self.function_factory('BindGlobal')
@@ -876,7 +876,7 @@ class Gap:
             >>> gap.get_global('FooBar')
             Traceback (most recent call last):
             ...
-            GAPError: Error, VAL_GVAR: No value bound to FooBar
+            gappy.exceptions.GAPError: Error, VAL_GVAR: No value bound to FooBar
         """
         is_readonlyglobal = self.function_factory('IsReadOnlyGlobal')
         make_readwrite = self.function_factory('MakeReadWriteGlobal')
@@ -908,7 +908,8 @@ class Gap:
             >>> gap.get_global('FooBar')
             Traceback (most recent call last):
             ...
-            GAPError: Error, VAL_GVAR: No value bound to FooBar
+            gappy.exceptions.GAPError: Error, VAL_GVAR: No value bound to
+            FooBar
         """
         value_global = self.function_factory('ValueGlobal')
         return value_global(variable)

@@ -456,14 +456,15 @@ cdef class GapObj:
         >>> gap.eval('1/0')
         Traceback (most recent call last):
         ...
-        GAPError: Error, Rational operations: <divisor> must not be zero
+        gappy.exceptions.GAPError: Error, Rational operations: <divisor> must
+        not be zero
 
     Also, a ``GAPError`` is raised if the input is not a simple expression::
 
         >>> gap.eval('1; 2; 3')
         Traceback (most recent call last):
         ...
-        GAPError: can only evaluate a single statement
+        gappy.exceptions.GAPError: can only evaluate a single statement
     """
 
     def __cinit__(self):
@@ -692,7 +693,8 @@ cdef class GapObj:
             >>> gap.eval('Integers') in gap(1)
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found! Error, no 1st choice method found for `in' on 2 arguments
+            gappy.exceptions.GAPError: Error, no method found! Error, no 1st
+            choice method found for `in' on 2 arguments
         """
         GAP_IN = self.parent().eval(r'\in')
         return GAP_IN(other, self).sage()
@@ -848,7 +850,7 @@ cdef class GapObj:
             >>> F1 < F2
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found!
+            gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `<' on 2 arguments
 
             >>> F1._set_compare_by_id()
@@ -937,7 +939,7 @@ cdef class GapObj:
             >>> F1 < F2
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found!
+            gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `<' on 2 arguments
 
             >>> F1._set_compare_by_id()
@@ -1039,7 +1041,7 @@ cdef class GapObj:
             >>> gap(1) + gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found!
+            gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `+' on 2 arguments
         """
         cdef Obj result
@@ -1062,13 +1064,13 @@ cdef class GapObj:
             >>> g2 = gap(2)
             >>> g1._sub_(g2)
             -1
-            >>> g1 - g2    # indirect doctest
+            >>> g1 - g2  # indirect doctest
             -1
 
             >>> gap(1) - gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found! ...
+            gappy.exceptions.GAPError: Error, no method found! ...
         """
         cdef Obj result
         try:
@@ -1097,7 +1099,7 @@ cdef class GapObj:
             >>> gap(1) * gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found!
+            gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `*' on 2 arguments
         """
         cdef Obj result
@@ -1126,13 +1128,14 @@ cdef class GapObj:
             >>> gap(1) / gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found!
+            gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `/' on 2 arguments
 
             >>> gap(1) / gap(0)
             Traceback (most recent call last):
             ...
-            GAPError: Error, Rational operations: <divisor> must not be zero
+            gappy.exceptions.GAPError: Error, Rational operations: <divisor>
+            must not be zero
         """
         cdef Obj result
         try:
@@ -1158,7 +1161,7 @@ cdef class GapObj:
             >>> gap(1) % gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found!
+            gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `mod' on 2 arguments
         """
         cdef Obj result
@@ -1202,13 +1205,13 @@ cdef class GapObj:
             >>> gap.CyclicGroup(2) ^ 2
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found!
+            gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `^' on 2 arguments
 
             >>> gap(3) ^ Infinity
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found! Error, no 1st choice
+            gappy.exceptions.GAPError: Error, no method found! Error, no 1st choice
             method found for `InverseMutable' on 1 arguments
         """
         try:
@@ -1947,7 +1950,7 @@ cdef class GapFunction(GapObj):
             >>> s(gap(1), gap(2))
             Traceback (most recent call last):
             ...
-            GAPError: Error, no method found!
+            gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `SumOp' on 2 arguments
 
             >>> for i in range(0,100):
@@ -2537,7 +2540,8 @@ cdef class GapRecord(GapObj):
         >>> rec['no_such_element']
         Traceback (most recent call last):
         ...
-        GAPError: Error, Record Element: '<rec>.no_such_element' must have an assigned value
+        gappy.exceptions.GAPError: Error, Record Element:
+        '<rec>.no_such_element' must have an assigned value
     """
 
     def __len__(self):
