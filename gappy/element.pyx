@@ -1865,15 +1865,12 @@ cdef class GapString(GapObj):
             <class 'gappy.element.GapString'>
             >>> str(s)
             'string'
-            >>> s.sage()
-            'string'
             >>> type(_)
             <class 'str'>
         """
         s = char_to_str(CSTR_STRING(self.value))
         return s
 
-    sage = __str__
 
 ############################################################################
 ### GapFunction ############################################################
@@ -1896,7 +1893,7 @@ cdef GapFunction make_GapFunction(parent, Obj obj):
     EXAMPLES::
 
         >>> gap.CycleLength
-        <Gap function "CycleLength">
+        <GAP function "CycleLength">
         >>> type(_)
         <class 'gappy.element.GapFunction'>
     """
@@ -1916,7 +1913,6 @@ cdef class GapFunction(GapObj):
         <class 'gappy.element.GapFunction'>
     """
 
-
     def __repr__(self):
         r"""
         Return a string representation
@@ -1928,13 +1924,11 @@ cdef class GapFunction(GapObj):
         EXAMPLES::
 
             >>> gap.Orbits
-            <Gap function "Orbits">
+            <GAP function "Orbits">
         """
         libgap = self.parent()
         name = libgap.NameFunction(self)
-        s = '<Gap function "'+name.sage()+'">'
-        return s
-
+        return f'<GAP function "{name}">'
 
     def __call__(self, *args):
         """
@@ -1956,7 +1950,7 @@ cdef class GapFunction(GapObj):
             >>> b = gap.SymmetricGroup(4)
             >>> gap.collect()
             >>> a
-            <Gap function "NormalSubgroups">
+            <GAP function "NormalSubgroups">
             >>> b
             Sym( [ 1 .. 4 ] )
             >>> sorted(a(b))
@@ -1966,7 +1960,7 @@ cdef class GapFunction(GapObj):
              Group([ (1,4)(2,3), (1,2)(3,4) ])]
 
             >>> gap.eval("a := NormalSubgroups")
-            <Gap function "NormalSubgroups">
+            <GAP function "NormalSubgroups">
             >>> gap.eval("b := SymmetricGroup(4)")
             Sym( [ 1 .. 4 ] )
             >>> gap.collect()
@@ -2086,8 +2080,6 @@ cdef class GapFunction(GapObj):
             return None
         return make_any_gap_element(libgap, result)
 
-
-
     def _instancedoc_(self):
         r"""
         Return the help string
@@ -2103,8 +2095,6 @@ cdef class GapFunction(GapObj):
         libgap = self.parent()
         from sage.interfaces.gap import gap
         return gap.help(libgap.NameFunction(self).sage(), pager=False)
-
-
 
 
 ############################################################################
@@ -2156,7 +2146,7 @@ cdef class GapMethodProxy(GapFunction):
 
         >>> lst = gap([])
         >>> lst.Add
-        <Gap function "Add">
+        <GAP function "Add">
         >>> type(_)
         <class 'gappy.element.GapMethodProxy'>
         >>> lst.Add(1)
@@ -2729,7 +2719,6 @@ cdef class GapRecordIterator(object):
         """
         self.rec = rec
         self.i = 1
-
 
     def __next__(self):
         r"""

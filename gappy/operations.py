@@ -129,7 +129,7 @@ class OperationInspector:
         NameFunction = self._gap.function_factory('NameFunction')
         result = set()
         for f in self.operations():
-            name = NameFunction(f).sage()
+            name = str(NameFunction(f))
             if name[0] not in string.ascii_letters:
                 continue
             match = NAME_RE.match(name)

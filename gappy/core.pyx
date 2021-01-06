@@ -826,7 +826,7 @@ class Gap:
         EXAMPLES::
 
             >>> gap.function_factory('Print')
-            <Gap function "Print">
+            <GAP function "Print">
         """
         initialize()
         return make_GapFunction(self, gap_eval(function_name))
@@ -1034,7 +1034,7 @@ class Gap:
 
     def __getattr__(self, name):
         r"""
-        The attributes of the Gap object are the Gap functions, and in some
+        The attributes of the GAP object are the GAP functions, and in some
         cases other global variables from GAP.
 
         INPUT:
@@ -1050,7 +1050,7 @@ class Gap:
         EXAMPLES::
 
             >>> gap.List
-            <Gap function "List">
+            <GAP function "List">
             >>> gap.GlobalRandomSource
             <RandomSource in IsGlobalRandomSource>
         """
