@@ -1028,8 +1028,12 @@ cdef class GapObj:
             GAP_Leave()
             sig_off()
 
-    def __add__(self, right):
-        return self._add_(self.parent(right))
+    def __add__(left, right):
+        # One or the other must be true.
+        if isinstance(left, GapObj):
+            return left._add_(left.parent(right))
+        else:
+            return right.parent(left)._add_(right)
 
     cpdef _add_(self, right):
         r"""
@@ -1060,8 +1064,11 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
-    def __sub__(self, right):
-        return self._sub_(self.parent(right))
+    def __sub__(left, right):
+        if isinstance(left, GapObj):
+            return left._sub_(left.parent(right))
+        else:
+            return right.parent(left)._sub_(right)
 
     cpdef _sub_(self, right):
         r"""
@@ -1091,8 +1098,11 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
-    def __mul__(self, right):
-        return self._mul_(self.parent(right))
+    def __mul__(left, right):
+        if isinstance(left, GapObj):
+            return left._mul_(left.parent(right))
+        else:
+            return right.parent(left)._mul_(right)
 
     cpdef _mul_(self, right):
         r"""
@@ -1123,8 +1133,11 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
-    def __truediv__(self, right):
-        return self._div_(self.parent(right))
+    def __truediv__(left, right):
+        if isinstance(left, GapObj):
+            return left._div_(left.parent(right))
+        else:
+            return right.parent(left)._div_(right)
 
     cpdef _div_(self, right):
         r"""
@@ -1161,8 +1174,11 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
-    def __mod__(self, right):
-        return self._mod_(self.parent(right))
+    def __mod__(left, right):
+        if isinstance(left, GapObj):
+            return left._mod_(left.parent(right))
+        else:
+            return right.parent(left)._mod_(right)
 
     cpdef _mod_(self, right):
         r"""
@@ -1191,16 +1207,18 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_element(self.parent(), result)
 
-    def __pow__(self, right, mod):
+    def __pow__(left, right, mod):
         if mod is not None:
             raise NotImplementedError(
                 'pow with modulus not supported yet')
 
         # TODO: Support pow() with the mod; GAP must have a function for that
+        if isinstance(left, GapObj):
+            return left._pow_(left.parent(right))
+        else:
+            return right.parent(left)._pow_(right)
 
-        return self._pow_(self.parent(right))
-
-    def __xor__(self, right):
+    def __xor__(left, right):
         """
         Exponentiation of a GapObj by the given power.
 
@@ -1210,7 +1228,10 @@ cdef class GapObj:
         logical "xor".
         """
 
-        return self._pow_(self.parent(right))
+        if isinstance(left, GapObj):
+            return left._pow_(left.parent(right))
+        else:
+            return right.parent(left)._pow_(right)
 
     cpdef _pow_(self, other):
         r"""
@@ -1220,12 +1241,12 @@ cdef class GapObj:
 
             >>> r = gap(5) ^ 2; r
             25
-            >>> parent(r)
-            C library interface to GAP
+            >>> type(r)
+            <class 'gappy.element.GapInteger'>
             >>> r = 5 ^ gap(2); r
             25
-            >>> parent(r)
-            C library interface to GAP
+            >>> type(r)
+            <class 'gappy.element.GapInteger'>
             >>> g, = gap.CyclicGroup(5).GeneratorsOfGroup()
             >>> g ^ 5
             <identity> of ...
@@ -1234,6 +1255,7 @@ cdef class GapObj:
 
         Check that this can be interrupted gracefully::
 
+            >>> from cysignals.alarm import alarm
             >>> a, b = gap.GL(1000, 3).GeneratorsOfGroup(); g = a * b
             >>> alarm(0.5); g ^ (2 ^ 10000)
             Traceback (most recent call last):
