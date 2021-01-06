@@ -1,9 +1,7 @@
 """
-GAP element wrapper
+GAP object wrappers.
 
-This document describes the individual wrappers for various GAP
-elements. For general information about GAP, you should read the
-:mod:`~sage.libs.gap.libgap` module documentation.
+This document describes the individual wrappers for various GAP objects.
 """
 
 # ****************************************************************************
@@ -489,7 +487,7 @@ cdef class GapObj:
 
         TESTS::
 
-            >>> from sage.libs.gap.element import GapElement
+            >>> from gappy.element import GapObj
             >>> GapObj()
             Traceback (most recent call last):
             ...
@@ -1993,7 +1991,7 @@ cdef class GapFunction(GapObj):
             >>> f()
             Traceback (most recent call last):
             ...
-            TypeError: 'sage.libs.gap.element.GapInteger' object is not callable
+            TypeError: 'gappy.element.GapInteger' object is not callable
 
         We illustrate appending to a list which returns None::
 

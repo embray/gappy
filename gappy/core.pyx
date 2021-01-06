@@ -85,7 +85,7 @@ cdef class ObjWrapper(object):
 
     EXAMPLES::
 
-        >>> from sage.libs.gap.util import ObjWrapper
+        >>> from gappy.core import ObjWrapper
         >>> x = ObjWrapper()
         >>> y = ObjWrapper()
         >>> x == y
@@ -108,7 +108,7 @@ cdef class ObjWrapper(object):
 
         EXAMPLES::
 
-            >>> from sage.libs.gap.util import ObjWrapper
+            >>> from gappy.core import ObjWrapper
             >>> x = ObjWrapper()
             >>> y = ObjWrapper()
             >>> x == y
@@ -138,7 +138,7 @@ cdef class ObjWrapper(object):
 
         EXAMPLES::
 
-            >>> from sage.libs.gap.util import ObjWrapper
+            >>> from gappy.core import ObjWrapper
             >>> x = ObjWrapper()
             >>> hash(x)
             0
@@ -819,10 +819,9 @@ class Gap:
 
         OUTPUT:
 
-        A function wrapper
-        :class:`~sage.libs.gap.element.GapFunction` for the
-        GAP function. Calling it from Sage is equivalent to calling
-        the wrapped function from GAP.
+        A function wrapper :class:`~gappy.element.GapFunction` for the GAP
+        function. Calling it from Sage is equivalent to calling the wrapped
+        function from GAP.
 
         EXAMPLES::
 
@@ -895,9 +894,8 @@ class Gap:
 
         OUTPUT:
 
-        A :class:`~sage.libs.gap.element.GapObj` wrapping the GAP
-        output. A ``ValueError`` is raised if there is no such
-        variable in GAP.
+        A :class:`~gappy.element.GapObj` wrapping the GAP output. A
+        ``ValueError`` is raised if there is no such variable in GAP.
 
         EXAMPLES::
 
@@ -1074,9 +1072,8 @@ class Gap:
         This includes the total memory allocated by GAP as returned by
         ``gap.eval('TotalMemoryAllocated()'), as well as garbage collection
         / object count statistics as returned by
-        ``gap.eval('GasmanStatistics')``, and finally the total number of
-        GAP objects held by Sage as :class:`~sage.libs.gap.element.GapObj`
-        instances.
+        ``gap.eval('GasmanStatistics')``, and finally the total number of GAP
+        objects held by gappy as :class:`~gappy.element.GapObj` instances.
 
         The value ``livekb + deadkb`` will roughly equal the total memory
         allocated for GAP objects (see
