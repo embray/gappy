@@ -819,7 +819,7 @@ cdef class GapObj:
             "a"
             >>> gap.eval('SymmetricGroup(3)')
             Sym( [ 1 .. 3 ] )
-            >>> gap(0)._repr_()
+            >>> gap(0).__repr__()
             '0'
         """
         if  self.value == NULL:
