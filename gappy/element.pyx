@@ -790,7 +790,7 @@ cdef class GapObj:
         s = char_to_str(gap_element_str(self.value))
         return s.strip()
 
-    def _repr_(self):
+    def __repr__(self):
         r"""
         Return a string representation of ``self``.
 
