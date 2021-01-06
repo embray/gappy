@@ -679,6 +679,8 @@ class Gap:
             return make_GapBoolean(self, GAP_True if x else GAP_False)
         elif isinstance(x, int):
             return make_GapInteger(self, make_gap_integer(x))
+        elif isinstance(x, float):
+            return make_GapFloat(self, make_gap_float(x))
         elif isinstance(x, str):
             return make_GapString(self, make_gap_string(x))
         # TODO: Add support for bytes

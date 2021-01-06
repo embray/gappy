@@ -21,6 +21,7 @@ cdef Obj make_gap_list(parent, lst) except NULL
 cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL
 cdef Obj make_gap_record(parent, dct) except NULL
 cdef Obj make_gap_integer(x) except NULL
+cdef Obj make_gap_float(x) except NULL
 cdef Obj make_gap_string(s) except NULL
 
 cdef GapObj make_any_gap_element(parent, Obj obj)
@@ -28,6 +29,7 @@ cdef GapObj make_GapObj(parent, Obj obj)
 cdef GapList make_GapList(parent, Obj obj)
 cdef GapRecord make_GapRecord(parent, Obj obj)
 cdef GapInteger make_GapInteger(parent, Obj obj)
+cdef GapFloat make_GapFloat(parent, Obj obj)
 cdef GapRational make_GapRational(parent, Obj obj)
 cdef GapString make_GapString(parent, Obj obj)
 cdef GapBoolean make_GapBoolean(parent, Obj obj)
@@ -70,6 +72,9 @@ cdef class GapObj:
     cpdef GapObj deepcopy(self, bint mut)
 
 cdef class GapInteger(GapObj):
+    pass
+
+cdef class GapFloat(GapObj):
     pass
 
 cdef class GapRational(GapObj):

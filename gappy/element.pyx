@@ -246,6 +246,32 @@ cdef Obj make_gap_integer(x) except NULL:
         GAP_Leave()
 
 
+cdef Obj make_gap_float(x) except NULL:
+    """
+    Convert a Python float to a GAP machine float
+
+    INPUT:
+
+    - ``x`` -- a Python float.
+
+    OUTPUT:
+
+    The float as a GAP ``Obj``.
+
+    TESTS::
+
+        >>> gap(1.23)  # indirect doctest
+        1.23
+    """
+    cdef Obj result
+    try:
+        GAP_Enter()
+        result = GAP_NewMacFloat(<double>x)
+        return result
+    finally:
+        GAP_Leave()
+
+
 cdef Obj make_gap_string(s) except NULL:
     """
     Convert a Python string to a GAP string

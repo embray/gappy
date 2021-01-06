@@ -99,6 +99,8 @@ cdef extern from "gap/libgap-api.h" nogil:
     cdef void GAP_Leave()
     cdef int GAP_Error_Setjmp() except 0
 
+    cdef Obj GAP_NewMacFloat(double)
+
 
 cdef extern from "gap/lists.h" nogil:
     bint IS_LIST(Obj lst)
