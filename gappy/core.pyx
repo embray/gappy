@@ -166,7 +166,7 @@ cdef ObjWrapper wrap_obj(Obj obj):
 cdef dict owned_objects_refcount = dict()
 
 #
-# used in Sage's libgap.Gap.count_GAP_objects
+# used in Gap.count_GAP_objects
 #
 cpdef get_owned_objects():
     """
@@ -241,7 +241,7 @@ cdef initialize(gap_root=None, libgap_soname=None, autoload=False):
 
     TESTS::
 
-        >>> libgap(123)   # indirect doctest
+        >>> gap(123)   # indirect doctest
         123
     """
     cdef link_map lm
@@ -394,17 +394,17 @@ cdef Obj gap_eval(str gap_string) except? NULL:
 
     EXAMPLES::
 
-        >>> libgap.eval('if 4>3 then\nPrint("hi");\nfi')
-        >>> libgap.eval('1+1')   # testing that we have successfully recovered
+        >>> gap.eval('if 4>3 then\nPrint("hi");\nfi')
+        >>> gap.eval('1+1')   # testing that we have successfully recovered
         2
 
-        >>> libgap.eval('if 4>3 thenPrint("hi");\nfi')
+        >>> gap.eval('if 4>3 thenPrint("hi");\nfi')
         Traceback (most recent call last):
         ...
         GAPError: Syntax error: then expected in stream:1
         if 4>3 thenPrint("hi");
                ^^^^^^^^^
-        >>> libgap.eval('1+1')   # testing that we have successfully recovered
+        >>> gap.eval('1+1')   # testing that we have successfully recovered
         2
 
     TESTS:
@@ -413,7 +413,7 @@ cdef Obj gap_eval(str gap_string) except? NULL:
     and hence multiple errors should still result in a single exception
     with a message capturing all errors that occurrer::
 
-        >>> libgap.eval('Complex Field with 53 bits of precision;')
+        >>> gap.eval('Complex Field with 53 bits of precision;')
         Traceback (most recent call last):
         ...
         GAPError: Error, Variable: 'Complex' must have a value
@@ -433,14 +433,14 @@ cdef Obj gap_eval(str gap_string) except? NULL:
     Test that on a subsequent attempt we get the same message (no garbage was
     left in the error stream)::
 
-        >>> libgap.eval('Complex Field with 53 bits of precision;')
+        >>> gap.eval('Complex Field with 53 bits of precision;')
         Traceback (most recent call last):
         ...
         GAPError: Error, Variable: 'Complex' must have a value
         ...
         Error, Variable: 'precision' must have a value
 
-        >>> libgap.eval('1+1')  # test that we successfully recover
+        >>> gap.eval('1+1')  # test that we successfully recover
         2
     """
     initialize()
@@ -583,22 +583,26 @@ cdef void error_handler_check_exception() except *:
 
 class Gap(Parent):
     r"""
-    The libgap interpreter object.
+    The GAP interpreter object.
 
     .. NOTE::
 
         This object must be instantiated exactly once by the
-        libgap. Always use the provided ``libgap`` instance, and never
+        libgap.  Always use the provided ``libgap`` instance, and never
         instantiate :class:`Gap` manually.
+
+        # TODO: Actually this will change when Gap becomes a singleton class; it
+        will be safe to initialize Gap() with alternate arguments from the
+        defaults before its first use; after that it cannot be re-initialized.
 
     EXAMPLES::
 
-        >>> libgap.eval('SymmetricGroup(4)')
+        >>> gap.eval('SymmetricGroup(4)')
         Sym( [ 1 .. 4 ] )
 
     TESTS::
 
-        >>> TestSuite(libgap).run(skip=['_test_category', '_test_elements', '_test_pickling'])
+        >>> TestSuite(gap).run(skip=['_test_category', '_test_elements', '_test_pickling'])
     """
 
     Element = GapElement
@@ -613,9 +617,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.has_coerce_map_from(ZZ)
+            >>> gap.has_coerce_map_from(ZZ)
             True
-            >>> libgap.has_coerce_map_from(CyclotomicField(5)['x','y'])
+            >>> gap.has_coerce_map_from(CyclotomicField(5)['x','y'])
             True
         """
         return True
@@ -634,17 +638,17 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap(0)   # indirect doctest
+            >>> gap(0)   # indirect doctest
             0
-            >>> libgap(ZZ(0))
+            >>> gap(ZZ(0))
             0
-            >>> libgap(int(0))
+            >>> gap(int(0))
             0
-            >>> libgap(vector((0,1,2)))
+            >>> gap(vector((0,1,2)))
             [ 0, 1, 2 ]
-            >>> libgap(vector((1/3,2/3,4/5)))
+            >>> gap(vector((1/3,2/3,4/5)))
             [ 1/3, 2/3, 4/5 ]
-            >>> libgap(vector((1/3, 0.8, 3)))
+            >>> gap(vector((1/3, 0.8, 3)))
             [ 0.333333, 0.8, 3. ]
 
         """
@@ -685,23 +689,23 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> M = libgap._construct_matrix(identity_matrix(ZZ,2)); M
+            >>> M = gap._construct_matrix(identity_matrix(ZZ,2)); M
             [ [ 1, 0 ], [ 0, 1 ] ]
             >>> M.IsMatrix()
             true
 
-            >>> M = libgap(identity_matrix(ZZ,2)); M  # syntactic sugar
+            >>> M = gap(identity_matrix(ZZ,2)); M  # syntactic sugar
             [ [ 1, 0 ], [ 0, 1 ] ]
             >>> M.IsMatrix()
             true
 
-            >>> M = libgap(matrix(GF(3),2,2,[4,5,6,7])); M
+            >>> M = gap(matrix(GF(3),2,2,[4,5,6,7])); M
             [ [ Z(3)^0, Z(3) ], [ 0*Z(3), Z(3)^0 ] ]
             >>> M.IsMatrix()
             true
 
             >>> x = polygen(QQ, 'x')
-            >>> M = libgap(matrix(QQ['x'],2,2,[x,5,6,7])); M
+            >>> M = gap(matrix(QQ['x'],2,2,[x,5,6,7])); M
             [ [ x, 5 ], [ 6, 7 ] ]
             >>> M.IsMatrix()
             true
@@ -711,7 +715,7 @@ class Gap(Parent):
         We gracefully handle the case that the conversion fails (:trac:`18039`)::
 
             >>> F.<a> = GF(9, modulus="first_lexicographic")
-            >>> libgap(Matrix(F, [[a]]))
+            >>> gap(Matrix(F, [[a]]))
             Traceback (most recent call last):
             ...
             NotImplementedError: conversion of (Givaro) finite field element to GAP not implemented except for fields defined by Conway polynomials.
@@ -739,9 +743,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.eval('0')
+            >>> gap.eval('0')
             0
-            >>> libgap.eval('"string"')
+            >>> gap.eval('"string"')
             "string"
         """
         cdef GapElement elem
@@ -764,7 +768,7 @@ class Gap(Parent):
 
         TESTS::
 
-            >>> libgap.load_package("chevie")
+            >>> gap.load_package("chevie")
             Traceback (most recent call last):
             ...
             RuntimeError: Error loading GAP package chevie. You may want to
@@ -788,7 +792,7 @@ class Gap(Parent):
         Return a GAP function wrapper
 
         This is almost the same as calling
-        ``libgap.eval(function_name)``, but faster and makes it
+        ``gap.eval(function_name)``, but faster and makes it
         obvious in your code that you are wrapping a function.
 
         INPUT:
@@ -804,7 +808,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.function_factory('Print')
+            >>> gap.function_factory('Print')
             <Gap function "Print">
         """
         initialize()
@@ -822,11 +826,11 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.set_global('FooBar', 1)
-            >>> libgap.get_global('FooBar')
+            >>> gap.set_global('FooBar', 1)
+            >>> gap.get_global('FooBar')
             1
-            >>> libgap.unset_global('FooBar')
-            >>> libgap.get_global('FooBar')
+            >>> gap.unset_global('FooBar')
+            >>> gap.get_global('FooBar')
             Traceback (most recent call last):
             ...
             GAPError: Error, VAL_GVAR: No value bound to FooBar
@@ -847,11 +851,11 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.set_global('FooBar', 1)
-            >>> libgap.get_global('FooBar')
+            >>> gap.set_global('FooBar', 1)
+            >>> gap.get_global('FooBar')
             1
-            >>> libgap.unset_global('FooBar')
-            >>> libgap.get_global('FooBar')
+            >>> gap.unset_global('FooBar')
+            >>> gap.get_global('FooBar')
             Traceback (most recent call last):
             ...
             GAPError: Error, VAL_GVAR: No value bound to FooBar
@@ -879,11 +883,11 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.set_global('FooBar', 1)
-            >>> libgap.get_global('FooBar')
+            >>> gap.set_global('FooBar', 1)
+            >>> gap.get_global('FooBar')
             1
-            >>> libgap.unset_global('FooBar')
-            >>> libgap.get_global('FooBar')
+            >>> gap.unset_global('FooBar')
+            >>> gap.get_global('FooBar')
             Traceback (most recent call last):
             ...
             GAPError: Error, VAL_GVAR: No value bound to FooBar
@@ -907,11 +911,11 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.set_global('FooBar', 1)
-            >>> with libgap.global_context('FooBar', 2):
-            ...     print(libgap.get_global('FooBar'))
+            >>> gap.set_global('FooBar', 1)
+            >>> with gap.global_context('FooBar', 2):
+            ...     print(gap.get_global('FooBar'))
             2
-            >>> libgap.get_global('FooBar')
+            >>> gap.get_global('FooBar')
             1
         """
         from sage.libs.gap.context_managers import GlobalVariableContext
@@ -927,9 +931,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.set_seed(0)
+            >>> gap.set_seed(0)
             0
-            >>> [libgap.Random(1, 10) for i in range(5)]
+            >>> [gap.Random(1, 10) for i in range(5)]
             [2, 3, 3, 4, 2]
         """
         if seed is None:
@@ -950,7 +954,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.an_element()   # indirect doctest
+            >>> gap.an_element()   # indirect doctest
             0
         """
         return self(0)
@@ -965,7 +969,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.zero()
+            >>> gap.zero()
             0
         """
         return self(0)
@@ -976,7 +980,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.one()
+            >>> gap.one()
             1
             >>> parent(_)
             C library interface to GAP
@@ -989,10 +993,10 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> type(libgap)
+            >>> type(gap)
             <type 'sage.misc.lazy_import.LazyImport'>
-            >>> type(libgap._get_object())
-            <class 'sage.libs.gap.libgap.Gap'>
+            >>> type(gap._get_object())
+            <class 'sage.libs.gap.gap.Gap'>
         """
         Parent.__init__(self, base=ZZ)
 
@@ -1006,7 +1010,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap
+            >>> gap
             C library interface to GAP
         """
         return 'C library interface to GAP'
@@ -1018,7 +1022,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-           >>> 'OctaveAlgebra' in dir(libgap)
+           >>> 'OctaveAlgebra' in dir(gap)
            True
         """
         from sage.libs.gap.gap_globals import common_gap_globals
@@ -1041,9 +1045,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.List
+            >>> gap.List
             <Gap function "List">
-            >>> libgap.GlobalRandomSource
+            >>> gap.GlobalRandomSource
             <RandomSource in IsGlobalRandomSource>
         """
         if name in dir(self.__class__):
@@ -1062,15 +1066,15 @@ class Gap(Parent):
         Return statistics about the GAP owned object list
 
         This includes the total memory allocated by GAP as returned by
-        ``libgap.eval('TotalMemoryAllocated()'), as well as garbage collection
+        ``gap.eval('TotalMemoryAllocated()'), as well as garbage collection
         / object count statistics as returned by
-        ``libgap.eval('GasmanStatistics')``, and finally the total number of
+        ``gap.eval('GasmanStatistics')``, and finally the total number of
         GAP objects held by Sage as :class:`~sage.libs.gap.element.GapElement`
         instances.
 
         The value ``livekb + deadkb`` will roughly equal the total memory
         allocated for GAP objects (see
-        ``libgap.eval('TotalMemoryAllocated()')``).
+        ``gap.eval('TotalMemoryAllocated()')``).
 
         .. note::
 
@@ -1080,12 +1084,12 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> a = libgap(123)
-            >>> b = libgap(456)
-            >>> c = libgap(789)
+            >>> a = gap(123)
+            >>> b = gap(456)
+            >>> c = gap(789)
             >>> del b
-            >>> libgap.collect()
-            >>> libgap.show()  # random output
+            >>> gap.collect()
+            >>> gap.show()  # random output
             {'gasman_stats': {'full': {'cumulative': 110,
                'deadbags': 321400,
                'deadkb': 12967,
@@ -1115,7 +1119,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> libgap.count_GAP_objects()   # random output
+            >>> gap.count_GAP_objects()   # random output
             5
         """
         return len(get_owned_objects())
@@ -1126,9 +1130,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            >>> a = libgap(123)
+            >>> a = gap(123)
             >>> del a
-            >>> libgap.collect()
+            >>> gap.collect()
         """
         initialize()
         rc = CollectBags(0, 1)
@@ -1136,4 +1140,4 @@ class Gap(Parent):
             raise RuntimeError('Garbage collection failed.')
 
 
-libgap = Gap()
+gap = Gap()

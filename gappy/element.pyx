@@ -217,7 +217,7 @@ cdef Obj make_gap_record(parent, sage_dict) except NULL:
 
     TESTS::
 
-        >>> libgap({'a': 1, 'b':123})   # indirect doctest
+        >>> gap({'a': 1, 'b':123})   # indirect doctest
         rec( a := 1, b := 123 )
     """
     data = [ (str(key), parent(value)) for key, value in sage_dict.iteritems() ]
@@ -252,7 +252,7 @@ cdef Obj make_gap_integer(sage_int) except NULL:
 
     TESTS::
 
-        >>> libgap(1)   # indirect doctest
+        >>> gap(1)   # indirect doctest
         1
     """
     cdef Obj result
@@ -278,7 +278,7 @@ cdef Obj make_gap_string(sage_string) except NULL:
 
     TESTS::
 
-        >>> libgap('string')   # indirect doctest
+        >>> gap('string')   # indirect doctest
         "string"
     """
     cdef Obj result
@@ -306,14 +306,14 @@ cdef GapElement make_any_gap_element(parent, Obj obj):
 
     TESTS::
 
-        >>> T_CHAR = libgap.eval("'c'");  T_CHAR
+        >>> T_CHAR = gap.eval("'c'");  T_CHAR
         "c"
         >>> type(T_CHAR)
         <type 'sage.libs.gap.element.GapElement_String'>
 
-        >>> libgap.eval("['a', 'b', 'c']")   # gap strings are also lists of chars
+        >>> gap.eval("['a', 'b', 'c']")   # gap strings are also lists of chars
         "abc"
-        >>> t = libgap.UnorderedTuples('abc', 2);  t
+        >>> t = gap.UnorderedTuples('abc', 2);  t
         [ "aa", "ab", "ac", "bb", "bc", "cc" ]
         >>> t[1]
         "ab"
@@ -325,7 +325,7 @@ cdef GapElement make_any_gap_element(parent, Obj obj):
     Check that :trac:`18158` is fixed::
 
         >>> S = SymmetricGroup(5)
-        >>> irr = libgap.Irr(S)[3]
+        >>> irr = gap.Irr(S)[3]
         >>> irr[0]
         6
         >>> irr[1]
@@ -400,13 +400,13 @@ cdef GapElement make_GapElement(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap(0)
+        >>> gap(0)
         0
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Integer'>
 
-        >>> libgap.eval('')
-        >>> libgap(None)
+        >>> gap.eval('')
+        >>> gap(None)
         Traceback (most recent call last):
         ...
         AttributeError: 'NoneType' object has no attribute '_libgap_init_'
@@ -416,15 +416,15 @@ cdef GapElement make_GapElement(parent, Obj obj):
     return r
 
 
-cpdef _from_sage(libgap, elem):
+cpdef _from_sage(gap, elem):
     """
-    Currently just used for unpickling; equivalent to calling ``libgap(elem)``
+    Currently just used for unpickling; equivalent to calling ``gap(elem)``
     to convert a Sage object to a `GapElement` where possible.
     """
     if isinstance(elem, str):
-        return libgap.eval(elem)
+        return gap.eval(elem)
 
-    return libgap(elem)
+    return gap(elem)
 
 
 cdef class GapElement(RingElement):
@@ -434,26 +434,26 @@ cdef class GapElement(RingElement):
     .. NOTE::
 
         In order to create ``GapElements`` you should use the
-        ``libgap`` instance (the parent of all Gap elements) to
+        ``gap`` instance (the parent of all Gap elements) to
         convert things into ``GapElement``. You must not create
         ``GapElement`` instances manually.
 
     EXAMPLES::
 
-        >>> libgap(0)
+        >>> gap(0)
         0
 
     If Gap finds an error while evaluating, a :class:`GAPError`
     exception is raised::
 
-        >>> libgap.eval('1/0')
+        >>> gap.eval('1/0')
         Traceback (most recent call last):
         ...
         GAPError: Error, Rational operations: <divisor> must not be zero
 
     Also, a ``GAPError`` is raised if the input is not a simple expression::
 
-        >>> libgap.eval('1; 2; 3')
+        >>> gap.eval('1; 2; 3')
         Traceback (most recent call last):
         ...
         GAPError: can only evaluate a single statement
@@ -465,7 +465,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap.eval('1')
+            >>> gap.eval('1')
             1
         """
         self.value = NULL
@@ -475,7 +475,7 @@ cdef class GapElement(RingElement):
         """
         The ``GapElement`` constructor
 
-        Users must use the ``libgap`` instance to construct instances
+        Users must use the ``gap`` instance to construct instances
         of :class:`GapElement`. Cython programmers must use
         :func:`make_GapElement` factory function.
 
@@ -499,15 +499,15 @@ cdef class GapElement(RingElement):
 
         TESTS::
 
-            >>> n_before = libgap.count_GAP_objects()
-            >>> a = libgap.eval('123')
-            >>> b = libgap.eval('456')
-            >>> c = libgap.eval('CyclicGroup(3)')
-            >>> d = libgap.eval('"a string"')
-            >>> libgap.collect()
+            >>> n_before = gap.count_GAP_objects()
+            >>> a = gap.eval('123')
+            >>> b = gap.eval('456')
+            >>> c = gap.eval('CyclicGroup(3)')
+            >>> d = gap.eval('"a string"')
+            >>> gap.collect()
             >>> del c
-            >>> libgap.collect()
-            >>> n_after = libgap.count_GAP_objects()
+            >>> gap.collect()
+            >>> n_after = gap.count_GAP_objects()
             >>> n_after - n_before
             3
         """
@@ -524,13 +524,13 @@ cdef class GapElement(RingElement):
 
         TESTS::
 
-            >>> pre_refcount = libgap.count_GAP_objects()
+            >>> pre_refcount = gap.count_GAP_objects()
             >>> def f():
-            ...     local_variable = libgap.eval('"This is a new string"')
+            ...     local_variable = gap.eval('"This is a new string"')
             >>> f()
             >>> f()
             >>> f()
-            >>> post_refcount = libgap.count_GAP_objects()
+            >>> post_refcount = gap.count_GAP_objects()
             >>> post_refcount - pre_refcount
             0
         """
@@ -542,15 +542,15 @@ cdef class GapElement(RingElement):
         r"""
         TESTS::
 
-            >>> a = libgap(1)
+            >>> a = gap(1)
             >>> a.__copy__() is a
             True
 
-            >>> a = libgap(1/3)
+            >>> a = gap(1/3)
             >>> a.__copy__() is a
             True
 
-            >>> a = libgap([1,2])
+            >>> a = gap([1,2])
             >>> b = a.__copy__()
             >>> a is b
             False
@@ -560,7 +560,7 @@ cdef class GapElement(RingElement):
             >>> b
             [ 1, 2 ]
 
-            >>> a = libgap([[0,1],[2,3,4]])
+            >>> a = gap([[0,1],[2,3,4]])
             >>> b = a.__copy__()
             >>> b[0][1] = -2
             >>> b
@@ -586,7 +586,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> a = libgap([[0,1],[2,3]])
+            >>> a = gap([[0,1],[2,3]])
             >>> b = a.deepcopy(1)
             >>> b[0,0] = 5
             >>> a
@@ -594,7 +594,7 @@ cdef class GapElement(RingElement):
             >>> b
             [ [ 5, 1 ], [ 2, 3 ] ]
 
-            >>> l = libgap([0,1])
+            >>> l = gap([0,1])
             >>> l.deepcopy(0).IsMutable()
             false
             >>> l.deepcopy(1).IsMutable()
@@ -609,7 +609,7 @@ cdef class GapElement(RingElement):
         r"""
         TESTS::
 
-            >>> a = libgap([[0,1],[2]])
+            >>> a = gap([[0,1],[2]])
             >>> b = deepcopy(a)
             >>> a[0,0] = -1
             >>> a
@@ -634,12 +634,12 @@ cdef class GapElement(RingElement):
         This workaround was motivated in particular by this example from the
         permutation groups implementation::
 
-            >>> CC = libgap.eval('ConjugacyClass(SymmetricGroup([ 1 .. 5 ]), (1,2)(3,4))')
+            >>> CC = gap.eval('ConjugacyClass(SymmetricGroup([ 1 .. 5 ]), (1,2)(3,4))')
             >>> CC.sage()
             Traceback (most recent call last):
             ...
             NotImplementedError: cannot construct equivalent Sage object
-            >>> libgap.eval(str(CC))
+            >>> gap.eval(str(CC))
             (1,2)(3,4)^G
             >>> loads(dumps(CC))
             (1,2)(3,4)^G
@@ -660,17 +660,17 @@ cdef class GapElement(RingElement):
         r"""
         TESTS::
 
-            >>> libgap(1) in libgap.eval('Integers')
+            >>> gap(1) in gap.eval('Integers')
             True
-            >>> 1 in libgap.eval('Integers')
+            >>> 1 in gap.eval('Integers')
             True
 
-            >>> 3 in libgap([1,5,3,2])
+            >>> 3 in gap([1,5,3,2])
             True
-            >>> -5 in libgap([1,5,3,2])
+            >>> -5 in gap([1,5,3,2])
             False
 
-            >>> libgap.eval('Integers') in libgap(1)
+            >>> gap.eval('Integers') in gap(1)
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found! Error, no 1st choice method found for `in' on 2 arguments
@@ -690,7 +690,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> x = libgap(1)
+            >>> x = gap(1)
             >>> x._type_number()
             (0, 'T_INT (integer)')
         """
@@ -705,12 +705,12 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> G = libgap.DihedralGroup(4)
+            >>> G = gap.DihedralGroup(4)
             >>> 'GeneratorsOfMagmaWithInverses' in dir(G)
             True
             >>> 'GeneratorsOfGroup' in dir(G)    # known bug
             False
-            >>> x = libgap(1)
+            >>> x = gap(1)
             >>> len(dir(x)) > 100
             True
         """
@@ -724,7 +724,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> lst = libgap([])
+            >>> lst = gap([])
             >>> 'Add' in dir(lst)    # This is why tab-completion works
             True
             >>> lst.Add(1)    # this is the syntactic sugar
@@ -733,8 +733,8 @@ cdef class GapElement(RingElement):
 
         The above is equivalent to the following calls::
 
-            >>> lst = libgap.eval('[]')
-            >>> libgap.eval('Add') (lst, 1)
+            >>> lst = gap.eval('[]')
+            >>> gap.eval('Add') (lst, 1)
             >>> lst
             [ 1 ]
 
@@ -745,7 +745,7 @@ cdef class GapElement(RingElement):
             ...
             AttributeError: 'Adddddd' is not defined in GAP
 
-            >>> libgap.eval('some_name := 1')
+            >>> gap.eval('some_name := 1')
             1
             >>> lst.some_name
             Traceback (most recent call last):
@@ -769,15 +769,15 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap(0)
+            >>> gap(0)
             0
-            >>> print(libgap.eval(''))
+            >>> print(gap.eval(''))
             None
-            >>> print(libgap('a'))
+            >>> print(gap('a'))
             a
-            >>> print(libgap.eval('SymmetricGroup(3)'))
+            >>> print(gap.eval('SymmetricGroup(3)'))
             SymmetricGroup( [ 1 .. 3 ] )
-            >>> libgap(0).__str__()
+            >>> gap(0).__str__()
             '0'
         """
         if  self.value == NULL:
@@ -792,14 +792,14 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap(0)
+            >>> gap(0)
             0
-            >>> libgap.eval('')
-            >>> libgap('a')
+            >>> gap.eval('')
+            >>> gap('a')
             "a"
-            >>> libgap.eval('SymmetricGroup(3)')
+            >>> gap.eval('SymmetricGroup(3)')
             Sym( [ 1 .. 3 ] )
-            >>> libgap(0)._repr_()
+            >>> gap(0)._repr_()
             '0'
         """
         if  self.value == NULL:
@@ -825,8 +825,8 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> F1 = libgap.FreeGroup(['a'])
-            >>> F2 = libgap.FreeGroup(['a'])
+            >>> F1 = gap.FreeGroup(['a'])
+            >>> F2 = gap.FreeGroup(['a'])
             >>> F1 < F2
             Traceback (most recent call last):
             ...
@@ -860,7 +860,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> x = libgap.FreeGroup(1)
+            >>> x = gap.FreeGroup(1)
             >>> x._assert_compare_by_id()
             Traceback (most recent call last):
             ...
@@ -878,7 +878,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> hash(libgap(123))   # random output
+            >>> hash(gap(123))   # random output
             163512108404620371
         """
         return hash(str(self))
@@ -900,22 +900,22 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> a = libgap(123)
+            >>> a = gap(123)
             >>> a == a
             True
-            >>> b = libgap('string')
+            >>> b = gap('string')
             >>> a._richcmp_(b, 0)
             1
             >>> (a < b) or (a > b)
             True
-            >>> a._richcmp_(libgap(123), 2)
+            >>> a._richcmp_(gap(123), 2)
             True
 
         GAP does not have a comparison function for two ``FreeGroup``
         objects. LibGAP signals this by raising a ``ValueError`` ::
 
-            >>> F1 = libgap.FreeGroup(['a'])
-            >>> F2 = libgap.FreeGroup(['a'])
+            >>> F1 = gap.FreeGroup(['a'])
+            >>> F2 = gap.FreeGroup(['a'])
             >>> F1 < F2
             Traceback (most recent call last):
             ...
@@ -935,13 +935,13 @@ cdef class GapElement(RingElement):
 
         Check that :trac:`26388` is fixed::
 
-            >>> 1 > libgap(1)
+            >>> 1 > gap(1)
             False
-            >>> libgap(1) > 1
+            >>> gap(1) > 1
             False
-            >>> 1 >= libgap(1)
+            >>> 1 >= gap(1)
             True
-            >>> libgap(1) >= 1
+            >>> gap(1) >= 1
             True
         """
         if self._compare_by_id != (<GapElement>other)._compare_by_id:
@@ -969,7 +969,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap(1) == libgap(1)   # indirect doctest
+            >>> gap(1) == gap(1)   # indirect doctest
             True
         """
         if self._compare_by_id:
@@ -991,7 +991,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap(1) < libgap(2)   # indirect doctest
+            >>> gap(1) < gap(2)   # indirect doctest
             True
         """
         if self._compare_by_id:
@@ -1011,14 +1011,14 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> g1 = libgap(1)
-            >>> g2 = libgap(2)
+            >>> g1 = gap(1)
+            >>> g2 = gap(2)
             >>> g1._add_(g2)
             3
             >>> g1 + g2    # indirect doctest
             3
 
-            >>> libgap(1) + libgap.CyclicGroup(2)
+            >>> gap(1) + gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found!
@@ -1040,14 +1040,14 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> g1 = libgap(1)
-            >>> g2 = libgap(2)
+            >>> g1 = gap(1)
+            >>> g2 = gap(2)
             >>> g1._sub_(g2)
             -1
             >>> g1 - g2    # indirect doctest
             -1
 
-            >>> libgap(1) - libgap.CyclicGroup(2)
+            >>> gap(1) - gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found! ...
@@ -1069,14 +1069,14 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> g1 = libgap(3)
-            >>> g2 = libgap(5)
+            >>> g1 = gap(3)
+            >>> g2 = gap(5)
             >>> g1._mul_(g2)
             15
             >>> g1 * g2    # indirect doctest
             15
 
-            >>> libgap(1) * libgap.CyclicGroup(2)
+            >>> gap(1) * gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found!
@@ -1098,20 +1098,20 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> g1 = libgap(3)
-            >>> g2 = libgap(5)
+            >>> g1 = gap(3)
+            >>> g2 = gap(5)
             >>> g1._div_(g2)
             3/5
             >>> g1 / g2    # indirect doctest
             3/5
 
-            >>> libgap(1) / libgap.CyclicGroup(2)
+            >>> gap(1) / gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found!
             Error, no 1st choice method found for `/' on 2 arguments
 
-            >>> libgap(1) / libgap(0)
+            >>> gap(1) / gap(0)
             Traceback (most recent call last):
             ...
             GAPError: Error, Rational operations: <divisor> must not be zero
@@ -1132,12 +1132,12 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> g1 = libgap(5)
-            >>> g2 = libgap(2)
+            >>> g1 = gap(5)
+            >>> g2 = gap(2)
             >>> g1 % g2
             1
 
-            >>> libgap(1) % libgap.CyclicGroup(2)
+            >>> gap(1) % gap.CyclicGroup(2)
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found!
@@ -1159,15 +1159,15 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> r = libgap(5) ^ 2; r
+            >>> r = gap(5) ^ 2; r
             25
             >>> parent(r)
             C library interface to GAP
-            >>> r = 5 ^ libgap(2); r
+            >>> r = 5 ^ gap(2); r
             25
             >>> parent(r)
             C library interface to GAP
-            >>> g, = libgap.CyclicGroup(5).GeneratorsOfGroup()
+            >>> g, = gap.CyclicGroup(5).GeneratorsOfGroup()
             >>> g ^ 5
             <identity> of ...
 
@@ -1175,19 +1175,19 @@ cdef class GapElement(RingElement):
 
         Check that this can be interrupted gracefully::
 
-            >>> a, b = libgap.GL(1000, 3).GeneratorsOfGroup(); g = a * b
+            >>> a, b = gap.GL(1000, 3).GeneratorsOfGroup(); g = a * b
             >>> alarm(0.5); g ^ (2 ^ 10000)
             Traceback (most recent call last):
             ...
             AlarmInterrupt
 
-            >>> libgap.CyclicGroup(2) ^ 2
+            >>> gap.CyclicGroup(2) ^ 2
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found!
             Error, no 1st choice method found for `^' on 2 arguments
 
-            >>> libgap(3) ^ Infinity
+            >>> gap(3) ^ Infinity
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found! Error, no 1st choice
@@ -1206,7 +1206,7 @@ cdef class GapElement(RingElement):
         """
         TESTS::
 
-            >>> libgap(5)._pow_int(int(2))
+            >>> gap(5)._pow_int(int(2))
             25
         """
         return self._pow_(self._parent(other))
@@ -1221,10 +1221,10 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> a = libgap.eval("NormalSubgroups")
+            >>> a = gap.eval("NormalSubgroups")
             >>> a.is_function()
             True
-            >>> a = libgap(2/3)
+            >>> a = gap(2/3)
             >>> a.is_function()
             False
         """
@@ -1240,9 +1240,9 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap.eval('[1, 2,,,, 5]').is_list()
+            >>> gap.eval('[1, 2,,,, 5]').is_list()
             True
-            >>> libgap.eval('3/2').is_list()
+            >>> gap.eval('3/2').is_list()
             False
         """
         return IS_LIST(self.value)
@@ -1257,9 +1257,9 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap.eval('[1, 2,,,, 5]').is_record()
+            >>> gap.eval('[1, 2,,,, 5]').is_record()
             False
-            >>> libgap.eval('rec(a:=1, b:=3)').is_record()
+            >>> gap.eval('rec(a:=1, b:=3)').is_record()
             True
         """
         return IS_REC(self.value)
@@ -1274,7 +1274,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap(True).is_bool()
+            >>> gap(True).is_bool()
             True
         """
         libgap = self.parent()
@@ -1292,7 +1292,7 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap('this is a string').is_string()
+            >>> gap('this is a string').is_string()
             True
         """
         return IS_STRING(self.value)
@@ -1307,11 +1307,11 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> perm = libgap.PermList( libgap([1,5,2,3,4]) );  perm
+            >>> perm = gap.PermList( gap([1,5,2,3,4]) );  perm
             (2,5,4,3)
             >>> perm.is_permutation()
             True
-            >>> libgap('this is a string').is_permutation()
+            >>> gap('this is a string').is_permutation()
             False
         """
         return (TNUM_OBJ(self.value) == T_PERM2 or
@@ -1323,37 +1323,37 @@ cdef class GapElement(RingElement):
 
         EXAMPLES::
 
-            >>> libgap(1).sage()
+            >>> gap(1).sage()
             1
             >>> type(_)
             <type 'sage.rings.integer.Integer'>
 
-            >>> libgap(3/7).sage()
+            >>> gap(3/7).sage()
             3/7
             >>> type(_)
             <type 'sage.rings.rational.Rational'>
 
-            >>> libgap.eval('5 + 7*E(3)').sage()
+            >>> gap.eval('5 + 7*E(3)').sage()
             7*zeta3 + 5
 
-            >>> libgap(Infinity).sage()
+            >>> gap(Infinity).sage()
             +Infinity
-            >>> libgap(-Infinity).sage()
+            >>> gap(-Infinity).sage()
             -Infinity
 
-            >>> libgap(True).sage()
+            >>> gap(True).sage()
             True
-            >>> libgap(False).sage()
+            >>> gap(False).sage()
             False
             >>> type(_)
             <... 'bool'>
 
-            >>> libgap('this is a string').sage()
+            >>> gap('this is a string').sage()
             'this is a string'
             >>> type(_)
             <... 'str'>
 
-            >>> x = libgap.Integers.Indeterminate("x")
+            >>> x = gap.Integers.Indeterminate("x")
 
             >>> p = x^2 - 2*x + 3
             >>> p.sage()
@@ -1377,7 +1377,7 @@ cdef class GapElement(RingElement):
 
         Check :trac:`30496`::
 
-            >>> x = libgap.Integers.Indeterminate("x")
+            >>> x = gap.Integers.Indeterminate("x")
 
             >>> p = x^2 - 2*x
             >>> p.sage()
@@ -1439,7 +1439,7 @@ cdef GapElement_Integer make_GapElement_Integer(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap(123)
+        >>> gap(123)
         123
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Integer'>
@@ -1455,7 +1455,7 @@ cdef class GapElement_Integer(GapElement):
 
     EXAMPLES::
 
-        >>> i = libgap(123)
+        >>> i = gap(123)
         >>> type(i)
         <type 'sage.libs.gap.element.GapElement_Integer'>
         >>> ZZ(i)
@@ -1476,7 +1476,7 @@ cdef class GapElement_Integer(GapElement):
 
         EXAMPLES::
 
-            >>> n = libgap(1)
+            >>> n = gap(1)
             >>> type(n)
             <type 'sage.libs.gap.element.GapElement_Integer'>
             >>> n.is_C_int()
@@ -1484,7 +1484,7 @@ cdef class GapElement_Integer(GapElement):
             >>> n.IsInt()
             true
 
-            >>> N = libgap(2^130)
+            >>> N = gap(2^130)
             >>> type(N)
             <type 'sage.libs.gap.element.GapElement_Integer'>
             >>> N.is_C_int()
@@ -1498,9 +1498,9 @@ cdef class GapElement_Integer(GapElement):
         r"""
         EXAMPLES::
 
-            >>> QQ(libgap(1))  # indirect doctest
+            >>> QQ(gap(1))  # indirect doctest
             1
-            >>> QQ(libgap(-2**200)) == -2**200
+            >>> QQ(gap(-2**200)) == -2**200
             True
         """
         return self.sage(ring=QQ)
@@ -1518,24 +1518,24 @@ cdef class GapElement_Integer(GapElement):
 
         EXAMPLES::
 
-            >>> libgap([ 1, 3, 4 ]).sage()
+            >>> gap([ 1, 3, 4 ]).sage()
             [1, 3, 4]
             >>> all( x in ZZ for x in _ )
             True
 
-            >>> libgap(132).sage(ring=IntegerModRing(13))
+            >>> gap(132).sage(ring=IntegerModRing(13))
             2
             >>> parent(_)
             Ring of integers modulo 13
 
         TESTS::
 
-            >>> large = libgap.eval('2^130');  large
+            >>> large = gap.eval('2^130');  large
             1361129467683753853853498429727072845824
             >>> large.sage()
             1361129467683753853853498429727072845824
 
-            >>> huge = libgap.eval('10^9999');  huge     # gap abbreviates very long ints
+            >>> huge = gap.eval('10^9999');  huge     # gap abbreviates very long ints
             <integer 100...000 (10000 digits)>
             >>> huge.sage().ndigits()
             10000
@@ -1558,12 +1558,12 @@ cdef class GapElement_Integer(GapElement):
         r"""
         TESTS::
 
-            >>> int(libgap(3))
+            >>> int(gap(3))
             3
             >>> type(_)
             <type 'int'>
 
-            >>> int(libgap(2)**128)
+            >>> int(gap(2)**128)
             340282366920938463463374607431768211456L
             >>> type(_)  # py2
             <type 'long'>
@@ -1579,7 +1579,7 @@ cdef class GapElement_Integer(GapElement):
         Check that gap integers can be used as indices (:trac:`23878`)::
 
             >>> s = 'abcd'
-            >>> s[libgap(1)]
+            >>> s[gap(1)]
             'b'
         """
         return int(self)
@@ -1595,7 +1595,7 @@ cdef GapElement_Float make_GapElement_Float(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap(123.5)
+        >>> gap(123.5)
         123.5
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Float'>
@@ -1610,7 +1610,7 @@ cdef class GapElement_Float(GapElement):
 
     EXAMPLES::
 
-        >>> i = libgap(123.5)
+        >>> i = gap(123.5)
         >>> type(i)
         <type 'sage.libs.gap.element.GapElement_Float'>
         >>> RDF(i)
@@ -1621,7 +1621,7 @@ cdef class GapElement_Float(GapElement):
     TESTS::
 
         >>> a = RDF.random_element()
-        >>> libgap(a).sage() == a
+        >>> gap(a).sage() == a
         True
     """
     def sage(self, ring=None):
@@ -1637,7 +1637,7 @@ cdef class GapElement_Float(GapElement):
 
         EXAMPLES::
 
-            >>> a = libgap.eval("Float(3.25)").sage()
+            >>> a = gap.eval("Float(3.25)").sage()
             >>> a
             3.25
             >>> parent(a)
@@ -1651,7 +1651,7 @@ cdef class GapElement_Float(GapElement):
         r"""
         TESTS::
 
-            >>> float(libgap.eval("Float(3.5)"))
+            >>> float(gap.eval("Float(3.5)"))
             3.5
         """
         return VAL_MACFLOAT(self.value)
@@ -1669,7 +1669,7 @@ cdef GapElement_IntegerMod make_GapElement_IntegerMod(parent, Obj obj):
     EXAMPLES::
 
         >>> n = IntegerModRing(123)(13)
-        >>> libgap(n)
+        >>> gap(n)
         ZmodnZObj( 13, 123 )
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_IntegerMod'>
@@ -1685,7 +1685,7 @@ cdef class GapElement_IntegerMod(GapElement):
     EXAMPLES::
 
         >>> n = IntegerModRing(123)(13)
-        >>> i = libgap(n)
+        >>> i = gap(n)
         >>> type(i)
         <type 'sage.libs.gap.element.GapElement_IntegerMod'>
     """
@@ -1701,7 +1701,7 @@ cdef class GapElement_IntegerMod(GapElement):
 
         EXAMPLES::
 
-            >>> n = libgap.eval('One(ZmodnZ(123)) * 13')
+            >>> n = gap.eval('One(ZmodnZ(123)) * 13')
             >>> n.lift()
             13
             >>> type(_)
@@ -1726,7 +1726,7 @@ cdef class GapElement_IntegerMod(GapElement):
 
         EXAMPLES::
 
-            >>> n = libgap.eval('One(ZmodnZ(123)) * 13')
+            >>> n = gap.eval('One(ZmodnZ(123)) * 13')
             >>> n.sage()
             13
             >>> parent(_)
@@ -1749,7 +1749,7 @@ cdef GapElement_FiniteField make_GapElement_FiniteField(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap.eval('Z(5)^2')
+        >>> gap.eval('Z(5)^2')
         Z(5)^2
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_FiniteField'>
@@ -1765,7 +1765,7 @@ cdef class GapElement_FiniteField(GapElement):
 
     EXAMPLES::
 
-        >>> libgap.eval('Z(5)^2')
+        >>> gap.eval('Z(5)^2')
         Z(5)^2
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_FiniteField'>
@@ -1782,13 +1782,13 @@ cdef class GapElement_FiniteField(GapElement):
 
         EXAMPLES::
 
-            >>> n = libgap.eval('Z(5)^2')
+            >>> n = gap.eval('Z(5)^2')
             >>> n.lift()
             4
             >>> type(_)
             <type 'sage.libs.gap.element.GapElement_Integer'>
 
-            >>> n = libgap.eval('Z(25)')
+            >>> n = gap.eval('Z(25)')
             >>> n.lift()
             Traceback (most recent call last):
             TypeError: not in prime subfield
@@ -1818,7 +1818,7 @@ cdef class GapElement_FiniteField(GapElement):
 
         EXAMPLES::
 
-            >>> n = libgap.eval('Z(25)^2')
+            >>> n = gap.eval('Z(25)^2')
             >>> n.sage()
             a + 3
             >>> parent(_)
@@ -1831,7 +1831,7 @@ cdef class GapElement_FiniteField(GapElement):
 
         TESTS::
 
-            >>> n = libgap.eval('Z(2^4)^2 + Z(2^4)^1 + Z(2^4)^0')
+            >>> n = gap.eval('Z(2^4)^2 + Z(2^4)^1 + Z(2^4)^0')
             >>> n
             Z(2^2)^2
             >>> n.sage()
@@ -1863,7 +1863,7 @@ cdef class GapElement_FiniteField(GapElement):
 
         Check that :trac:`23153` is fixed::
 
-            >>> n = libgap.eval('Z(2^4)^2 + Z(2^4)^1 + Z(2^4)^0')
+            >>> n = gap.eval('Z(2^4)^2 + Z(2^4)^1 + Z(2^4)^0')
             >>> n.sage(ring=GF(2^4, 'a'))
             a^2 + a + 1
         """
@@ -1891,7 +1891,7 @@ cdef class GapElement_FiniteField(GapElement):
         r"""
         TESTS::
 
-            >>> int(libgap.eval("Z(53)"))
+            >>> int(gap.eval("Z(53)"))
             2
         """
         return int(self.Int())
@@ -1900,7 +1900,7 @@ cdef class GapElement_FiniteField(GapElement):
         r"""
         TESTS::
 
-            >>> ZZ(libgap.eval("Z(53)"))
+            >>> ZZ(gap.eval("Z(53)"))
             2
         """
         return R(self.Int())
@@ -1917,7 +1917,7 @@ cdef GapElement_Cyclotomic make_GapElement_Cyclotomic(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap.eval('E(3)')
+        >>> gap.eval('E(3)')
         E(3)
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Cyclotomic'>
@@ -1933,7 +1933,7 @@ cdef class GapElement_Cyclotomic(GapElement):
 
     EXAMPLES::
 
-        >>> libgap.eval('E(3)')
+        >>> gap.eval('E(3)')
         E(3)
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Cyclotomic'>
@@ -1955,7 +1955,7 @@ cdef class GapElement_Cyclotomic(GapElement):
 
         EXAMPLES::
 
-            >>> n = libgap.eval('E(3)')
+            >>> n = gap.eval('E(3)')
             >>> n.sage()
             zeta3
             >>> parent(_)
@@ -1964,18 +1964,18 @@ cdef class GapElement_Cyclotomic(GapElement):
             >>> n.sage(ring=CyclotomicField(6))
             zeta6 - 1
 
-            >>> libgap.E(3).sage(ring=CyclotomicField(3))
+            >>> gap.E(3).sage(ring=CyclotomicField(3))
             zeta3
-            >>> libgap.E(3).sage(ring=CyclotomicField(6))
+            >>> gap.E(3).sage(ring=CyclotomicField(6))
             zeta6 - 1
 
         TESTS:
 
         Check that :trac:`15204` is fixed::
 
-            >>> libgap.E(3).sage(ring=UniversalCyclotomicField())
+            >>> gap.E(3).sage(ring=UniversalCyclotomicField())
             E(3)
-            >>> libgap.E(3).sage(ring=CC)
+            >>> gap.E(3).sage(ring=CC)
             -0.500000000000000 + 0.866025403784439*I
         """
         if ring is None:
@@ -2004,7 +2004,7 @@ cdef GapElement_Rational make_GapElement_Rational(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap(123/456)
+        >>> gap(123/456)
         41/152
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Rational'>
@@ -2020,7 +2020,7 @@ cdef class GapElement_Rational(GapElement):
 
     EXAMPLES::
 
-        >>> r = libgap(123/456)
+        >>> r = gap(123/456)
         >>> type(r)
         <type 'sage.libs.gap.element.GapElement_Rational'>
     """
@@ -2028,10 +2028,10 @@ cdef class GapElement_Rational(GapElement):
         r"""
         EXAMPLES::
 
-            >>> r = libgap(-1/3)
+            >>> r = gap(-1/3)
             >>> QQ(r)  # indirect doctest
             -1/3
-            >>> QQ(libgap(2**300 / 3**300)) == 2**300 / 3**300
+            >>> QQ(gap(2**300 / 3**300)) == 2**300 / 3**300
             True
         """
         return self.sage(ring=QQ)
@@ -2051,7 +2051,7 @@ cdef class GapElement_Rational(GapElement):
 
         EXAMPLES::
 
-            >>> r = libgap(123/456);  r
+            >>> r = gap(123/456);  r
             41/152
             >>> type(_)
             <type 'sage.libs.gap.element.GapElement_Rational'>
@@ -2077,7 +2077,7 @@ cdef GapElement_Ring make_GapElement_Ring(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap(GF(5))
+        >>> gap(GF(5))
         GF(5)
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Ring'>
@@ -2093,7 +2093,7 @@ cdef class GapElement_Ring(GapElement):
 
     EXAMPLES::
 
-        >>> i = libgap(ZZ)
+        >>> i = gap(ZZ)
         >>> type(i)
         <type 'sage.libs.gap.element.GapElement_Ring'>
     """
@@ -2104,7 +2104,7 @@ cdef class GapElement_Ring(GapElement):
 
         EXAMPLES::
 
-            >>> libgap.eval('Integers').ring_integer()
+            >>> gap.eval('Integers').ring_integer()
             Integer Ring
         """
         return ZZ
@@ -2115,7 +2115,7 @@ cdef class GapElement_Ring(GapElement):
 
         EXAMPLES::
 
-            >>> libgap.eval('Rationals').ring_rational()
+            >>> gap.eval('Rationals').ring_rational()
             Rational Field
         """
         return ZZ.fraction_field()
@@ -2126,7 +2126,7 @@ cdef class GapElement_Ring(GapElement):
 
         EXAMPLES::
 
-            >>> libgap.eval('ZmodnZ(15)').ring_integer_mod()
+            >>> gap.eval('ZmodnZ(15)').ring_integer_mod()
             Ring of integers modulo 15
         """
         characteristic = self.Characteristic().sage()
@@ -2139,7 +2139,7 @@ cdef class GapElement_Ring(GapElement):
 
         EXAMPLES::
 
-            >>> libgap.GF(3,2).ring_finite_field(var='A')
+            >>> gap.GF(3,2).ring_finite_field(var='A')
             Finite Field in A of size 3^2
         """
         size = self.Size().sage()
@@ -2153,7 +2153,7 @@ cdef class GapElement_Ring(GapElement):
 
         EXAMPLES::
 
-            >>> libgap.CyclotomicField(6).ring_cyclotomic()
+            >>> gap.CyclotomicField(6).ring_cyclotomic()
             Cyclotomic Field of order 3 and degree 2
         """
         conductor = self.Conductor()
@@ -2166,11 +2166,11 @@ cdef class GapElement_Ring(GapElement):
 
         EXAMPLES::
 
-            >>> B = libgap(QQ['x'])
+            >>> B = gap(QQ['x'])
             >>> B.ring_polynomial()
             Univariate Polynomial Ring in x over Rational Field
 
-            >>> B = libgap(ZZ['x','y'])
+            >>> B = gap(ZZ['x','y'])
             >>> B.ring_polynomial()
             Multivariate Polynomial Ring in x, y over Integer Ring
         """
@@ -2195,22 +2195,22 @@ cdef class GapElement_Ring(GapElement):
 
         EXAMPLES::
 
-            >>> libgap.eval('Integers').sage()
+            >>> gap.eval('Integers').sage()
             Integer Ring
 
-            >>> libgap.eval('Rationals').sage()
+            >>> gap.eval('Rationals').sage()
             Rational Field
 
-            >>> libgap.eval('ZmodnZ(15)').sage()
+            >>> gap.eval('ZmodnZ(15)').sage()
             Ring of integers modulo 15
 
-            >>> libgap.GF(3,2).sage(var='A')
+            >>> gap.GF(3,2).sage(var='A')
             Finite Field in A of size 3^2
 
-            >>> libgap.CyclotomicField(6).sage()
+            >>> gap.CyclotomicField(6).sage()
             Cyclotomic Field of order 3 and degree 2
 
-            >>> libgap(QQ['x','y']).sage()
+            >>> gap(QQ['x','y']).sage()
             Multivariate Polynomial Ring in x, y over Rational Field
         """
         if self.IsField():
@@ -2240,7 +2240,7 @@ cdef GapElement_Boolean make_GapElement_Boolean(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap(True)
+        >>> gap(True)
         true
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Boolean'>
@@ -2256,7 +2256,7 @@ cdef class GapElement_Boolean(GapElement):
 
     EXAMPLES::
 
-        >>> b = libgap(True)
+        >>> b = gap(True)
         >>> type(b)
         <type 'sage.libs.gap.element.GapElement_Boolean'>
     """
@@ -2273,7 +2273,7 @@ cdef class GapElement_Boolean(GapElement):
 
         EXAMPLES::
 
-            >>> b = libgap.eval('true');  b
+            >>> b = gap.eval('true');  b
             true
             >>> type(_)
             <type 'sage.libs.gap.element.GapElement_Boolean'>
@@ -2282,7 +2282,7 @@ cdef class GapElement_Boolean(GapElement):
             >>> type(_)
             <... 'bool'>
 
-            >>> libgap.eval('fail')
+            >>> gap.eval('fail')
             fail
             >>> _.sage()
             Traceback (most recent call last):
@@ -2307,7 +2307,7 @@ cdef class GapElement_Boolean(GapElement):
 
         EXAMPLES::
 
-            >>> gap_bool = [libgap.eval('true'), libgap.eval('false'), libgap.eval('fail')]
+            >>> gap_bool = [gap.eval('true'), gap.eval('false'), gap.eval('fail')]
             >>> for x in gap_bool:
             ...     if x:     # this calls __nonzero__
             ...         print("{} {}".format(x, type(x)))
@@ -2332,7 +2332,7 @@ cdef GapElement_String make_GapElement_String(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap('this is a string')
+        >>> gap('this is a string')
         "this is a string"
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_String'>
@@ -2348,7 +2348,7 @@ cdef class GapElement_String(GapElement):
 
     EXAMPLES::
 
-        >>> s = libgap('string')
+        >>> s = gap('string')
         >>> type(s)
         <type 'sage.libs.gap.element.GapElement_String'>
         >>> s
@@ -2366,7 +2366,7 @@ cdef class GapElement_String(GapElement):
 
         EXAMPLES::
 
-            >>> s = libgap.eval(' "string" '); s
+            >>> s = gap.eval(' "string" '); s
             "string"
             >>> type(_)
             <type 'sage.libs.gap.element.GapElement_String'>
@@ -2402,7 +2402,7 @@ cdef GapElement_Function make_GapElement_Function(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap.CycleLength
+        >>> gap.CycleLength
         <Gap function "CycleLength">
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Function'>
@@ -2418,7 +2418,7 @@ cdef class GapElement_Function(GapElement):
 
     EXAMPLES::
 
-        >>> f = libgap.Cycles
+        >>> f = gap.Cycles
         >>> type(f)
         <type 'sage.libs.gap.element.GapElement_Function'>
     """
@@ -2434,7 +2434,7 @@ cdef class GapElement_Function(GapElement):
 
         EXAMPLES::
 
-            >>> libgap.Orbits
+            >>> gap.Orbits
             <Gap function "Orbits">
         """
         libgap = self.parent()
@@ -2459,9 +2459,9 @@ cdef class GapElement_Function(GapElement):
 
         EXAMPLES::
 
-            >>> a = libgap.NormalSubgroups
-            >>> b = libgap.SymmetricGroup(4)
-            >>> libgap.collect()
+            >>> a = gap.NormalSubgroups
+            >>> b = gap.SymmetricGroup(4)
+            >>> gap.collect()
             >>> a
             <Gap function "NormalSubgroups">
             >>> b
@@ -2472,20 +2472,20 @@ cdef class GapElement_Function(GapElement):
              Alt( [ 1 .. 4 ] ),
              Group([ (1,4)(2,3), (1,2)(3,4) ])]
 
-            >>> libgap.eval("a := NormalSubgroups")
+            >>> gap.eval("a := NormalSubgroups")
             <Gap function "NormalSubgroups">
-            >>> libgap.eval("b := SymmetricGroup(4)")
+            >>> gap.eval("b := SymmetricGroup(4)")
             Sym( [ 1 .. 4 ] )
-            >>> libgap.collect()
-            >>> sorted(libgap.eval('a') (libgap.eval('b')))
+            >>> gap.collect()
+            >>> sorted(gap.eval('a') (gap.eval('b')))
             [Group(()),
              Sym( [ 1 .. 4 ] ),
              Alt( [ 1 .. 4 ] ),
              Group([ (1,4)(2,3), (1,2)(3,4) ])]
 
-            >>> a = libgap.eval('a')
-            >>> b = libgap.eval('b')
-            >>> libgap.collect()
+            >>> a = gap.eval('a')
+            >>> b = gap.eval('b')
+            >>> gap.collect()
             >>> sorted(a(b))
             [Group(()),
              Sym( [ 1 .. 4 ] ),
@@ -2494,7 +2494,7 @@ cdef class GapElement_Function(GapElement):
 
         Not every ``GapElement`` is callable::
 
-            >>> f = libgap(3)
+            >>> f = gap(3)
             >>> f()
             Traceback (most recent call last):
             ...
@@ -2502,7 +2502,7 @@ cdef class GapElement_Function(GapElement):
 
         We illustrate appending to a list which returns None::
 
-            >>> a = libgap([]); a
+            >>> a = gap([]); a
             [  ]
             >>> a.Add(5); a
             [ 5 ]
@@ -2511,10 +2511,10 @@ cdef class GapElement_Function(GapElement):
 
         TESTS::
 
-            >>> s = libgap.Sum
-            >>> s(libgap([1,2]))
+            >>> s = gap.Sum
+            >>> s(gap([1,2]))
             3
-            >>> s(libgap(1), libgap(2))
+            >>> s(gap(1), gap(2))
             Traceback (most recent call last):
             ...
             GAPError: Error, no method found!
@@ -2523,16 +2523,16 @@ cdef class GapElement_Function(GapElement):
             >>> for i in range(0,100):
             ...     rnd = [ randint(-10,10) for i in range(0,randint(0,7)) ]
             ...     # compute the sum in GAP
-            ...     _ = libgap.Sum(rnd)
+            ...     _ = gap.Sum(rnd)
             ...     try:
-            ...         libgap.Sum(*rnd)
+            ...         gap.Sum(*rnd)
             ...         print('This should have triggered a ValueError')
             ...         print('because Sum needs a list as argument')
             ...     except ValueError:
             ...         pass
 
-            >>> libgap_exec = libgap.eval("Exec")
-            >>> libgap_exec('echo hello from the shell')
+            >>> gap_exec = gap.eval("Exec")
+            >>> gap_exec('echo hello from the shell')
             hello from the shell
         """
         cdef Obj result = NULL
@@ -2601,7 +2601,7 @@ cdef class GapElement_Function(GapElement):
 
         EXAMPLES::
 
-            >>> f = libgap.CyclicGroup
+            >>> f = gap.CyclicGroup
             >>> 'constructs  the  cyclic  group' in f.__doc__
             True
 
@@ -2623,7 +2623,7 @@ cdef GapElement_MethodProxy make_GapElement_MethodProxy(parent, Obj function, Ga
     Turn a Gap C rec object (of type ``Obj``) into a Cython ``GapElement_Record``.
 
     This class implement syntactic sugar so that you can write
-    ``gapelement.f()`` instead of ``libgap.f(gapelement)`` for any GAP
+    ``gapelement.f()`` instead of ``gap.f(gapelement)`` for any GAP
     function ``f``.
 
     INPUT:
@@ -2640,7 +2640,7 @@ cdef GapElement_MethodProxy make_GapElement_MethodProxy(parent, Obj function, Ga
 
     EXAMPLES::
 
-        >>> lst = libgap([])
+        >>> lst = gap([])
         >>> type( lst.Add )
         <type 'sage.libs.gap.element.GapElement_MethodProxy'>
     """
@@ -2661,7 +2661,7 @@ cdef class GapElement_MethodProxy(GapElement_Function):
 
     EXAMPLES::
 
-        >>> lst = libgap([])
+        >>> lst = gap([])
         >>> lst.Add
         <Gap function "Add">
         >>> type(_)
@@ -2691,7 +2691,7 @@ cdef class GapElement_MethodProxy(GapElement_Function):
 
         EXAMPLES::
 
-            >>> lst = libgap.eval('[1,,3]')
+            >>> lst = gap.eval('[1,,3]')
             >>> lst.Add.__call__(4)
             >>> lst.Add(5)
             >>> lst
@@ -2714,7 +2714,7 @@ cdef GapElement_List make_GapElement_List(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap([0, 2, 3])
+        >>> gap([0, 2, 3])
         [ 0, 2, 3 ]
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_List'>
@@ -2736,7 +2736,7 @@ cdef class GapElement_List(GapElement):
 
     EXAMPLES::
 
-        >>> lst = libgap.SymmetricGroup(3).List(); lst
+        >>> lst = gap.SymmetricGroup(3).List(); lst
         [ (), (1,3), (1,2,3), (2,3), (1,3,2), (1,2) ]
         >>> type(lst)
         <type 'sage.libs.gap.element.GapElement_List'>
@@ -2766,10 +2766,10 @@ cdef class GapElement_List(GapElement):
 
         EXAMPLES::
 
-            >>> lst = libgap.eval('[1,,,4]')
+            >>> lst = gap.eval('[1,,,4]')
             >>> bool(lst)
             True
-            >>> lst = libgap.eval('[]')
+            >>> lst = gap.eval('[]')
             >>> bool(lst)
             False
         """
@@ -2785,7 +2785,7 @@ cdef class GapElement_List(GapElement):
 
         EXAMPLES::
 
-            >>> lst = libgap.eval('[1,,,4]')   # a sparse list
+            >>> lst = gap.eval('[1,,,4]')   # a sparse list
             >>> len(lst)
             4
         """
@@ -2808,11 +2808,11 @@ cdef class GapElement_List(GapElement):
 
         EXAMPLES::
 
-            >>> lst = libgap.eval('["first",,,"last"]')   # a sparse list
+            >>> lst = gap.eval('["first",,,"last"]')   # a sparse list
             >>> lst[0]
             "first"
 
-            >>> l = libgap.eval('[ [0, 1], [2, 3] ]')
+            >>> l = gap.eval('[ [0, 1], [2, 3] ]')
             >>> l[0,0]
             0
             >>> l[0,1]
@@ -2857,7 +2857,7 @@ cdef class GapElement_List(GapElement):
 
         EXAMPLES::
 
-            >>> l = libgap.eval('[0, 1]')
+            >>> l = gap.eval('[0, 1]')
             >>> l
             [ 0, 1 ]
             >>> l[0] = 3
@@ -2872,7 +2872,7 @@ cdef class GapElement_List(GapElement):
 
         This function also handles multi-indices::
 
-            >>> l = libgap.eval('[[[0,1],[2,3]],[[4,5], [6,7]]]')
+            >>> l = gap.eval('[[[0,1],[2,3]],[[4,5], [6,7]]]')
             >>> l[0,1,0] = -18
             >>> l
             [ [ [ 0, 1 ], [ -18, 3 ] ], [ [ 4, 5 ], [ 6, 7 ] ] ]
@@ -2883,7 +2883,7 @@ cdef class GapElement_List(GapElement):
 
         Assignment to immutable objects gives error::
 
-            >>> l = libgap([0,1])
+            >>> l = gap([0,1])
             >>> u = l.deepcopy(0)
             >>> u[0] = 5
             Traceback (most recent call last):
@@ -2892,7 +2892,7 @@ cdef class GapElement_List(GapElement):
 
         TESTS::
 
-            >>> m = libgap.eval('[[0,0],[0,0]]')
+            >>> m = gap.eval('[[0,0],[0,0]]')
             >>> m[0,0] = 1
             >>> m[0,1] = 2
             >>> m[1,0] = 3
@@ -2940,7 +2940,7 @@ cdef class GapElement_List(GapElement):
 
         EXAMPLES::
 
-            >>> libgap([ 1, 3, 4 ]).sage()
+            >>> gap([ 1, 3, 4 ]).sage()
             [1, 3, 4]
             >>> all( x in ZZ for x in _ )
             True
@@ -2962,9 +2962,9 @@ cdef class GapElement_List(GapElement):
 
         EXAMPLES::
 
-            >>> F = libgap.GF(4)
+            >>> F = gap.GF(4)
             >>> a = F.PrimitiveElement()
-            >>> m = libgap([[a,a^0],[0*a,a^2]]); m
+            >>> m = gap([[a,a^0],[0*a,a^2]]); m
             [ [ Z(2^2), Z(2)^0 ],
               [ 0*Z(2), Z(2^2)^2 ] ]
             >>> m.IsMatrix()
@@ -2976,7 +2976,7 @@ cdef class GapElement_List(GapElement):
             [    B     1]
             [    0 B + 1]
 
-            >>> M = libgap.eval('SL(2,GF(5))').GeneratorsOfGroup()[1]
+            >>> M = gap.eval('SL(2,GF(5))').GeneratorsOfGroup()[1]
             >>> type(M)
             <type 'sage.libs.gap.element.GapElement_List'>
             >>> M[0][0]
@@ -3015,9 +3015,9 @@ cdef class GapElement_List(GapElement):
 
         EXAMPLES::
 
-            >>> F = libgap.GF(4)
+            >>> F = gap.GF(4)
             >>> a = F.PrimitiveElement()
-            >>> m = libgap([0*a, a, a^3, a^2]); m
+            >>> m = gap([0*a, a, a^3, a^2]); m
             [ 0*Z(2), Z(2^2), Z(2)^0, Z(2^2)^2 ]
             >>> type(m)
             <type 'sage.libs.gap.element.GapElement_List'>
@@ -3052,7 +3052,7 @@ cdef GapElement_Permutation make_GapElement_Permutation(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap.eval('(1,3,2)(4,5,8)')
+        >>> gap.eval('(1,3,2)(4,5,8)')
         (1,3,2)(4,5,8)
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Permutation'>
@@ -3072,7 +3072,7 @@ cdef class GapElement_Permutation(GapElement):
 
     EXAMPLES::
 
-        >>> perm = libgap.eval('(1,5,2)(4,3,8)')
+        >>> perm = gap.eval('(1,5,2)(4,3,8)')
         >>> type(perm)
         <type 'sage.libs.gap.element.GapElement_Permutation'>
     """
@@ -3086,7 +3086,7 @@ cdef class GapElement_Permutation(GapElement):
 
         EXAMPLES::
 
-            >>> perm_gap = libgap.eval('(1,5,2)(4,3,8)');  perm_gap
+            >>> perm_gap = gap.eval('(1,5,2)(4,3,8)');  perm_gap
             (1,5,2)(3,8,4)
             >>> perm_gap.sage()
             [5, 1, 8, 3, 2, 6, 7, 4]
@@ -3117,7 +3117,7 @@ cdef GapElement_Record make_GapElement_Record(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> libgap.eval('rec(a:=0, b:=2, c:=3)')
+        >>> gap.eval('rec(a:=0, b:=2, c:=3)')
         rec( a := 0, b := 2, c := 3 )
         >>> type(_)
         <type 'sage.libs.gap.element.GapElement_Record'>
@@ -3133,7 +3133,7 @@ cdef class GapElement_Record(GapElement):
 
     EXAMPLES::
 
-        >>> rec = libgap.eval('rec(a:=123, b:=456)')
+        >>> rec = gap.eval('rec(a:=123, b:=456)')
         >>> type(rec)
         <type 'sage.libs.gap.element.GapElement_Record'>
         >>> len(rec)
@@ -3166,7 +3166,7 @@ cdef class GapElement_Record(GapElement):
 
         EXAMPLES::
 
-            >>> rec = libgap.eval('rec(a:=123, b:=456, S3:=SymmetricGroup(3))')
+            >>> rec = gap.eval('rec(a:=123, b:=456, S3:=SymmetricGroup(3))')
             >>> len(rec)
             3
         """
@@ -3182,7 +3182,7 @@ cdef class GapElement_Record(GapElement):
 
         EXAMPLES::
 
-            >>> rec = libgap.eval('rec(a:=123, b:=456)')
+            >>> rec = gap.eval('rec(a:=123, b:=456)')
             >>> iter = rec.__iter__()
             >>> type(iter)
             <type 'sage.libs.gap.element.GapElement_RecordIterator'>
@@ -3207,7 +3207,7 @@ cdef class GapElement_Record(GapElement):
 
         EXAMPLES::
 
-            >>> rec = libgap.eval('rec(first:=123, second:=456)')
+            >>> rec = gap.eval('rec(first:=123, second:=456)')
             >>> rec.record_name_to_index('first')   # random output
             1812L
             >>> rec.record_name_to_index('no_such_name') # random output
@@ -3230,7 +3230,7 @@ cdef class GapElement_Record(GapElement):
 
         EXAMPLES::
 
-            >>> rec = libgap.eval('rec(first:=123, second:=456)')
+            >>> rec = gap.eval('rec(first:=123, second:=456)')
             >>> rec['first']
             123
         """
@@ -3251,12 +3251,12 @@ cdef class GapElement_Record(GapElement):
 
         EXAMPLES::
 
-            >>> libgap.eval('rec(a:=1, b:=2)').sage()
+            >>> gap.eval('rec(a:=1, b:=2)').sage()
             {'a': 1, 'b': 2}
             >>> all( isinstance(key,str) and val in ZZ for key,val in _.items() )
             True
 
-            >>> rec = libgap.eval('rec(a:=123, b:=456, Sym3:=SymmetricGroup(3))')
+            >>> rec = gap.eval('rec(a:=123, b:=456, Sym3:=SymmetricGroup(3))')
             >>> rec.sage()
             {'Sym3': NotImplementedError('cannot construct equivalent Sage object'...),
              'a': 123,
@@ -3285,7 +3285,7 @@ cdef class GapElement_RecordIterator(object):
 
     EXAMPLES::
 
-        >>> rec = libgap.eval('rec(a:=123, b:=456)')
+        >>> rec = gap.eval('rec(a:=123, b:=456)')
         >>> sorted(rec)
         [('a', 123), ('b', 456)]
         >>> dict(rec)
@@ -3302,7 +3302,7 @@ cdef class GapElement_RecordIterator(object):
 
         EXAMPLES::
 
-            >>> libgap.eval('rec(a:=123, b:=456)')
+            >>> gap.eval('rec(a:=123, b:=456)')
             rec( a := 123, b := 456 )
         """
         self.rec = rec
@@ -3320,7 +3320,7 @@ cdef class GapElement_RecordIterator(object):
 
         EXAMPLES::
 
-            >>> rec = libgap.eval('rec(a:=123, b:=456)')
+            >>> rec = gap.eval('rec(a:=123, b:=456)')
             >>> iter = rec.__iter__()
             >>> a = iter.__next__()
             >>> b = next(iter)
