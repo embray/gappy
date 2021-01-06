@@ -1163,6 +1163,4 @@ class Gap(Parent):
             raise RuntimeError('Garbage collection failed.')
 
 
-# TODO: Global libgap instance is disabled for now since it causes test collector
-# to segfault; it will probably be reworked later anyways.
-#libgap = Gap()
+libgap = Gap()
