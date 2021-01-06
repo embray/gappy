@@ -324,9 +324,9 @@ cdef GapObj make_any_gap_element(parent, Obj obj):
         [ "aa", "ab", "ac", "bb", "bc", "cc" ]
         >>> t[1]
         "ab"
-        >>> t[1].sage()
+        >>> str(t[1])
         'ab'
-        >>> t.sage()
+        >>> list(t)
         ['aa', 'ab', 'ac', 'bb', 'bc', 'cc']
 
     Check that :trac:`18158` is fixed::
