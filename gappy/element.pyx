@@ -58,7 +58,7 @@ decode_type_number = {
 ### helper functions to construct lists and records ########################
 ############################################################################
 
-cdef Obj make_gap_list(parent, sage_list) except NULL:
+cdef Obj make_gap_list(parent, lst) except NULL:
     """
     Convert Sage lists into Gap lists
 
@@ -72,7 +72,7 @@ cdef Obj make_gap_list(parent, sage_list) except NULL:
     """
     cdef GapObj l = parent.eval('[]')
     cdef GapObj elem
-    for x in sage_list:
+    for x in lst:
         if not isinstance(x, GapObj):
             elem = <GapObj>parent(x)
         else:
@@ -82,13 +82,17 @@ cdef Obj make_gap_list(parent, sage_list) except NULL:
     return l.value
 
 
-cdef Obj make_gap_matrix(parent, sage_list, gap_ring) except NULL:
+cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL:
     """
-    Convert Sage lists into Gap matrices
+    Convert Python lists into Gap matrices.
+
+    .. todo::
+
+        Perhaps support Numpy arrays as well.
 
     INPUT:
 
-    - ``sage_list`` -- list of :class:`GapObj`.
+    - ``lst`` -- list of :class:`GapObj` or objects that can converted to one
 
     - ``gap_ring`` -- the base ring
 
@@ -98,7 +102,7 @@ cdef Obj make_gap_matrix(parent, sage_list, gap_ring) except NULL:
 
     OUTPUT:
 
-    The list of the elements in ``sage_list`` as a Gap ``Obj``.
+    The list of the elements in ``lst`` as a GAP ``Obj``.
     """
     cdef GapObj l = parent.eval('[]')
     cdef GapObj elem
@@ -107,7 +111,7 @@ cdef Obj make_gap_matrix(parent, sage_list, gap_ring) except NULL:
         one = <GapObj>gap_ring.One()
     else:
         one = <GapObj>parent(1)
-    for x in sage_list:
+    for x in lst:
         if not isinstance(x, GapObj):
             elem = <GapObj>parent(x)
             elem = elem * one
@@ -180,24 +184,25 @@ cdef char *gap_element_str(Obj obj):
     return capture_stdout(func, obj)
 
 
-cdef Obj make_gap_record(parent, sage_dict) except NULL:
+cdef Obj make_gap_record(parent, dct) except NULL:
     """
-    Convert Sage lists into Gap lists
+    Convert Python dicts into GAP records.
 
     INPUT:
 
-    - ``a`` -- list of :class:`GapObj`.
+    - ``a`` -- a dict mapping stringifiable keys to values of :class:`GapObj`
+      or that can be converted to one
 
     OUTPUT:
 
-    The list of the elements in ``a`` as a Gap ``Obj``.
+    A `GapRecord` instance.
 
     TESTS::
 
-        >>> gap({'a': 1, 'b':123})   # indirect doctest
+        >>> gap({'a': 1, 'b':123})  # indirect doctest
         rec( a := 1, b := 123 )
     """
-    data = [ (str(key), parent(value)) for key, value in sage_dict.iteritems() ]
+    data = [(str(key), parent(value)) for key, value in dct.iteritems()]
 
     cdef Obj rec
     cdef GapObj val
@@ -215,13 +220,13 @@ cdef Obj make_gap_record(parent, sage_dict) except NULL:
         GAP_Leave()
 
 
-cdef Obj make_gap_integer(sage_int) except NULL:
+cdef Obj make_gap_integer(x) except NULL:
     """
-    Convert Sage integer into Gap integer
+    Convert a Python int to a Gap integer
 
     INPUT:
 
-    - ``sage_int`` -- a Sage integer.
+    - ``x`` -- a Python integer.
 
     OUTPUT:
 
@@ -235,19 +240,19 @@ cdef Obj make_gap_integer(sage_int) except NULL:
     cdef Obj result
     try:
         GAP_Enter()
-        result = INTOBJ_INT(<int>sage_int)
+        result = INTOBJ_INT(<int>x)
         return result
     finally:
         GAP_Leave()
 
 
-cdef Obj make_gap_string(sage_string) except NULL:
+cdef Obj make_gap_string(s) except NULL:
     """
     Convert a Python string to a Gap string
 
     INPUT:
 
-    - ``sage_string`` -- a Python str.
+    - ``s`` -- a Python str.
 
     OUTPUT:
 
@@ -255,13 +260,13 @@ cdef Obj make_gap_string(sage_string) except NULL:
 
     TESTS::
 
-        >>> gap('string')   # indirect doctest
+        >>> gap('string')  # indirect doctest
         "string"
     """
     cdef Obj result
     try:
         GAP_Enter()
-        b = str_to_bytes(sage_string)
+        b = str_to_bytes(s)
         C_NEW_STRING(result, len(b), b)
         return result
     finally:

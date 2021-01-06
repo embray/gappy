@@ -17,11 +17,11 @@ cdef class Element:
 cdef class ModuleElement:
     pass
 
-cdef Obj make_gap_list(parent, sage_list) except NULL
-cdef Obj make_gap_matrix(parent, sage_list, gap_ring) except NULL
-cdef Obj make_gap_record(parent, sage_dict) except NULL
-cdef Obj make_gap_integer(sage_dict) except NULL
-cdef Obj make_gap_string(sage_string) except NULL
+cdef Obj make_gap_list(parent, lst) except NULL
+cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL
+cdef Obj make_gap_record(parent, dct) except NULL
+cdef Obj make_gap_integer(x) except NULL
+cdef Obj make_gap_string(s) except NULL
 
 cdef GapObj make_any_gap_element(parent, Obj obj)
 cdef GapObj make_GapObj(parent, Obj obj)
