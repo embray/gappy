@@ -1255,12 +1255,14 @@ cdef class GapObj:
 
         Check that this can be interrupted gracefully::
 
-            >>> from cysignals.alarm import alarm
+            >>> from cysignals.alarm import alarm, AlarmInterrupt
             >>> a, b = gap.GL(1000, 3).GeneratorsOfGroup(); g = a * b
-            >>> alarm(0.5); g ^ (2 ^ 10000)
-            Traceback (most recent call last):
+            >>> try:
+            ...     alarm(0.5); g ^ (2 ^ 10000)
+            ... except AlarmInterrupt:
+            ...     print('interrupted long computation')
             ...
-            AlarmInterrupt
+            interrupted long computation
 
             >>> gap.CyclicGroup(2) ^ 2
             Traceback (most recent call last):
