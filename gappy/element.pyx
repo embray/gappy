@@ -29,24 +29,12 @@ cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
     return s.encode(encoding, errors)
 cdef char_to_str(char *s):
     return s.decode('utf-8')
-#from sage.misc.cachefunc import cached_method
-def cached_method(func):
-    return func
+
 #from sage.rings.all import ZZ, QQ, RDF
 ZZ = object()
 QQ = object()
 RDF = object()
 
-#from sage.groups.perm_gps.permgroup_element cimport PermutationGroupElement
-cdef class PermutationGroupElement:
-    pass
-#from sage.combinat.permutation import Permutation
-cdef class Permutation:
-    pass
-#from sage.structure.coerce cimport coercion_model as cm
-cdef class cm:
-    def common_parent(self, *args, **kwargs):
-        pass
 
 decode_type_number = {
     0: 'T_INT (integer)',
@@ -1321,117 +1309,6 @@ cdef class GapObj:
         return (TNUM_OBJ(self.value) == T_PERM2 or
                 TNUM_OBJ(self.value) == T_PERM4)
 
-    def sage(self):
-        r"""
-        Return the Sage equivalent of the :class:`GapObj`
-
-        EXAMPLES::
-
-            >>> gap(1).sage()
-            1
-            >>> type(_)
-            <type 'sage.rings.integer.Integer'>
-
-            >>> gap(3/7).sage()
-            3/7
-            >>> type(_)
-            <type 'sage.rings.rational.Rational'>
-
-            >>> gap.eval('5 + 7*E(3)').sage()
-            7*zeta3 + 5
-
-            >>> gap(Infinity).sage()
-            +Infinity
-            >>> gap(-Infinity).sage()
-            -Infinity
-
-            >>> gap(True).sage()
-            True
-            >>> gap(False).sage()
-            False
-            >>> type(_)
-            <... 'bool'>
-
-            >>> gap('this is a string').sage()
-            'this is a string'
-            >>> type(_)
-            <... 'str'>
-
-            >>> x = gap.Integers.Indeterminate("x")
-
-            >>> p = x^2 - 2*x + 3
-            >>> p.sage()
-            x^2 - 2*x + 3
-            >>> p.sage().parent()
-            Univariate Polynomial Ring in x over Integer Ring
-
-            >>> p = x^-2 + 3*x
-            >>> p.sage()
-            x^-2 + 3*x
-            >>> p.sage().parent()
-            Univariate Laurent Polynomial Ring in x over Integer Ring
-
-            >>> p = (3 * x^2 + x) / (x^2 - 2)
-            >>> p.sage()
-            (3*x^2 + x)/(x^2 - 2)
-            >>> p.sage().parent()
-            Fraction Field of Univariate Polynomial Ring in x over Integer Ring
-
-        TESTS:
-
-        Check :trac:`30496`::
-
-            >>> x = gap.Integers.Indeterminate("x")
-
-            >>> p = x^2 - 2*x
-            >>> p.sage()
-            x^2 - 2*x
-        """
-        if self.value is NULL:
-            return None
-
-        if self.IsInfinity():
-            from sage.rings.infinity import Infinity
-            return Infinity
-
-        elif self.IsNegInfinity():
-            from sage.rings.infinity import Infinity
-            return -Infinity
-
-        elif self.IsUnivariateRationalFunction():
-            var = self.IndeterminateOfUnivariateRationalFunction().String()
-            var = var.sage()
-            num, den, val = self.CoefficientsOfUnivariateRationalFunction()
-            num = num.sage()
-            den = den.sage()
-            val = val.sage()
-            base_ring = cm.common_parent(*(num + den))
-
-            if self.IsUnivariatePolynomial():
-                from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-                R = PolynomialRing(base_ring, var)
-                x = R.gen()
-                return x**val * R(num)
-
-            elif self.IsLaurentPolynomial():
-                from sage.rings.polynomial.laurent_polynomial_ring import LaurentPolynomialRing
-                R = LaurentPolynomialRing(base_ring, var)
-                x = R.gen()
-                return x**val * R(num)
-
-            else:
-                from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-                R = PolynomialRing(base_ring, var)
-                x = R.gen()
-                return x**val * R(num) / R(den)
-
-        elif self.IsList():
-            # May be a list-like collection of some other type of GapObjs
-            # that we can convert
-            return [item.sage() for item in self.AsList()]
-
-        raise NotImplementedError('cannot construct equivalent Sage object')
-
 
 ############################################################################
 ### GapInteger #############################################################
@@ -1497,66 +1374,6 @@ cdef class GapInteger(GapObj):
             true
         """
         return IS_INTOBJ(self.value)
-
-    def _rational_(self):
-        r"""
-        EXAMPLES::
-
-            >>> QQ(gap(1))  # indirect doctest
-            1
-            >>> QQ(gap(-2**200)) == -2**200
-            True
-        """
-        return self.sage(ring=QQ)
-
-    def sage(self, ring=None):
-        r"""
-        Return the Sage equivalent of the :class:`GapInteger`
-
-        - ``ring`` -- Integer ring or ``None`` (default). If not
-          specified, a the default Sage integer ring is used.
-
-        OUTPUT:
-
-        A Sage integer
-
-        EXAMPLES::
-
-            >>> gap([ 1, 3, 4 ]).sage()
-            [1, 3, 4]
-            >>> all( x in ZZ for x in _ )
-            True
-
-            >>> gap(132).sage(ring=IntegerModRing(13))
-            2
-            >>> parent(_)
-            Ring of integers modulo 13
-
-        TESTS::
-
-            >>> large = gap.eval('2^130');  large
-            1361129467683753853853498429727072845824
-            >>> large.sage()
-            1361129467683753853853498429727072845824
-
-            >>> huge = gap.eval('10^9999');  huge     # gap abbreviates very long ints
-            <integer 100...000 (10000 digits)>
-            >>> huge.sage().ndigits()
-            10000
-        """
-        if ring is None:
-            ring = ZZ
-        if self.is_C_int():
-            return ring(INT_INTOBJ(self.value))
-        else:
-            # TODO: waste of time!
-            # gap integers are stored as a mp_limb_t and we have a much more direct
-            # conversion implemented in mpz_get_pylong(mpz_srcptr z)
-            # (see sage.libs.gmp.pylong)
-            string = self.String().sage()
-            return ring(string)
-
-    _integer_ = sage
 
     def __int__(self):
         r"""
@@ -1626,28 +1443,6 @@ cdef class GapFloat(GapObj):
         >>> gap(a).sage() == a
         True
     """
-    def sage(self, ring=None):
-        r"""
-        Return the Sage equivalent of the :class:`GapFloat`
-
-        - ``ring`` -- a floating point field or ``None`` (default). If not
-          specified, the default Sage ``RDF`` is used.
-
-        OUTPUT:
-
-        A Sage double precision floating point number
-
-        EXAMPLES::
-
-            >>> a = gap.eval("Float(3.25)").sage()
-            >>> a
-            3.25
-            >>> parent(a)
-            Real Double Field
-        """
-        if ring is None:
-            ring = RDF
-        return ring(VAL_MACFLOAT(self.value))
 
     def __float__(self):
         r"""
@@ -1711,35 +1506,6 @@ cdef class GapIntegerMod(GapObj):
         return self.Int()
 
 
-    def sage(self, ring=None):
-        r"""
-        Return the Sage equivalent of the :class:`GapIntegerMod`
-
-        INPUT:
-
-        - ``ring`` -- Sage integer mod ring or ``None`` (default). If
-          not specified, a suitable integer mod ringa is used
-          automatically.
-
-        OUTPUT:
-
-        A Sage integer modulo another integer.
-
-        EXAMPLES::
-
-            >>> n = gap.eval('One(ZmodnZ(123)) * 13')
-            >>> n.sage()
-            13
-            >>> parent(_)
-            Ring of integers modulo 123
-        """
-        if ring is None:
-            # ring = self.DefaultRing().sage()
-            characteristic = self.Characteristic().sage()
-            ring = ZZ.quotient_ring(characteristic)
-        return self.lift().sage(ring=ring)
-
-
 ############################################################################
 ### GapFiniteField #########################################################
 ############################################################################
@@ -1800,94 +1566,6 @@ cdef class GapFiniteField(GapObj):
         else:
             raise TypeError('not in prime subfield')
 
-
-    def sage(self, ring=None, var='a'):
-        r"""
-        Return the Sage equivalent of the :class:`GapFiniteField`.
-
-        INPUT:
-
-        - ``ring`` -- a Sage finite field or ``None`` (default). The
-          field to return ``self`` in. If not specified, a suitable
-          finite field will be constructed.
-
-        OUTPUT:
-
-        An Sage finite field element. The isomorphism is chosen such
-        that the Gap ``PrimitiveRoot()`` maps to the Sage
-        :meth:`~sage.rings.finite_rings.finite_field_prime_modn.multiplicative_generator`.
-
-        EXAMPLES::
-
-            >>> n = gap.eval('Z(25)^2')
-            >>> n.sage()
-            a + 3
-            >>> parent(_)
-            Finite Field in a of size 5^2
-
-            >>> n.sage(ring=GF(5))
-            Traceback (most recent call last):
-            ...
-            ValueError: the given ring is incompatible ...
-
-        TESTS::
-
-            >>> n = gap.eval('Z(2^4)^2 + Z(2^4)^1 + Z(2^4)^0')
-            >>> n
-            Z(2^2)^2
-            >>> n.sage()
-            a + 1
-            >>> parent(_)
-            Finite Field in a of size 2^2
-            >>> n.sage(ring=ZZ)
-            Traceback (most recent call last):
-            ...
-            ValueError: the given ring is incompatible ...
-            >>> n.sage(ring=CC)
-            Traceback (most recent call last):
-            ...
-            ValueError: the given ring is incompatible ...
-            >>> n.sage(ring=GF(5))
-            Traceback (most recent call last):
-            ...
-            ValueError: the given ring is incompatible ...
-            >>> n.sage(ring=GF(2^3))
-            Traceback (most recent call last):
-            ...
-            ValueError: the given ring is incompatible ...
-            >>> n.sage(ring=GF(2^2, 'a'))
-            a + 1
-            >>> n.sage(ring=GF(2^4, 'a'))
-            a^2 + a + 1
-            >>> n.sage(ring=GF(2^8, 'a'))
-            a^7 + a^6 + a^4 + a^2 + a + 1
-
-        Check that :trac:`23153` is fixed::
-
-            >>> n = gap.eval('Z(2^4)^2 + Z(2^4)^1 + Z(2^4)^0')
-            >>> n.sage(ring=GF(2^4, 'a'))
-            a^2 + a + 1
-        """
-        deg = self.DegreeFFE().sage()
-        char = self.Characteristic().sage()
-        if ring is None:
-            from sage.rings.finite_rings.finite_field_constructor import GF
-            ring = GF(char**deg, name=var)
-        elif not (ring.is_field() and ring.is_finite() and \
-                  ring.characteristic() == char and ring.degree() % deg == 0):
-            raise ValueError(('the given ring is incompatible (must be a '
-                              'finite field of characteristic {} and degree '
-                              'divisible by {})').format(char, deg))
-
-        if self.IsOne():
-            return ring.one()
-        if deg == 1 and char == ring.characteristic():
-            return ring(self.lift().sage())
-        else:
-            gap_field = make_GapRing(self.parent(), gap_eval(ring._gap_init_()))
-            exp = self.LogFFE(gap_field.PrimitiveRoot())
-            return ring.multiplicative_generator() ** exp.sage()
-
     def __int__(self):
         r"""
         TESTS::
@@ -1896,15 +1574,6 @@ cdef class GapFiniteField(GapObj):
             2
         """
         return int(self.Int())
-
-    def _integer_(self, R):
-        r"""
-        TESTS::
-
-            >>> ZZ(gap.eval("Z(53)"))
-            2
-        """
-        return R(self.Int())
 
 
 ############################################################################
@@ -1940,60 +1609,6 @@ cdef class GapCyclotomic(GapObj):
         <class 'gappy.element.GapCyclotomic'>
     """
 
-    def sage(self, ring=None):
-        r"""
-        Return the Sage equivalent of the :class:`GapCyclotomic`.
-
-        INPUT:
-
-        - ``ring`` -- a Sage cyclotomic field or ``None``
-          (default). If not specified, a suitable minimal cyclotomic
-          field will be constructed.
-
-        OUTPUT:
-
-        A Sage cyclotomic field element.
-
-        EXAMPLES::
-
-            >>> n = gap.eval('E(3)')
-            >>> n.sage()
-            zeta3
-            >>> parent(_)
-            Cyclotomic Field of order 3 and degree 2
-
-            >>> n.sage(ring=CyclotomicField(6))
-            zeta6 - 1
-
-            >>> gap.E(3).sage(ring=CyclotomicField(3))
-            zeta3
-            >>> gap.E(3).sage(ring=CyclotomicField(6))
-            zeta6 - 1
-
-        TESTS:
-
-        Check that :trac:`15204` is fixed::
-
-            >>> gap.E(3).sage(ring=UniversalCyclotomicField())
-            E(3)
-            >>> gap.E(3).sage(ring=CC)
-            -0.500000000000000 + 0.866025403784439*I
-        """
-        if ring is None:
-            conductor = self.Conductor()
-            from sage.rings.number_field.number_field import CyclotomicField
-            ring = CyclotomicField(conductor.sage())
-        else:
-            try:
-                conductor = ring._n()
-            except AttributeError:
-                from sage.rings.number_field.number_field import CyclotomicField
-                conductor = self.Conductor()
-                cf = CyclotomicField(conductor.sage())
-                return ring(cf(self.CoeffsCyc(conductor).sage()))
-        coeff = self.CoeffsCyc(conductor).sage()
-        return ring(coeff)
-
 
 ############################################################################
 ### GapRational ############################################################
@@ -2025,46 +1640,6 @@ cdef class GapRational(GapObj):
         >>> type(r)
         <class 'gappy.element.GapRational'>
     """
-    def _rational_(self):
-        r"""
-        EXAMPLES::
-
-            >>> r = gap(-1/3)
-            >>> QQ(r)  # indirect doctest
-            -1/3
-            >>> QQ(gap(2**300 / 3**300)) == 2**300 / 3**300
-            True
-        """
-        return self.sage(ring=QQ)
-
-    def sage(self, ring=None):
-        r"""
-        Return the Sage equivalent of the :class:`GapObj`.
-
-        INPUT:
-
-        - ``ring`` -- the Sage rational ring or ``None`` (default). If
-          not specified, the rational ring is used automatically.
-
-        OUTPUT:
-
-        A Sage rational number.
-
-        EXAMPLES::
-
-            >>> r = gap(123/456);  r
-            41/152
-            >>> type(_)
-            <class 'gappy.element.GapRational'>
-            >>> r.sage()
-            41/152
-            >>> type(_)
-            <type 'sage.rings.rational.Rational'>
-        """
-        if ring is None:
-            ring = ZZ
-        libgap = self.parent()
-        return libgap.NumeratorRat(self).sage(ring=ring) / libgap.DenominatorRat(self).sage(ring=ring)
 
 
 ############################################################################
@@ -2146,7 +1721,6 @@ cdef class GapRing(GapObj):
         from sage.rings.finite_rings.finite_field_constructor import GF
         return GF(size, name=var)
 
-
     def ring_cyclotomic(self):
         """
         Construct an integer ring.
@@ -2180,55 +1754,6 @@ cdef class GapRing(GapObj):
         from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
         return PolynomialRing(base_ring, vars)
 
-    def sage(self, **kwds):
-        r"""
-        Return the Sage equivalent of the :class:`GapRing`.
-
-        INPUT:
-
-        - ``**kwds`` -- keywords that are passed on to the ``ring_``
-          method.
-
-        OUTPUT:
-
-        A Sage ring.
-
-        EXAMPLES::
-
-            >>> gap.eval('Integers').sage()
-            Integer Ring
-
-            >>> gap.eval('Rationals').sage()
-            Rational Field
-
-            >>> gap.eval('ZmodnZ(15)').sage()
-            Ring of integers modulo 15
-
-            >>> gap.GF(3,2).sage(var='A')
-            Finite Field in A of size 3^2
-
-            >>> gap.CyclotomicField(6).sage()
-            Cyclotomic Field of order 3 and degree 2
-
-            >>> gap(QQ['x','y']).sage()
-            Multivariate Polynomial Ring in x, y over Rational Field
-        """
-        if self.IsField():
-            if self.IsRationals():
-                return self.ring_rational(**kwds)
-            if self.IsCyclotomicField():
-                return self.ring_cyclotomic(**kwds)
-            if self.IsFinite():
-                return self.ring_finite_field(**kwds)
-        else:
-            if self.IsIntegers():
-                return self.ring_integer(**kwds)
-            if self.IsFinite():
-                return self.ring_integer_mod(**kwds)
-            if self.IsPolynomialRing():
-                return self.ring_polynomial(**kwds)
-        raise NotImplementedError('cannot convert GAP ring to Sage')
-
 
 ############################################################################
 ### GapBoolean #############################################################
@@ -2260,40 +1785,6 @@ cdef class GapBoolean(GapObj):
         >>> type(b)
         <class 'gappy.element.GapBoolean'>
     """
-
-    def sage(self):
-        r"""
-        Return the Sage equivalent of the :class:`GapObj`
-
-        OUTPUT:
-
-        A Python boolean if the values is either true or false. GAP
-        booleans can have the third value ``Fail``, in which case a
-        ``ValueError`` is raised.
-
-        EXAMPLES::
-
-            >>> b = gap.eval('true');  b
-            true
-            >>> type(_)
-            <class 'gappy.element.GapBoolean'>
-            >>> b.sage()
-            True
-            >>> type(_)
-            <... 'bool'>
-
-            >>> gap.eval('fail')
-            fail
-            >>> _.sage()
-            Traceback (most recent call last):
-            ...
-            ValueError: the GAP boolean value "fail" cannot be represented in Sage
-        """
-        if self.value == GAP_True:
-            return True
-        if self.value == GAP_False:
-            return False
-        raise ValueError('the GAP boolean value "fail" cannot be represented in Sage')
 
     def __nonzero__(self):
         """
@@ -2930,24 +2421,6 @@ cdef class GapList(GapObj):
 
         ASS_LIST(obj, j+1, celt.value)
 
-    def sage(self, **kwds):
-        r"""
-        Return the Sage equivalent of the :class:`GapObj`
-
-        OUTPUT:
-
-        A Python list.
-
-        EXAMPLES::
-
-            >>> gap([ 1, 3, 4 ]).sage()
-            [1, 3, 4]
-            >>> all( x in ZZ for x in _ )
-            True
-        """
-        return [ x.sage(**kwds) for x in self ]
-
-
     def matrix(self, ring=None):
         """
         Return the list as a matrix.
@@ -3078,35 +2551,6 @@ cdef class GapPermutation(GapObj):
         <class 'gappy.element.GapPermutation'>
     """
 
-    def sage(self, parent=None):
-        r"""
-        Return the Sage equivalent of the :class:`GapObj`
-
-        If the permutation group is given as parent, this method is
-        *much* faster.
-
-        EXAMPLES::
-
-            >>> perm_gap = gap.eval('(1,5,2)(4,3,8)');  perm_gap
-            (1,5,2)(3,8,4)
-            >>> perm_gap.sage()
-            [5, 1, 8, 3, 2, 6, 7, 4]
-            >>> type(_)
-            <class 'sage.combinat.permutation.StandardPermutations_all_with_category.element_class'>
-            >>> perm_gap.sage(PermutationGroup([(1,2),(1,2,3,4,5,6,7,8)]))
-            (1,5,2)(3,8,4)
-            >>> type(_)
-            <type 'sage.groups.perm_gps.permgroup_element.PermutationGroupElement'>
-        """
-        cdef PermutationGroupElement one_c
-
-        libgap = self.parent()
-        lst = libgap.ListPerm(self)
-
-        if parent is None:
-            return Permutation(lst.sage(), check_input=False)
-        else:
-            return parent.one()._generate_new_GAP(lst)
 
 ############################################################################
 ### GapRecord ##############################################################
@@ -3245,32 +2689,6 @@ cdef class GapRecord(GapObj):
             GAP_Leave()
             sig_off()
         return make_any_gap_element(self.parent(), result)
-
-    def sage(self):
-        r"""
-        Return the Sage equivalent of the :class:`GapObj`
-
-        EXAMPLES::
-
-            >>> gap.eval('rec(a:=1, b:=2)').sage()
-            {'a': 1, 'b': 2}
-            >>> all( isinstance(key,str) and val in ZZ for key,val in _.items() )
-            True
-
-            >>> rec = gap.eval('rec(a:=123, b:=456, Sym3:=SymmetricGroup(3))')
-            >>> rec.sage()
-            {'Sym3': NotImplementedError('cannot construct equivalent Sage object'...),
-             'a': 123,
-             'b': 456}
-        """
-        result = {}
-        for key, val in self:
-            try:
-                val = val.sage()
-            except Exception as ex:
-                val = ex
-            result[key] = val
-        return result
 
 
 cdef class GapRecordIterator(object):
