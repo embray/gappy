@@ -737,10 +737,10 @@ class Gap(Parent):
         load_package = self.function_factory('LoadPackage')
         # Note: For some reason the default package loading error messages are
         # controlled with InfoWarning and not InfoPackageLoading
-        prev_infolevel = libgap.InfoLevel(libgap.InfoWarning)
-        libgap.SetInfoLevel(libgap.InfoWarning, 0)
+        prev_infolevel = self.InfoLevel(self.InfoWarning)
+        self.SetInfoLevel(self.InfoWarning, 0)
         ret = load_package(pkg)
-        libgap.SetInfoLevel(libgap.InfoWarning, prev_infolevel)
+        self.SetInfoLevel(self.InfoWarning, prev_infolevel)
         if str(ret) == 'fail':
             raise RuntimeError(f"Error loading GAP package {pkg}.  "
                                f"You may want to install gap_packages SPKG.")
@@ -1100,4 +1100,6 @@ class Gap(Parent):
             raise RuntimeError('Garbage collection failed.')
 
 
-libgap = Gap()
+# TODO: Global libgap instance is disabled for now since it causes test collector
+# to segfault; it will probably be reworked later anyways.
+#libgap = Gap()
