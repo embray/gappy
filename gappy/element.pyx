@@ -903,6 +903,9 @@ cdef class GapObj:
         """
         return hash(str(self))
 
+    def __richcmp__(self, other, int op):
+        return self._richcmp_(self.parent(other), op)
+
     cpdef _richcmp_(self, other, int op):
         """
         Compare ``self`` with ``other``.
@@ -966,9 +969,9 @@ cdef class GapObj:
         """
         if self._compare_by_id != (<GapObj>other)._compare_by_id:
             raise ValueError("comparison style must be the same for both operands")
-        if op==Py_LT:
+        if op == Py_LT:
             return self._compare_less(other)
-        elif op==Py_LE:
+        elif op == Py_LE:
             return self._compare_equal(other) or self._compare_less(other)
         elif op == Py_EQ:
             return self._compare_equal(other)
@@ -981,7 +984,7 @@ cdef class GapObj:
         else:
             assert False  # unreachable
 
-    cdef bint _compare_equal(self, Element other) except -2:
+    cdef bint _compare_equal(self, GapObj other) except -2:
         """
         Compare ``self`` with ``other``.
 
@@ -994,16 +997,16 @@ cdef class GapObj:
         """
         if self._compare_by_id:
             return id(self) == id(other)
-        cdef GapObj c_other = <GapObj>other
+
         sig_on()
         try:
             GAP_Enter()
-            return EQ(self.value, c_other.value)
+            return EQ(self.value, other.value)
         finally:
             GAP_Leave()
             sig_off()
 
-    cdef bint _compare_less(self, Element other) except -2:
+    cdef bint _compare_less(self, GapObj other) except -2:
         """
         Compare ``self`` with ``other``.
 
@@ -1016,11 +1019,11 @@ cdef class GapObj:
         """
         if self._compare_by_id:
             return id(self) < id(other)
-        cdef GapObj c_other = <GapObj>other
+
         sig_on()
         try:
             GAP_Enter()
-            return LT(self.value, c_other.value)
+            return LT(self.value, other.value)
         finally:
             GAP_Leave()
             sig_off()

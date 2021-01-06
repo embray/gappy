@@ -10,12 +10,6 @@
 #*****************************************************************************
 
 from .gap_includes cimport Obj, UInt
-#from sage.structure.element cimport Element, ModuleElement
-cdef class Element:
-    pass
-
-cdef class ModuleElement:
-    pass
 
 cdef Obj make_gap_list(parent, lst) except NULL
 cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL
@@ -52,8 +46,8 @@ cdef class GapObj:
 
     # comparison
     cdef bint _compare_by_id
-    cdef bint _compare_equal(self, Element other) except -2
-    cdef bint _compare_less(self, Element other) except -2
+    cdef bint _compare_equal(self, GapObj other) except -2
+    cdef bint _compare_less(self, GapObj other) except -2
     cpdef _set_compare_by_id(self)
     cpdef _assert_compare_by_id(self)
 
