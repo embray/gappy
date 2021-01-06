@@ -865,7 +865,7 @@ cdef class GapObj:
 
         EXAMPLES::
 
-            >>> hash(gap(123))   # random output
+            >>> hash(gap(123))  # doctest: +IGNORE_OUTPUT
             163512108404620371
         """
         return hash(str(self))
@@ -2561,10 +2561,10 @@ cdef class GapRecord(GapObj):
         EXAMPLES::
 
             >>> rec = gap.eval('rec(first:=123, second:=456)')
-            >>> rec.record_name_to_index('first')   # random output
-            1812L
-            >>> rec.record_name_to_index('no_such_name') # random output
-            3776L
+            >>> rec.record_name_to_index('first')   # doctest: +IGNORE_OUTPUT
+            1812
+            >>> rec.record_name_to_index('no_such_name') # doctest: +IGNORE_OUTPUT
+            3776
         """
         name = str_to_bytes(name)
         return RNamName(name)

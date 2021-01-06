@@ -1091,7 +1091,7 @@ class Gap:
             >>> c = gap(789)
             >>> del b
             >>> gap.collect()
-            >>> gap.show()  # random output
+            >>> gap.show()  # doctest: +IGNORE_OUTPUT
             {'gasman_stats': {'full': {'cumulative': 110,
                'deadbags': 321400,
                'deadkb': 12967,
@@ -1121,7 +1121,7 @@ class Gap:
 
         EXAMPLES::
 
-            >>> gap.count_GAP_objects()   # random output
+            >>> gap.count_GAP_objects()  # doctest: +IGNORE_OUTPUT
             5
         """
         return len(get_owned_objects())
