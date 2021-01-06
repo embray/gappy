@@ -30,11 +30,6 @@ cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
 cdef char_to_str(char *s):
     return s.decode('utf-8')
 
-#from sage.rings.all import ZZ, QQ, RDF
-ZZ = object()
-QQ = object()
-RDF = object()
-
 
 decode_type_number = {
     0: 'T_INT (integer)',
@@ -1339,7 +1334,7 @@ cdef class GapInteger(GapObj):
         >>> i = gap(123)
         >>> type(i)
         <class 'gappy.element.GapInteger'>
-        >>> ZZ(i)
+        >>> i
         123
     """
 
@@ -1432,16 +1427,10 @@ cdef class GapFloat(GapObj):
         >>> i = gap(123.5)
         >>> type(i)
         <class 'gappy.element.GapFloat'>
-        >>> RDF(i)
+        >>> i
         123.5
         >>> float(i)
         123.5
-
-    TESTS::
-
-        >>> a = RDF.random_element()
-        >>> gap(a).sage() == a
-        True
     """
 
     def __float__(self):
@@ -1668,91 +1657,10 @@ cdef class GapRing(GapObj):
 
     EXAMPLES::
 
-        >>> i = gap(ZZ)
+        >>> i = gap.Integers
         >>> type(i)
         <class 'gappy.element.GapRing'>
     """
-
-    def ring_integer(self):
-        """
-        Construct the Sage integers.
-
-        EXAMPLES::
-
-            >>> gap.eval('Integers').ring_integer()
-            Integer Ring
-        """
-        return ZZ
-
-    def ring_rational(self):
-        """
-        Construct the Sage rationals.
-
-        EXAMPLES::
-
-            >>> gap.eval('Rationals').ring_rational()
-            Rational Field
-        """
-        return ZZ.fraction_field()
-
-    def ring_integer_mod(self):
-        """
-        Construct a Sage integer mod ring.
-
-        EXAMPLES::
-
-            >>> gap.eval('ZmodnZ(15)').ring_integer_mod()
-            Ring of integers modulo 15
-        """
-        characteristic = self.Characteristic().sage()
-        return ZZ.quotient_ring(characteristic)
-
-
-    def ring_finite_field(self, var='a'):
-        """
-        Construct an integer ring.
-
-        EXAMPLES::
-
-            >>> gap.GF(3,2).ring_finite_field(var='A')
-            Finite Field in A of size 3^2
-        """
-        size = self.Size().sage()
-        from sage.rings.finite_rings.finite_field_constructor import GF
-        return GF(size, name=var)
-
-    def ring_cyclotomic(self):
-        """
-        Construct an integer ring.
-
-        EXAMPLES::
-
-            >>> gap.CyclotomicField(6).ring_cyclotomic()
-            Cyclotomic Field of order 3 and degree 2
-        """
-        conductor = self.Conductor()
-        from sage.rings.number_field.number_field import CyclotomicField
-        return CyclotomicField(conductor.sage())
-
-    def ring_polynomial(self):
-        """
-        Construct a polynomial ring.
-
-        EXAMPLES::
-
-            >>> B = gap(QQ['x'])
-            >>> B.ring_polynomial()
-            Univariate Polynomial Ring in x over Rational Field
-
-            >>> B = gap(ZZ['x','y'])
-            >>> B.ring_polynomial()
-            Multivariate Polynomial Ring in x, y over Integer Ring
-        """
-        base_ring = self.CoefficientsRing().sage()
-        vars = [x.String().sage()
-                for x in self.IndeterminatesOfPolynomialRing()]
-        from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-        return PolynomialRing(base_ring, vars)
 
 
 ############################################################################
