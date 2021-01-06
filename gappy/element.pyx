@@ -1270,7 +1270,7 @@ cdef class GapObj:
             gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `^' on 2 arguments
 
-            >>> gap(3) ^ Infinity
+            >>> gap(3) ^ gap.infinity
             Traceback (most recent call last):
             ...
             gappy.exceptions.GAPError: Error, no method found! Error, no 1st choice
