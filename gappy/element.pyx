@@ -60,7 +60,7 @@ decode_type_number = {
 
 cdef Obj make_gap_list(parent, lst) except NULL:
     """
-    Convert Sage lists into Gap lists
+    Convert Sage lists into GAP lists
 
     INPUT:
 
@@ -68,7 +68,7 @@ cdef Obj make_gap_list(parent, lst) except NULL:
 
     OUTPUT:
 
-    The list of the elements in ``a`` as a Gap ``Obj``.
+    The list of the elements in ``a`` as a GAP ``Obj``.
     """
     cdef GapObj l = parent.eval('[]')
     cdef GapObj elem
@@ -84,7 +84,7 @@ cdef Obj make_gap_list(parent, lst) except NULL:
 
 cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL:
     """
-    Convert Python lists into Gap matrices.
+    Convert Python lists into GAP matrices.
 
     .. todo::
 
@@ -97,8 +97,8 @@ cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL:
     - ``gap_ring`` -- the base ring
 
     If ``gap_ring`` is ``None``, nothing is made to make sure
-    that all coefficients live in the same Gap ring. The resulting Gap list
-    may not be recognized as a matrix by Gap.
+    that all coefficients live in the same GAP ring. The resulting GAP list
+    may not be recognized as a matrix by GAP.
 
     OUTPUT:
 
@@ -222,7 +222,7 @@ cdef Obj make_gap_record(parent, dct) except NULL:
 
 cdef Obj make_gap_integer(x) except NULL:
     """
-    Convert a Python int to a Gap integer
+    Convert a Python int to a GAP integer
 
     INPUT:
 
@@ -248,7 +248,7 @@ cdef Obj make_gap_integer(x) except NULL:
 
 cdef Obj make_gap_string(s) except NULL:
     """
-    Convert a Python string to a Gap string
+    Convert a Python string to a GAP string
 
     INPUT:
 
@@ -367,7 +367,7 @@ cdef GapObj make_any_gap_element(parent, Obj obj):
 
 cdef GapObj make_GapObj(parent, Obj obj):
     r"""
-    Turn a Gap C object (of type ``Obj``) into a Cython ``GapObj``.
+    Turn a GAP C object (of type ``Obj``) into a Cython ``GapObj``.
 
     INPUT:
 
@@ -411,12 +411,12 @@ cpdef _from_sage(gap, elem):
 
 cdef class GapObj:
     r"""
-    Wrapper for all Gap objects.
+    Wrapper for all GAP objects.
 
     .. NOTE::
 
         In order to create ``GapObjs`` you should use the ``gap`` instance (the
-        parent of all Gap elements) to convert things into ``GapObj``. You must
+        parent of all GAP elements) to convert things into ``GapObj``. You must
         not create ``GapObj`` instances manually.
 
     EXAMPLES::
@@ -424,7 +424,7 @@ cdef class GapObj:
         >>> gap(0)
         0
 
-    If Gap finds an error while evaluating, a :class:`GAPError`
+    If GAP finds an error while evaluating, a :class:`GAPError`
     exception is raised::
 
         >>> gap.eval('1/0')
@@ -568,7 +568,7 @@ cdef class GapObj:
 
     cpdef GapObj deepcopy(self, bint mut):
         r"""
-        Return a deepcopy of this Gap object
+        Return a deepcopy of this GAP object
 
         Note that this is the same thing as calling ``StructuralCopy`` but much
         faster.
@@ -645,7 +645,7 @@ cdef class GapObj:
         except NotImplementedError:
             elem = str(self)
 
-        # TODO: This might be broken, since I'm not sure the Gap instance
+        # TODO: This might be broken, since I'm not sure the GAP instance
         # itself can be successfully pickled.  Will come back to this later.
         return (_from_sage, (self.parent(), elem))
 
@@ -1316,7 +1316,7 @@ cdef class GapObj:
 
 cdef GapInteger make_GapInteger(parent, Obj obj):
     r"""
-    Turn a Gap integer object into a GapInteger Sage object
+    Turn a GAP integer object into a GapInteger Sage object
 
     EXAMPLES::
 
@@ -1410,7 +1410,7 @@ cdef class GapInteger(GapObj):
 
 cdef GapFloat make_GapFloat(parent, Obj obj):
     r"""
-    Turn a Gap macfloat object into a GapFloat Sage object
+    Turn a GAP machine float object into a GapFloat Sage object
 
     EXAMPLES::
 
@@ -1455,7 +1455,7 @@ cdef class GapFloat(GapObj):
 
 cdef GapIntegerMod make_GapIntegerMod(parent, Obj obj):
     r"""
-    Turn a Gap integer object into a :class:`GapIntegerMod` Sage object
+    Turn a GAP integer object into a :class:`GapIntegerMod` Sage object
 
     EXAMPLES::
 
@@ -1576,7 +1576,7 @@ cdef class GapFiniteField(GapObj):
 
 cdef GapCyclotomic make_GapCyclotomic(parent, Obj obj):
     r"""
-    Turn a Gap cyclotomic object into a :class:`GapCyclotomic` Sage
+    Turn a GAP cyclotomic object into a :class:`GapCyclotomic` Sage
     object.
 
     EXAMPLES::
@@ -1610,7 +1610,7 @@ cdef class GapCyclotomic(GapObj):
 
 cdef GapRational make_GapRational(parent, Obj obj):
     r"""
-    Turn a Gap Rational number (of type ``Obj``) into a Cython ``GapRational``.
+    Turn a GAP Rational number (of type ``Obj``) into a Cython ``GapRational``.
 
     EXAMPLES::
 
@@ -1642,7 +1642,7 @@ cdef class GapRational(GapObj):
 
 cdef GapRing make_GapRing(parent, Obj obj):
     r"""
-    Turn a Gap integer object into a :class:`GapRing` Sage object.
+    Turn a GAP integer object into a :class:`GapRing` Sage object.
 
     EXAMPLES::
 
@@ -1674,7 +1674,7 @@ cdef class GapRing(GapObj):
 
 cdef GapBoolean make_GapBoolean(parent, Obj obj):
     r"""
-    Turn a Gap Boolean number (of type ``Obj``) into a Cython ``GapBoolean``.
+    Turn a GAP Boolean number (of type ``Obj``) into a Cython ``GapBoolean``.
 
     EXAMPLES::
 
@@ -1732,7 +1732,7 @@ cdef class GapBoolean(GapObj):
 
 cdef GapString make_GapString(parent, Obj obj):
     r"""
-    Turn a Gap String (of type ``Obj``) into a Cython ``GapString``.
+    Turn a GAP String (of type ``Obj``) into a Cython ``GapString``.
 
     EXAMPLES::
 
@@ -1792,7 +1792,7 @@ cdef class GapString(GapObj):
 
 cdef GapFunction make_GapFunction(parent, Obj obj):
     r"""
-    Turn a Gap C function object (of type ``Obj``) into a Cython ``GapFunction``.
+    Turn a GAP C function object (of type ``Obj``) into a Cython ``GapFunction``.
 
     INPUT:
 
@@ -2024,7 +2024,7 @@ cdef class GapFunction(GapObj):
 
 cdef GapMethodProxy make_GapMethodProxy(parent, Obj function, GapObj base_object):
     r"""
-    Turn a Gap C rec object (of type ``Obj``) into a Cython ``GapRecord``.
+    Turn a GAP C rec object (of type ``Obj``) into a Cython ``GapRecord``.
 
     This class implement syntactic sugar so that you can write
     ``gapelement.f()`` instead of ``gap.f(gapelement)`` for any GAP
@@ -2114,7 +2114,7 @@ cdef class GapMethodProxy(GapFunction):
 
 cdef GapList make_GapList(parent, Obj obj):
     r"""
-    Turn a Gap C List object (of type ``Obj``) into a Cython ``GapList``.
+    Turn a GAP C List object (of type ``Obj``) into a Cython ``GapList``.
 
     EXAMPLES::
 
@@ -2149,7 +2149,7 @@ cdef class GapList(GapObj):
         >>> lst[3]
         (2,3)
 
-    We can easily convert a Gap ``List`` object into a Python ``list``::
+    We can easily convert a GAP ``List`` object into a Python ``list``::
 
         >>> list(lst)
         [(), (1,3), (1,2,3), (2,3), (1,3,2), (1,2)]
@@ -2292,7 +2292,7 @@ cdef class GapList(GapObj):
             >>> u[0] = 5
             Traceback (most recent call last):
             ...
-            TypeError: immutable Gap object does not support item assignment
+            TypeError: immutable GAP object does not support item assignment
 
         TESTS::
 
@@ -2305,7 +2305,7 @@ cdef class GapList(GapObj):
             [ [ 1, 2 ], [ 3, 4 ] ]
         """
         if not IS_MUTABLE_OBJ(self.value):
-            raise TypeError('immutable Gap object does not support item assignment')
+            raise TypeError('immutable GAP object does not support item assignment')
 
         cdef int j
         cdef Obj obj = self.value
@@ -2434,7 +2434,7 @@ cdef class GapList(GapObj):
 
 cdef GapPermutation make_GapPermutation(parent, Obj obj):
     r"""
-    Turn a Gap C permutation object (of type ``Obj``) into a Cython
+    Turn a GAP C permutation object (of type ``Obj``) into a Cython
     ``GapPermutation``.
 
     EXAMPLES::
@@ -2471,7 +2471,7 @@ cdef class GapPermutation(GapObj):
 
 cdef GapRecord make_GapRecord(parent, Obj obj):
     r"""
-    Turn a Gap C rec object (of type ``Obj``) into a Cython ``GapRecord``.
+    Turn a GAP C rec object (of type ``Obj``) into a Cython ``GapRecord``.
 
     EXAMPLES::
 
@@ -2499,7 +2499,7 @@ cdef class GapRecord(GapObj):
         >>> rec['a']
         123
 
-    We can easily convert a Gap ``rec`` object into a Python ``dict``::
+    We can easily convert a GAP ``rec`` object into a Python ``dict``::
 
         >>> dict(rec)
         {'a': 123, 'b': 456}
