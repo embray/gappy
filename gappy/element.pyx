@@ -1565,13 +1565,11 @@ cdef class GapInteger(GapObj):
             >>> int(gap(3))
             3
             >>> type(_)
-            <type 'int'>
+            <class 'int'>
 
             >>> int(gap(2)**128)
-            340282366920938463463374607431768211456L
-            >>> type(_)  # py2
-            <type 'long'>
-            >>> type(_)  # py3
+            340282366920938463463374607431768211456
+            >>> type(_)
             <class 'int'>
         """
         return self.sage(ring=int)
@@ -2377,7 +2375,7 @@ cdef class GapString(GapObj):
             >>> s.sage()
             'string'
             >>> type(_)
-            <type 'str'>
+            <class 'str'>
         """
         s = char_to_str(CSTR_STRING(self.value))
         return s
