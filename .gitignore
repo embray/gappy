@@ -1,3 +1,6 @@
+# vim files
+*.sw[nop]
+
 # Python files
 __pycache__/
 
@@ -15,3 +18,9 @@ gappy/_version.py
 
 ## Cython generated files
 gappy/*.c
+
+## cysignals logs
+cysignals_crash_logs/
+
+## pytest files
+pytestdebug.log
