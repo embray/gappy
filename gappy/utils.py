@@ -20,8 +20,8 @@ def get_gap_memory_pool_size(unit='m'):
 
     EXAMPLES::
 
-        sage: from sage.interfaces.gap import get_gap_memory_pool_size
-        sage: get_gap_memory_pool_size()   # random output
+        >>> from sage.interfaces.gap import get_gap_memory_pool_size
+        >>> get_gap_memory_pool_size()   # random output
         1534059315
     """
     allowed_units = ('k', 'm', 'g')
@@ -58,10 +58,10 @@ def virtual_memory_limit():
 
     EXAMPLES::
 
-        sage: from sage.misc.getusage import virtual_memory_limit
-        sage: virtual_memory_limit() > 0
+        >>> from sage.misc.getusage import virtual_memory_limit
+        >>> virtual_memory_limit() > 0
         True
-        sage: virtual_memory_limit() <= sys.maxsize
+        >>> virtual_memory_limit() <= sys.maxsize
         True
     """
     try:

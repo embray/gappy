@@ -68,10 +68,10 @@ cdef class ObjWrapper(object):
 
     EXAMPLES::
 
-        sage: from sage.libs.gap.util import ObjWrapper
-        sage: x = ObjWrapper()
-        sage: y = ObjWrapper()
-        sage: x == y
+        >>> from sage.libs.gap.util import ObjWrapper
+        >>> x = ObjWrapper()
+        >>> y = ObjWrapper()
+        >>> x == y
         True
     """
 
@@ -91,10 +91,10 @@ cdef class ObjWrapper(object):
 
         EXAMPLES::
 
-            sage: from sage.libs.gap.util import ObjWrapper
-            sage: x = ObjWrapper()
-            sage: y = ObjWrapper()
-            sage: x == y
+            >>> from sage.libs.gap.util import ObjWrapper
+            >>> x = ObjWrapper()
+            >>> y = ObjWrapper()
+            >>> x == y
             True
         """
         cdef result
@@ -121,9 +121,9 @@ cdef class ObjWrapper(object):
 
         EXAMPLES::
 
-            sage: from sage.libs.gap.util import ObjWrapper
-            sage: x = ObjWrapper()
-            sage: hash(x)
+            >>> from sage.libs.gap.util import ObjWrapper
+            >>> x = ObjWrapper()
+            >>> hash(x)
             0
         """
         return <Py_hash_t>(self.value)
@@ -218,7 +218,7 @@ cdef initialize():
 
     TESTS::
 
-        sage: libgap(123)   # indirect doctest
+        >>> libgap(123)   # indirect doctest
         123
     """
     global _gap_is_initialized
@@ -335,17 +335,17 @@ cdef Obj gap_eval(str gap_string) except? NULL:
 
     EXAMPLES::
 
-        sage: libgap.eval('if 4>3 then\nPrint("hi");\nfi')
-        sage: libgap.eval('1+1')   # testing that we have successfully recovered
+        >>> libgap.eval('if 4>3 then\nPrint("hi");\nfi')
+        >>> libgap.eval('1+1')   # testing that we have successfully recovered
         2
 
-        sage: libgap.eval('if 4>3 thenPrint("hi");\nfi')
+        >>> libgap.eval('if 4>3 thenPrint("hi");\nfi')
         Traceback (most recent call last):
         ...
         GAPError: Syntax error: then expected in stream:1
         if 4>3 thenPrint("hi");
                ^^^^^^^^^
-        sage: libgap.eval('1+1')   # testing that we have successfully recovered
+        >>> libgap.eval('1+1')   # testing that we have successfully recovered
         2
 
     TESTS:
@@ -354,7 +354,7 @@ cdef Obj gap_eval(str gap_string) except? NULL:
     and hence multiple errors should still result in a single exception
     with a message capturing all errors that occurrer::
 
-        sage: libgap.eval('Complex Field with 53 bits of precision;')
+        >>> libgap.eval('Complex Field with 53 bits of precision;')
         Traceback (most recent call last):
         ...
         GAPError: Error, Variable: 'Complex' must have a value
@@ -374,14 +374,14 @@ cdef Obj gap_eval(str gap_string) except? NULL:
     Test that on a subsequent attempt we get the same message (no garbage was
     left in the error stream)::
 
-        sage: libgap.eval('Complex Field with 53 bits of precision;')
+        >>> libgap.eval('Complex Field with 53 bits of precision;')
         Traceback (most recent call last):
         ...
         GAPError: Error, Variable: 'Complex' must have a value
         ...
         Error, Variable: 'precision' must have a value
 
-        sage: libgap.eval('1+1')  # test that we successfully recover
+        >>> libgap.eval('1+1')  # test that we successfully recover
         2
     """
     initialize()
@@ -557,12 +557,12 @@ class Gap(Parent):
 
     EXAMPLES::
 
-        sage: libgap.eval('SymmetricGroup(4)')
+        >>> libgap.eval('SymmetricGroup(4)')
         Sym( [ 1 .. 4 ] )
 
     TESTS::
 
-        sage: TestSuite(libgap).run(skip=['_test_category', '_test_elements', '_test_pickling'])
+        >>> TestSuite(libgap).run(skip=['_test_category', '_test_elements', '_test_pickling'])
     """
 
     Element = GapElement
@@ -577,9 +577,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.has_coerce_map_from(ZZ)
+            >>> libgap.has_coerce_map_from(ZZ)
             True
-            sage: libgap.has_coerce_map_from(CyclotomicField(5)['x','y'])
+            >>> libgap.has_coerce_map_from(CyclotomicField(5)['x','y'])
             True
         """
         return True
@@ -598,17 +598,17 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap(0)   # indirect doctest
+            >>> libgap(0)   # indirect doctest
             0
-            sage: libgap(ZZ(0))
+            >>> libgap(ZZ(0))
             0
-            sage: libgap(int(0))
+            >>> libgap(int(0))
             0
-            sage: libgap(vector((0,1,2)))
+            >>> libgap(vector((0,1,2)))
             [ 0, 1, 2 ]
-            sage: libgap(vector((1/3,2/3,4/5)))
+            >>> libgap(vector((1/3,2/3,4/5)))
             [ 1/3, 2/3, 4/5 ]
-            sage: libgap(vector((1/3, 0.8, 3)))
+            >>> libgap(vector((1/3, 0.8, 3)))
             [ 0.333333, 0.8, 3. ]
 
         """
@@ -649,33 +649,33 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: M = libgap._construct_matrix(identity_matrix(ZZ,2)); M
+            >>> M = libgap._construct_matrix(identity_matrix(ZZ,2)); M
             [ [ 1, 0 ], [ 0, 1 ] ]
-            sage: M.IsMatrix()
+            >>> M.IsMatrix()
             true
 
-            sage: M = libgap(identity_matrix(ZZ,2)); M  # syntactic sugar
+            >>> M = libgap(identity_matrix(ZZ,2)); M  # syntactic sugar
             [ [ 1, 0 ], [ 0, 1 ] ]
-            sage: M.IsMatrix()
+            >>> M.IsMatrix()
             true
 
-            sage: M = libgap(matrix(GF(3),2,2,[4,5,6,7])); M
+            >>> M = libgap(matrix(GF(3),2,2,[4,5,6,7])); M
             [ [ Z(3)^0, Z(3) ], [ 0*Z(3), Z(3)^0 ] ]
-            sage: M.IsMatrix()
+            >>> M.IsMatrix()
             true
 
-            sage: x = polygen(QQ, 'x')
-            sage: M = libgap(matrix(QQ['x'],2,2,[x,5,6,7])); M
+            >>> x = polygen(QQ, 'x')
+            >>> M = libgap(matrix(QQ['x'],2,2,[x,5,6,7])); M
             [ [ x, 5 ], [ 6, 7 ] ]
-            sage: M.IsMatrix()
+            >>> M.IsMatrix()
             true
 
         TESTS:
 
         We gracefully handle the case that the conversion fails (:trac:`18039`)::
 
-            sage: F.<a> = GF(9, modulus="first_lexicographic")
-            sage: libgap(Matrix(F, [[a]]))
+            >>> F.<a> = GF(9, modulus="first_lexicographic")
+            >>> libgap(Matrix(F, [[a]]))
             Traceback (most recent call last):
             ...
             NotImplementedError: conversion of (Givaro) finite field element to GAP not implemented except for fields defined by Conway polynomials.
@@ -703,9 +703,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.eval('0')
+            >>> libgap.eval('0')
             0
-            sage: libgap.eval('"string"')
+            >>> libgap.eval('"string"')
             "string"
         """
         cdef GapElement elem
@@ -728,7 +728,7 @@ class Gap(Parent):
 
         TESTS::
 
-            sage: libgap.load_package("chevie")
+            >>> libgap.load_package("chevie")
             Traceback (most recent call last):
             ...
             RuntimeError: Error loading GAP package chevie. You may want to
@@ -768,7 +768,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.function_factory('Print')
+            >>> libgap.function_factory('Print')
             <Gap function "Print">
         """
         initialize()
@@ -786,11 +786,11 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.set_global('FooBar', 1)
-            sage: libgap.get_global('FooBar')
+            >>> libgap.set_global('FooBar', 1)
+            >>> libgap.get_global('FooBar')
             1
-            sage: libgap.unset_global('FooBar')
-            sage: libgap.get_global('FooBar')
+            >>> libgap.unset_global('FooBar')
+            >>> libgap.get_global('FooBar')
             Traceback (most recent call last):
             ...
             GAPError: Error, VAL_GVAR: No value bound to FooBar
@@ -811,11 +811,11 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.set_global('FooBar', 1)
-            sage: libgap.get_global('FooBar')
+            >>> libgap.set_global('FooBar', 1)
+            >>> libgap.get_global('FooBar')
             1
-            sage: libgap.unset_global('FooBar')
-            sage: libgap.get_global('FooBar')
+            >>> libgap.unset_global('FooBar')
+            >>> libgap.get_global('FooBar')
             Traceback (most recent call last):
             ...
             GAPError: Error, VAL_GVAR: No value bound to FooBar
@@ -843,11 +843,11 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.set_global('FooBar', 1)
-            sage: libgap.get_global('FooBar')
+            >>> libgap.set_global('FooBar', 1)
+            >>> libgap.get_global('FooBar')
             1
-            sage: libgap.unset_global('FooBar')
-            sage: libgap.get_global('FooBar')
+            >>> libgap.unset_global('FooBar')
+            >>> libgap.get_global('FooBar')
             Traceback (most recent call last):
             ...
             GAPError: Error, VAL_GVAR: No value bound to FooBar
@@ -871,11 +871,11 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.set_global('FooBar', 1)
-            sage: with libgap.global_context('FooBar', 2):
-            ....:     print(libgap.get_global('FooBar'))
+            >>> libgap.set_global('FooBar', 1)
+            >>> with libgap.global_context('FooBar', 2):
+            ...     print(libgap.get_global('FooBar'))
             2
-            sage: libgap.get_global('FooBar')
+            >>> libgap.get_global('FooBar')
             1
         """
         from sage.libs.gap.context_managers import GlobalVariableContext
@@ -891,9 +891,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.set_seed(0)
+            >>> libgap.set_seed(0)
             0
-            sage: [libgap.Random(1, 10) for i in range(5)]
+            >>> [libgap.Random(1, 10) for i in range(5)]
             [2, 3, 3, 4, 2]
         """
         if seed is None:
@@ -914,7 +914,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.an_element()   # indirect doctest
+            >>> libgap.an_element()   # indirect doctest
             0
         """
         return self(0)
@@ -929,7 +929,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.zero()
+            >>> libgap.zero()
             0
         """
         return self(0)
@@ -940,9 +940,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.one()
+            >>> libgap.one()
             1
-            sage: parent(_)
+            >>> parent(_)
             C library interface to GAP
         """
         return self(1)
@@ -953,9 +953,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: type(libgap)
+            >>> type(libgap)
             <type 'sage.misc.lazy_import.LazyImport'>
-            sage: type(libgap._get_object())
+            >>> type(libgap._get_object())
             <class 'sage.libs.gap.libgap.Gap'>
         """
         Parent.__init__(self, base=ZZ)
@@ -970,7 +970,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap
+            >>> libgap
             C library interface to GAP
         """
         return 'C library interface to GAP'
@@ -982,7 +982,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-           sage: 'OctaveAlgebra' in dir(libgap)
+           >>> 'OctaveAlgebra' in dir(libgap)
            True
         """
         from sage.libs.gap.gap_globals import common_gap_globals
@@ -1005,9 +1005,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.List
+            >>> libgap.List
             <Gap function "List">
-            sage: libgap.GlobalRandomSource
+            >>> libgap.GlobalRandomSource
             <RandomSource in IsGlobalRandomSource>
         """
         if name in dir(self.__class__):
@@ -1044,12 +1044,12 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: a = libgap(123)
-            sage: b = libgap(456)
-            sage: c = libgap(789)
-            sage: del b
-            sage: libgap.collect()
-            sage: libgap.show()  # random output
+            >>> a = libgap(123)
+            >>> b = libgap(456)
+            >>> c = libgap(789)
+            >>> del b
+            >>> libgap.collect()
+            >>> libgap.show()  # random output
             {'gasman_stats': {'full': {'cumulative': 110,
                'deadbags': 321400,
                'deadkb': 12967,
@@ -1079,7 +1079,7 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: libgap.count_GAP_objects()   # random output
+            >>> libgap.count_GAP_objects()   # random output
             5
         """
         return len(get_owned_objects())
@@ -1090,9 +1090,9 @@ class Gap(Parent):
 
         EXAMPLES::
 
-            sage: a = libgap(123)
-            sage: del a
-            sage: libgap.collect()
+            >>> a = libgap(123)
+            >>> del a
+            >>> libgap.collect()
         """
         initialize()
         rc = CollectBags(0, 1)
