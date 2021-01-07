@@ -674,6 +674,7 @@ cdef class GapObj:
         r"""
         TESTS::
 
+            >>> from copy import deepcopy
             >>> a = gap([[0,1],[2]])
             >>> b = deepcopy(a)
             >>> a[0,0] = -1
