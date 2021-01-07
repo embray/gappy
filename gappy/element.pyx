@@ -17,7 +17,6 @@ This document describes the individual wrappers for various GAP objects.
 
 from cpython.longintrepr cimport py_long, digit, PyLong_SHIFT, _PyLong_New
 from cpython.object cimport Py_EQ, Py_NE, Py_LE, Py_GE, Py_LT, Py_GT, Py_SIZE
-
 from cysignals.signals cimport sig_on, sig_off
 
 from .gap_includes cimport *
@@ -1725,8 +1724,8 @@ cdef class GapFiniteField(GapObj):
 
         OUTPUT:
 
-        The smallest positive :class:`GapInteger` that equals
-        ``self`` in the prime finite field.
+        The smallest positive :class:`GapInteger` that equals ``self`` in the
+        prime finite field.
 
         EXAMPLES::
 
@@ -1741,8 +1740,7 @@ cdef class GapFiniteField(GapObj):
             Traceback (most recent call last):
             TypeError: not in prime subfield
         """
-        degree = self.DegreeFFE().sage()
-        if degree == 1:
+        if self.DegreeFFE() == 1:
             return self.IntFFE()
         else:
             raise TypeError('not in prime subfield')
