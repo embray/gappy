@@ -15,13 +15,34 @@ This document describes the individual wrappers for various GAP objects.
 #                  https://www.gnu.org/licenses/
 # ****************************************************************************
 
-from cpython.object cimport Py_EQ, Py_NE, Py_LE, Py_GE, Py_LT, Py_GT
+from cpython.longintrepr cimport py_long, digit, PyLong_SHIFT, _PyLong_New
+from cpython.object cimport Py_EQ, Py_NE, Py_LE, Py_GE, Py_LT, Py_GT, Py_SIZE
+
 from cysignals.signals cimport sig_on, sig_off
 
 from .gap_includes cimport *
 from .core cimport *
 from .exceptions import GAPError
 from .operations import OperationInspector
+
+# Some minimal bits from GMP used primarily for converting between GAP integers
+# and Python ints
+cdef extern from "<gmp.h>":
+    ctypedef struct __mpz_struct:
+        pass
+    ctypedef __mpz_struct mpz_t[1]
+
+    # GAP ensures at compile time that sizeof(mp_limb_t) == sizeof(UInt)
+    ctypedef UInt mp_limb_t
+
+    void mpz_init(mpz_t)
+    void mpz_clear(mpz_t)
+    void mpz_neg(mpz_t, const mpz_t)
+    void mpz_import(mpz_t, size_t, int, int, int, size_t, void *)
+    void *mpz_export(void *, size_t *, int, size_t, int, size_t, const mpz_t)
+    size_t mpz_size(const mpz_t)
+    size_t mpz_sizeinbase(const mpz_t, int)
+    const mp_limb_t* mpz_limbs_read(const mpz_t)
 
 #from sage.cpython.string cimport str_to_bytes, char_to_str
 cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
@@ -236,13 +257,38 @@ cdef Obj make_gap_integer(x) except NULL:
         >>> gap(1)   # indirect doctest
         1
     """
+
     cdef Obj result
+    cdef mpz_t z
+    cdef UInt s
+    cdef UInt *limbs
+    cdef Int size = Py_SIZE(x)
+    cdef Int sign = (size > 0) - (size < 0)
+    cdef Int do_clear = 0
+
+    if -1 <= size <= 1:
+        # Shortcut for smaller ints (up to 30 bits)
+        s = <UInt>((<py_long>x).ob_digit[0])
+        limbs = &s
+    else:
+        # See https://github.com/gap-system/gap/issues/4209
+        mpz_init(z)
+        mpz_import(z, size * sign, -1, sizeof(digit), 0,
+                   (sizeof(digit) * 8) - PyLong_SHIFT, (<py_long>x).ob_digit)
+        do_clear = 1
+        if sign < 0:
+            mpz_neg(z, z)
+        limbs = <UInt *>mpz_limbs_read(z)
+        size = <Int>mpz_size(z) * sign
+
     try:
         GAP_Enter()
-        result = INTOBJ_INT(<int>x)
+        result = GAP_MakeObjInt(limbs, size)
         return result
     finally:
         GAP_Leave()
+        if do_clear:
+            mpz_clear(z)
 
 
 cdef Obj make_gap_float(x) except NULL:
@@ -345,7 +391,7 @@ cdef GapObj make_any_gap_element(parent, Obj obj):
         if obj is NULL:
             return make_GapObj(parent, obj)
         num = TNUM_OBJ(obj)
-        if IS_INT(obj):
+        if GAP_IsInt(obj):
             return make_GapInteger(parent, obj)
         elif num == T_MACFLOAT:
             return make_GapFloat(parent, obj)
@@ -1432,7 +1478,7 @@ cdef class GapInteger(GapObj):
         123
     """
 
-    def is_C_int(self):
+    cpdef is_C_int(self):
         r"""
         Return whether the wrapped GAP object is a immediate GAP integer.
 
@@ -1454,7 +1500,7 @@ cdef class GapInteger(GapObj):
             >>> n.IsInt()
             true
 
-            >>> N = gap(2^130)
+            >>> N = gap(2**130)
             >>> type(N)
             <class 'gappy.element.GapInteger'>
             >>> N.is_C_int()
@@ -1462,7 +1508,7 @@ cdef class GapInteger(GapObj):
             >>> N.IsInt()
             true
         """
-        return IS_INTOBJ(self.value)
+        return bool(GAP_IsSmallInt(self.value))
 
     def __int__(self):
         r"""
@@ -1474,21 +1520,62 @@ cdef class GapInteger(GapObj):
             3
             >>> type(_)
             <class 'int'>
+            >>> int(gap(-3))
+            -3
+            >>> type(_)
+            <class 'int'>
 
-            >>> int(gap(2)**128)
+            >>> int(gap(2**128))
             340282366920938463463374607431768211456
+            >>> type(_)
+            <class 'int'>
+            >>> int(gap(-2**128))
+            -340282366920938463463374607431768211456
             >>> type(_)
             <class 'int'>
         """
 
+        cdef Int size, sign
+        cdef size_t nbits
+        cdef mpz_t z
+
         if self.is_C_int():
-            return INT_INTOBJ(self.value)
+            # This should work, but there should be a function for this; see
+            # https://github.com/gap-system/gap/issues/4208
+            # Previously this used the internal function INT_INTOBJ, but in the
+            # effort to not use internal functions it's replaced with this
+            # instead (which is effectively the same as what INT_INTOBJ does).
+            if <Int>self.value < 0:
+                # ensure arithmetic right-shift; the compiler might optimize
+                # this out but let's see...
+                return ((<Int>self.value) >> 2) | ~(~0 >> 2)
+            else:
+                return <Int>self.value >> 2
         else:
-            # TODO: waste of time!
-            # gap integers are stored as a mp_limb_t and we have a much more direct
-            # conversion implemented in mpz_get_pylong(mpz_srcptr z)
-            # (see sage.libs.gmp.pylong)
-            return int(self.String())
+            mpz_init(z)
+            try:
+                GAP_Enter()
+                size = GAP_SizeInt(self.value)
+                sign = (size > 0) - (size < 0)
+                # Import limbs from GAP
+                mpz_import(z, size * sign, -1, sizeof(UInt), 0, 0,
+                           GAP_AddrInt(self.value))
+            except:
+                mpz_clear(z)
+            finally:
+                GAP_Leave()
+
+            # Determine number of bits needed to represent z
+            nbits = mpz_sizeinbase(z, 2)
+            # Minimum number of limbs needed for the Python int
+            # e.g. if 2**30 we require 31 bits and with PyLong_SHIFT = 30
+            # this returns 2
+            x = _PyLong_New((nbits + PyLong_SHIFT - 1) // PyLong_SHIFT)
+            mpz_export((<py_long>x).ob_digit, NULL, -1, sizeof(digit), 0,
+                       (sizeof(digit) * 8) - PyLong_SHIFT, z)
+            x *= sign
+            mpz_clear(z)
+            return x
 
     def __index__(self):
         r"""

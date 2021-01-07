@@ -66,16 +66,6 @@ cdef extern from "gap/gvars.h" nogil:
     void AssGVar "AssGVar"(UInt gvar, Obj val)
 
 
-cdef extern from "gap/integer.h" nogil:
-    Int IS_INT(Obj)
-
-
-cdef extern from "gap/intobj.h" nogil:
-    bint IS_INTOBJ(Obj obj)
-    Obj INTOBJ_INT(Int)
-    Int INT_INTOBJ(Obj)
-
-
 cdef extern from "gap/io.h" nogil:
     UInt OpenOutputStream(Obj stream)
     UInt CloseOutput()
@@ -99,6 +89,14 @@ cdef extern from "gap/libgap-api.h" nogil:
     cdef void GAP_Leave()
     cdef int GAP_Error_Setjmp() except 0
 
+    # Ints
+    cdef int GAP_IsInt(Obj)
+    cdef int GAP_IsSmallInt(Obj)
+    cdef Obj GAP_MakeObjInt(UInt *, Int)
+    cdef Int GAP_SizeInt(Obj)
+    cdef UInt *GAP_AddrInt(Obj)
+
+    # Floats
     cdef Obj GAP_NewMacFloat(double)
 
 

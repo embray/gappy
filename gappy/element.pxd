@@ -66,7 +66,7 @@ cdef class GapObj:
     cpdef GapObj deepcopy(self, bint mut)
 
 cdef class GapInteger(GapObj):
-    pass
+    cpdef is_C_int(self)
 
 cdef class GapFloat(GapObj):
     pass
