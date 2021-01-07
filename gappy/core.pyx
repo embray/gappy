@@ -25,6 +25,7 @@ import os
 import warnings
 import sys
 
+from .gap_globals import common_gap_globals as GAP_GLOBALS
 from .gap_includes cimport *
 from .element cimport *
 from .exceptions import GAPError
@@ -1025,8 +1026,7 @@ class Gap:
            >>> 'OctaveAlgebra' in dir(gap)
            True
         """
-        from sage.libs.gap.gap_globals import common_gap_globals
-        return dir(self.__class__) + sorted(common_gap_globals)
+        return dir(self.__class__) + sorted(GAP_GLOBALS)
 
     def __getattr__(self, name):
         r"""
