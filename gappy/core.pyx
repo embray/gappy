@@ -595,23 +595,6 @@ class Gap:
         Sym( [ 1 .. 4 ] )
     """
 
-    def _coerce_map_from_(self, S):
-        """
-        Whether a coercion from `S` exists.
-
-        INPUT / OUTPUT:
-
-        See :mod:`sage.structure.parent`.
-
-        EXAMPLES::
-
-            >>> gap.has_coerce_map_from(ZZ)
-            True
-            >>> gap.has_coerce_map_from(CyclotomicField(5)['x','y'])
-            True
-        """
-        return True
-
     def __call__(self, x):
         r"""
         Construct GapObj elements from a given object that either has a
@@ -688,60 +671,6 @@ class Gap:
                 pass
             x = str(x._gap_init_())
             return make_any_gap_element(self, gap_eval(x))
-
-    def _construct_matrix(self, M):
-        """
-        Construct a LibGAP matrix.
-
-        INPUT:
-
-        - ``M`` -- a matrix.
-
-        OUTPUT:
-
-        A GAP matrix, that is, a list of lists with entries over a
-        common ring.
-
-        EXAMPLES::
-
-            >>> M = gap._construct_matrix(identity_matrix(ZZ,2)); M
-            [ [ 1, 0 ], [ 0, 1 ] ]
-            >>> M.IsMatrix()
-            true
-
-            >>> M = gap(identity_matrix(ZZ,2)); M  # syntactic sugar
-            [ [ 1, 0 ], [ 0, 1 ] ]
-            >>> M.IsMatrix()
-            true
-
-            >>> M = gap(matrix(GF(3),2,2,[4,5,6,7])); M
-            [ [ Z(3)^0, Z(3) ], [ 0*Z(3), Z(3)^0 ] ]
-            >>> M.IsMatrix()
-            true
-
-            >>> x = polygen(QQ, 'x')
-            >>> M = gap(matrix(QQ['x'],2,2,[x,5,6,7])); M
-            [ [ x, 5 ], [ 6, 7 ] ]
-            >>> M.IsMatrix()
-            true
-
-        TESTS:
-
-        We gracefully handle the case that the conversion fails (:trac:`18039`)::
-
-            >>> F.<a> = GF(9, modulus="first_lexicographic")
-            >>> gap(Matrix(F, [[a]]))
-            Traceback (most recent call last):
-            ...
-            NotImplementedError: conversion of (Givaro) finite field element to GAP not implemented except for fields defined by Conway polynomials.
-        """
-        ring = M.base_ring()
-        try:
-            gap_ring = self(ring)
-        except ValueError:
-            raise TypeError('base ring is not supported by GAP')
-        M_list = map(list, M.rows())
-        return make_GapList(self, make_gap_matrix(self, M_list, gap_ring))
 
     def eval(self, gap_command):
         """
@@ -957,21 +886,6 @@ class Gap:
         Reset(self.GlobalMersenneTwister, seed)
         Reset(self.GlobalRandomSource, seed)
         return seed
-
-    def _an_element_(self):
-        r"""
-        Return a :class:`GapObj`.
-
-        OUTPUT:
-
-        A :class:`GapObj`.
-
-        EXAMPLES::
-
-            >>> gap.an_element()   # indirect doctest
-            0
-        """
-        return self(0)
 
     def zero(self):
         """
