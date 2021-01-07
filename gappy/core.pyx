@@ -910,11 +910,14 @@ class Gap:
 
             >>> gap.one()
             1
-            >>> parent(_)
+            >>> _.parent()
             C library interface to GAP
         """
         return self(1)
 
+    # TODO: Update this to display something more useful, such as the
+    # arguments Gap was initialized with (e.g. gap_root path).
+    # For that matter, gap_root should also be exposed as a property.
     def __repr__(self):
         r"""
         Return a string representation of ``self``.
@@ -1016,8 +1019,8 @@ class Gap:
              'total_alloc': 3234234}
         """
         d = {'nelements': self.count_GAP_objects()}
-        d['total_alloc'] = self.eval('TotalMemoryAllocated()').sage()
-        d['gasman_stats'] = self.eval('GasmanStatistics()').sage()
+        d['total_alloc'] = int(self.eval('TotalMemoryAllocated()'))
+        d['gasman_stats'] = dict(self.eval('GasmanStatistics()'))
         return d
 
     def count_GAP_objects(self):
