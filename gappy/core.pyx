@@ -592,10 +592,6 @@ class Gap:
 
         >>> gap.eval('SymmetricGroup(4)')
         Sym( [ 1 .. 4 ] )
-
-    TESTS::
-
-        >>> TestSuite(gap).run(skip=['_test_category', '_test_elements', '_test_pickling'])
     """
 
     def _coerce_map_from_(self, S):
