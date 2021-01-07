@@ -1661,8 +1661,8 @@ cdef class GapIntegerMod(GapObj):
 
     EXAMPLES::
 
-        >>> n = IntegerModRing(123)(13)
-        >>> i = gap(n)
+        >>> i = gap.eval('One(ZmodnZ(123)) * 13'); i
+        ZmodnZObj( 13, 123 )
         >>> type(i)
         <class 'gappy.element.GapIntegerMod'>
     """
@@ -2053,7 +2053,7 @@ cdef class GapFunction(GapObj):
             [Group(()),
              Sym( [ 1 .. 4 ] ),
              Alt( [ 1 .. 4 ] ),
-             Group([ (1,4)(2,3), (1,2)(3,4) ])]
+             Group([ (1,4)(2,3), (...)(...) ])]
 
             >>> gap.eval("a := NormalSubgroups")
             <GAP function "NormalSubgroups">
@@ -2064,7 +2064,7 @@ cdef class GapFunction(GapObj):
             [Group(()),
              Sym( [ 1 .. 4 ] ),
              Alt( [ 1 .. 4 ] ),
-             Group([ (1,4)(2,3), (1,3)(2,4) ])]
+             Group([ (1,4)(2,3), (...)(...) ])]
 
             >>> a = gap.eval('a')
             >>> b = gap.eval('b')
@@ -2073,7 +2073,7 @@ cdef class GapFunction(GapObj):
             [Group(()),
              Sym( [ 1 .. 4 ] ),
              Alt( [ 1 .. 4 ] ),
-             Group([ (1,4)(2,3), (1,3)(2,4) ])]
+             Group([ (1,4)(2,3), (...)(...) ])]
 
         Not every ``GapObj`` is callable::
 
