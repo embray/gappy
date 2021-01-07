@@ -2027,7 +2027,7 @@ cdef class GapFunction(GapObj):
         return f'<GAP function "{name}">'
 
     def __call__(self, *args):
-        """
+        r"""
         Call syntax for functions.
 
         INPUT:
@@ -2064,7 +2064,7 @@ cdef class GapFunction(GapObj):
             [Group(()),
              Sym( [ 1 .. 4 ] ),
              Alt( [ 1 .. 4 ] ),
-             Group([ (1,4)(2,3), (1,2)(3,4) ])]
+             Group([ (1,4)(2,3), (1,3)(2,4) ])]
 
             >>> a = gap.eval('a')
             >>> b = gap.eval('b')
@@ -2073,7 +2073,7 @@ cdef class GapFunction(GapObj):
             [Group(()),
              Sym( [ 1 .. 4 ] ),
              Alt( [ 1 .. 4 ] ),
-             Group([ (1,4)(2,3), (1,2)(3,4) ])]
+             Group([ (1,4)(2,3), (1,3)(2,4) ])]
 
         Not every ``GapObj`` is callable::
 
@@ -2103,8 +2103,9 @@ cdef class GapFunction(GapObj):
             gappy.exceptions.GAPError: Error, no method found!
             Error, no 1st choice method found for `SumOp' on 2 arguments
 
+            >>> from random import randint
             >>> for i in range(0,100):
-            ...     rnd = [ randint(-10,10) for i in range(0,randint(0,7)) ]
+            ...     rnd = [randint(-10, 10) for i in range(0, randint(0, 7))]
             ...     # compute the sum in GAP
             ...     _ = gap.Sum(rnd)
             ...     try:
@@ -2114,9 +2115,19 @@ cdef class GapFunction(GapObj):
             ...     except ValueError:
             ...         pass
 
-            >>> gap_exec = gap.eval("Exec")
-            >>> gap_exec('echo hello from the shell')
-            hello from the shell
+        Note, for this test the ``Exec`` call outputs to the system stdout,
+        bypassing Python's ``sys.stdout`` so the output is not picked up by
+        doctest automatically::
+
+            >>> import os, tempfile
+            >>> with tempfile.TemporaryFile() as f:
+            ...     _ = os.dup2(1, f.fileno())
+            ...     gap_exec = gap.eval("Exec")
+            ...     gap_exec('echo hello from the shell')
+            ...     _ = f.seek(0)
+            ...     f.read()
+            ...
+            b'hello from the shell\n'
         """
         cdef Obj result = NULL
         cdef Obj arg_list
