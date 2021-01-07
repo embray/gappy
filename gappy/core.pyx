@@ -25,6 +25,7 @@ import os
 import warnings
 import sys
 
+from .context_managers import GlobalVariableContext
 from .gap_globals import common_gap_globals as GAP_GLOBALS
 from .gap_includes cimport *
 from .element cimport *
@@ -861,9 +862,8 @@ class Gap:
             >>> gap.get_global('FooBar')
             1
         """
-        from sage.libs.gap.context_managers import GlobalVariableContext
         initialize()
-        return GlobalVariableContext(variable, value)
+        return GlobalVariableContext(self, variable, value)
 
     def set_seed(self, seed=None):
         """

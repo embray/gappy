@@ -1,5 +1,5 @@
 """
-Context Managers for LibGAP
+Context Managers for gappy.
 
 This module implements a context manager for global variables. This is
 useful since the behavior of GAP is sometimes controlled by global
@@ -7,34 +7,35 @@ variables, which you might want to switch to a different value for a
 computation. Here is an example how you are suppose to use it from
 your code. First, let us set a dummy global variable for our example::
 
-    sage: libgap.set_global('FooBar', 123)
+    >>> gap.set_global('FooBar', 123)
 
 Then, if you want to switch the value momentarily you can write::
 
-    sage: with libgap.global_context('FooBar', 'test'):
-    ....:     print(libgap.get_global('FooBar'))
+    >>> with gap.global_context('FooBar', 'test'):
+    ...     print(gap.get_global('FooBar'))
     test
 
 Afterward, the global variable reverts to the previous value::
 
-    sage: print(libgap.get_global('FooBar'))
+    >>> print(gap.get_global('FooBar'))
     123
 
 The value is reset even if exceptions occur::
 
-    sage: with libgap.global_context('FooBar', 'test'):
-    ....:     print(libgap.get_global('FooBar'))
-    ....:     raise ValueError(libgap.get_global('FooBar'))
+    >>> with gap.global_context('FooBar', 'test'):
+    ...     print(gap.get_global('FooBar'))
+    ...     raise ValueError(gap.get_global('FooBar'))
     Traceback (most recent call last):
     ...
     ValueError: test
-    sage: print(libgap.get_global('FooBar'))
+    >>> print(gap.get_global('FooBar'))
     123
 """
 
 
 ###############################################################################
 #       Copyright (C) 2012, Volker Braun <vbraun.name@gmail.com>
+#       Copyright (C) 2021, E. Madison Bray <embray@lri.fr>
 #
 #   Distributed under the terms of the GNU General Public License (GPL)
 #   as published by the Free Software Foundation; either version 2 of
@@ -42,18 +43,15 @@ The value is reset even if exceptions occur::
 #                   http://www.gnu.org/licenses/
 ###############################################################################
 
-from sage.libs.gap.libgap import libgap
 
-
-class GlobalVariableContext():
-
-    def __init__(self, variable, value):
+class GlobalVariableContext:
+    def __init__(self, gap, variable, value):
         """
         Context manager for GAP global variables.
 
         It is recommended that you use the
-        :meth:`sage.libs.gap.libgap.Gap.global_context` method and not
-        construct objects of this class manually.
+        :meth:`~gappy.core.Gap.global_context` method and not construct objects
+        of this class manually.
 
         INPUT:
 
@@ -63,13 +61,14 @@ class GlobalVariableContext():
 
         EXAMPLES::
 
-            sage: libgap.set_global('FooBar', 1)
-            sage: with libgap.global_context('FooBar', 2):
-            ....:     print(libgap.get_global('FooBar'))
+            >>> gap.set_global('FooBar', 1)
+            >>> with gap.global_context('FooBar', 2):
+            ...     print(gap.get_global('FooBar'))
             2
-            sage: libgap.get_global('FooBar')
+            >>> gap.get_global('FooBar')
             1
         """
+        self._gap = gap
         self._variable = variable
         self._new_value = value
 
@@ -79,15 +78,15 @@ class GlobalVariableContext():
 
         EXAMPLES::
 
-            sage: libgap.set_global('FooBar', 1)
-            sage: with libgap.global_context('FooBar', 2):
-            ....:     print(libgap.get_global('FooBar'))
+            >>> gap.set_global('FooBar', 1)
+            >>> with gap.global_context('FooBar', 2):
+            ...     print(gap.get_global('FooBar'))
             2
-            sage: libgap.get_global('FooBar')
+            >>> gap.get_global('FooBar')
             1
         """
-        self._old_value = libgap.get_global(self._variable)
-        libgap.set_global(self._variable, self._new_value)
+        self._old_value = self._gap.get_global(self._variable)
+        self._gap.set_global(self._variable, self._new_value)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
@@ -95,12 +94,12 @@ class GlobalVariableContext():
 
         EXAMPLES::
 
-            sage: libgap.set_global('FooBar', 1)
-            sage: with libgap.global_context('FooBar', 2):
-            ....:     print(libgap.get_global('FooBar'))
+            >>> gap.set_global('FooBar', 1)
+            >>> with gap.global_context('FooBar', 2):
+            ...     print(gap.get_global('FooBar'))
             2
-            sage: libgap.get_global('FooBar')
+            >>> gap.get_global('FooBar')
             1
         """
-        libgap.set_global(self._variable, self._old_value)
+        self._gap.set_global(self._variable, self._old_value)
         return False
