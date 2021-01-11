@@ -97,7 +97,7 @@ cdef Obj make_gap_list(parent, lst) except NULL:
         else:
             elem = <GapObj>x
 
-        AddList(l.value, elem.value)
+        GAP_AssList(l.value, GAP_LenList(l.value) + 1, elem.value)
     return l.value
 
 
@@ -137,7 +137,7 @@ cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL:
         else:
             elem = <GapObj>x
 
-        AddList(l.value, elem.value)
+        GAP_AssList(l.value, GAP_LenList(l.value) + 1, elem.value)
     return l.value
 
 
@@ -408,13 +408,13 @@ cdef GapObj make_any_gap_element(parent, Obj obj):
             return make_GapPermutation(parent, obj)
         elif IS_REC(obj):
             return make_GapRecord(parent, obj)
-        elif IS_LIST(obj) and LEN_LIST(obj) == 0:
+        elif GAP_IsList(obj) and GAP_LenList(obj) == 0:
             # Empty lists are lists and not strings in Python
             return make_GapList(parent, obj)
         elif IsStringConv(obj):
             # GAP strings are lists, too. Make sure this comes before non-empty make_GapList
             return make_GapString(parent, obj)
-        elif IS_LIST(obj):
+        elif GAP_IsList(obj):
             return make_GapList(parent, obj)
         elif num == T_CHAR:
             ch = make_GapObj(parent, obj).IntChar().sage()
@@ -1372,7 +1372,7 @@ cdef class GapObj:
             >>> gap.eval('3/2').is_list()
             False
         """
-        return IS_LIST(self.value)
+        return GAP_IsList(self.value)
 
     def is_record(self):
         r"""
@@ -2379,7 +2379,7 @@ cdef class GapList(GapObj):
             >>> len(lst)
             4
         """
-        return LEN_LIST(self.value)
+        return GAP_LenList(self.value)
 
     def __getitem__(self, i):
         r"""
@@ -2427,17 +2427,17 @@ cdef class GapList(GapObj):
 
         if isinstance(i, tuple):
             for j in i:
-                if not IS_LIST(obj):
+                if not GAP_IsList(obj):
                     raise ValueError('too many indices')
-                if j < 0 or j >= LEN_LIST(obj):
+                if j < 0 or j >= GAP_LenList(obj):
                     raise IndexError('index out of range')
-                obj = ELM_LIST(obj, j+1)
+                obj = GAP_ElmList(obj, j + 1)
 
         else:
             j = i
-            if j < 0 or j >= LEN_LIST(obj):
+            if j < 0 or j >= GAP_LenList(obj):
                 raise IndexError('index out of range.')
-            obj = ELM_LIST(obj, j+1)
+            obj = GAP_ElmList(obj, j + 1)
 
         return make_any_gap_element(self.parent(), obj)
 
@@ -2498,12 +2498,12 @@ cdef class GapList(GapObj):
 
         if isinstance(i, tuple):
             for j in i[:-1]:
-                if not IS_LIST(obj):
+                if not GAP_IsList(obj):
                     raise ValueError('too many indices')
-                if j < 0 or j >= LEN_LIST(obj):
+                if j < 0 or j >= GAP_LenList(obj):
                     raise IndexError('index out of range')
-                obj = ELM_LIST(obj, j+1)
-            if not IS_LIST(obj):
+                obj = GAP_ElmList(obj, j + 1)
+            if not GAP_IsList(obj):
                 raise ValueError('too many indices')
             j = i[-1]
         else:
@@ -2518,7 +2518,7 @@ cdef class GapList(GapObj):
         else:
             celt= self.parent()(elt)
 
-        ASS_LIST(obj, j+1, celt.value)
+        GAP_AssList(obj, j + 1, celt.value)
 
 
 ############################################################################

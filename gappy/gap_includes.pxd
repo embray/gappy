@@ -99,17 +99,12 @@ cdef extern from "gap/libgap-api.h" nogil:
     # Floats
     cdef Obj GAP_NewMacFloat(double)
 
+    # Lists
+    void GAP_AssList(Obj, UInt, Obj val)
+    Obj GAP_ElmList(Obj, UInt)
+    UInt GAP_LenList(Obj)
+    int GAP_IsList(Obj)
 
-cdef extern from "gap/lists.h" nogil:
-    bint IS_LIST(Obj lst)
-    int LEN_LIST(Obj lst)
-    Obj ELM_LIST(Obj lst, int pos)
-    Obj ELM0_LIST(Obj lst, int pos)
-    void ASS_LIST(Obj lst, int pos, Obj elt)
-
-
-cdef extern from "gap/listfunc.h" nogil:
-    void AddList(Obj list, Obj obj)
 
 
 cdef extern from "gap/macfloat.h" nogil:
