@@ -1945,6 +1945,24 @@ cdef class GapString(GapObj):
         >>> print(s)
         string
     """
+
+    # TODO: Add other sequence methods for GAP strings
+    def __len__(self):
+        """
+        Return the string length.
+
+        Examples
+        --------
+
+        >>> s = gap('foo')
+        >>> type(s)
+        <class 'gappy.element.GapString'>
+        >>> len(s)
+        3
+        """
+
+        return GAP_LenString(self.value)
+
     def __str__(self):
         r"""
         Convert this :class:`GapString` to a Python string.

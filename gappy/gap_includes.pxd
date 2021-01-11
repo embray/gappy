@@ -99,6 +99,9 @@ cdef extern from "gap/libgap-api.h" nogil:
     # Floats
     cdef Obj GAP_NewMacFloat(double)
 
+    # Strings
+    cdef UInt GAP_LenString(Obj)
+
     # Lists
     void GAP_AssList(Obj, UInt, Obj val)
     Obj GAP_ElmList(Obj, UInt)
