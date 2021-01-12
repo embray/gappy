@@ -108,6 +108,7 @@ cdef extern from "gap/libgap-api.h" nogil:
     Obj GAP_ElmList(Obj, UInt)
     UInt GAP_LenList(Obj)
     int GAP_IsList(Obj)
+    Obj GAP_NewPlist(Int)
 
 
 

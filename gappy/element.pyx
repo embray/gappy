@@ -92,16 +92,21 @@ cdef Obj make_gap_list(parent, lst) except NULL:
 
     The list of the elements in ``a`` as a GAP ``Obj``.
     """
-    cdef GapObj l = parent.eval('[]')
+    cdef Obj l
     cdef GapObj elem
-    for x in lst:
-        if not isinstance(x, GapObj):
-            elem = <GapObj>parent(x)
-        else:
-            elem = <GapObj>x
+    try:
+        GAP_Enter()
+        l = GAP_NewPlist(len(lst))
+        for idx, x in enumerate(lst):
+            if not isinstance(x, GapObj):
+                elem = <GapObj>parent(x)
+            else:
+                elem = <GapObj>x
 
-        GAP_AssList(l.value, GAP_LenList(l.value) + 1, elem.value)
-    return l.value
+            GAP_AssList(l, idx + 1, elem.value)
+        return l
+    finally:
+        GAP_Leave()
 
 
 cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL:
