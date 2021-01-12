@@ -88,7 +88,7 @@ class build_ext(_build_ext):
             nthreads = int(nthreads) if nthreads else None
             self.extensions[:] = cythonize(
                 self.extensions, nthreads=nthreads, force=self.force,
-                language_level=3)
+                language_level=3, compiler_directives={'autotestdict': False})
         super().run()
 
     def _get_directory_option(self, opt):
