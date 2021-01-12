@@ -745,7 +745,7 @@ cdef class GapObj:
             choice method found for `in' on 2 arguments
         """
         GAP_IN = self.parent().eval(r'\in')
-        return GAP_IN(other, self).sage()
+        return bool(GAP_IN(other, self))
 
     cpdef _type_number(self):
         """
