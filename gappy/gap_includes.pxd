@@ -100,6 +100,7 @@ cdef extern from "gap/libgap-api.h" nogil:
     cdef Obj GAP_NewMacFloat(double)
 
     # Strings
+    cdef char *GAP_CSTR_STRING(Obj)
     cdef UInt GAP_LenString(Obj)
 
     # Lists

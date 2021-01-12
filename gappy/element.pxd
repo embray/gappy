@@ -93,7 +93,7 @@ cdef class GapBoolean(GapObj):
     pass
 
 cdef class GapFunction(GapObj):
-    pass
+    cpdef GapObj _name(self)
 
 cdef class GapMethodProxy(GapFunction):
     cdef GapObj first_argument

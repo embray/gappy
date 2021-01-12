@@ -15,6 +15,9 @@ This document describes the individual wrappers for various GAP objects.
 #                  https://www.gnu.org/licenses/
 # ****************************************************************************
 
+import itertools
+from textwrap import dedent
+
 from cpython.longintrepr cimport py_long, digit, PyLong_SHIFT, _PyLong_New
 from cpython.object cimport Py_EQ, Py_NE, Py_LE, Py_GE, Py_LT, Py_GT, Py_SIZE
 from cysignals.signals cimport sig_on, sig_off
@@ -2027,6 +2030,17 @@ cdef class GapFunction(GapObj):
         <class 'gappy.element.GapFunction'>
     """
 
+    @property
+    def __name__(self):
+        """Return the function's name or "unknown" for unbound functions."""
+
+        return str(self._name())
+
+    cpdef GapObj _name(self):
+        """Return the function's name as a `GapString`."""
+
+        return self.parent().NameFunction(self)
+
     def __repr__(self):
         r"""
         Return a string representation
@@ -2040,9 +2054,7 @@ cdef class GapFunction(GapObj):
             >>> gap.Orbits
             <GAP function "Orbits">
         """
-        libgap = self.parent()
-        name = libgap.NameFunction(self)
-        return f'<GAP function "{name}">'
+        return f'<GAP function "{self.__name__}">'
 
     def __call__(self, *args):
         r"""
@@ -2200,10 +2212,108 @@ cdef class GapFunction(GapObj):
             sig_off()
         finally:
             GAP_Leave()
+
         if result == NULL:
             # We called a procedure that does not return anything
             return None
+
         return make_any_gap_element(libgap, result)
+
+    def help(self):
+        """
+        Return the GAP help text for the function, if any exists.
+
+        Roughly equivalent to calling ``?FuncName`` in GAP, but returns the
+        result as a string.
+
+        Examples
+        --------
+
+        >>> print(gap.SymmetricGroup.help())
+        50.1-12 SymmetricGroup
+        <BLANKLINE>
+        ‣ SymmetricGroup( [filt, ]deg ) ─────────────────────────────────── function
+        ‣ SymmetricGroup( [filt, ]dom ) ─────────────────────────────────── function
+        ...
+        Note  that  permutation  groups  provide  special treatment of
+        symmetric and alternating groups, see 43.4.
+        """
+
+        cdef bytes line_bytes
+
+        old_text_theme = None
+        old_screen_size = None
+        libgap = self.parent()
+        width = 80  # TODO: Make this customizable?
+
+        try:
+            GAP_Enter()
+
+            HELP_GET_MATCHES = libgap.function_factory('HELP_GET_MATCHES')
+            SIMPLE_STRING = libgap.function_factory('SIMPLE_STRING')
+            matches = HELP_GET_MATCHES(libgap.HELP_KNOWN_BOOKS[0],
+                                       SIMPLE_STRING(self._name()), True)
+
+            # HELP_GET_MATCHES returns 'exact' matches and 'topic' matches; in
+            # the latter case we always guess the first match is the one we
+            # want (it usually is)
+            try:
+                book, entrynum = next(itertools.chain(*matches))
+            except StopIteration:
+                return ''
+
+            handler = libgap.HELP_BOOK_HANDLER[book['handler']]
+
+            # Save the old text theme and set it to "none"; in particular to
+            # strip out terminal control codes
+            try:
+                # In the off-chance GAPDoc is not loaded...
+                SetGAPDocTextTheme = libgap.function_factory(
+                    'SetGAPDocTextTheme')
+            except GAPError:
+                pass
+            else:
+                old_text_theme = libgap.eval('GAPDocTextTheme')
+                SetGAPDocTextTheme('none')
+
+            # Set the screen width to 80 (otherwise it will produce text with
+            # lines up to 4096, the hard-coded maximum line length)
+            # Hard-coding this might be a small problem for other functions
+            # that depend on screen width, but this seems to be rare...
+            SizeScreen = libgap.function_factory('SizeScreen')
+            old_screen_size = SizeScreen()
+            SizeScreen([width])
+
+            line_info = dict(handler['HelpData'](book, entrynum, 'text'))
+            # TODO: Add .get() and other dict methods to GapRecord
+            start = line_info.get('start', 0)
+            lines = line_info['lines']
+            line_bytes = GAP_CSTR_STRING((<GapObj>lines).value)[:len(lines)]
+            lines = line_bytes.splitlines()
+
+            # We can get the end of the section by finding the start line of
+            # the next section.  AFACT the start line info may be
+            # GAPDoc-specific
+            if book['handler'] == 'GapDocGAP':
+                book, entrynum = handler['MatchNext'](book['bookname'],
+                                                      entrynum)
+                entry = book['entries'][entrynum - 1]
+                end = entry[3] - 1  # the 3-th element is the start line
+            else:
+                end = len(lines)
+
+            out = b'\n'.join(lines[start:end])
+            # NOTE: There is some metadata in the book object about its
+            # encoding type but for now just assuming UTF-8 (which is true
+            # e.g. for the GAP Reference Manual)
+            return dedent(out.decode('utf-8', 'surrogageescape')).strip()
+        finally:
+            if old_text_theme is not None:
+                SetGAPDocTextTheme(old_text_theme)
+            if old_screen_size is not None:
+                SizeScreen(old_screen_size)
+
+            GAP_Leave()
 
     def _instancedoc_(self):
         r"""
@@ -2662,13 +2772,15 @@ cdef class GapRecord(GapObj):
         """
         return GapRecordIterator(self)
 
+    # TODO: This should probably just be an internal method, or even go away
+    # entirely once switching fully to the libgap public API (ref: #2)
     cpdef UInt record_name_to_index(self, name):
         r"""
         Convert string to GAP record index.
 
         INPUT:
 
-        - ``py_name`` -- a python string.
+        - ``name`` -- a python string.
 
         OUTPUT:
 
@@ -2681,10 +2793,12 @@ cdef class GapRecord(GapObj):
             >>> rec = gap.eval('rec(first:=123, second:=456)')
             >>> rec.record_name_to_index('first')   # doctest: +IGNORE_OUTPUT
             1812
+            >>> rec.record_name_to_index(gap('first'))  # doctest: +IGNORE_OUTPUT
+            1812
             >>> rec.record_name_to_index('no_such_name') # doctest: +IGNORE_OUTPUT
             3776
         """
-        name = str_to_bytes(name)
+        name = str_to_bytes(str(name))
         return RNamName(name)
 
     def __getitem__(self, name):
