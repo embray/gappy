@@ -2023,12 +2023,21 @@ cdef class GapFunction(GapObj):
     r"""
     Derived class of GapObj for GAP functions.
 
-    EXAMPLES::
+    To show the GAP documentation for this function, use the ``<func>?`` syntax
+    in IPython/Jupyter or call ``print(<func>.help())``, where ``<func>`` is
+    this function.
 
-        >>> f = gap.Cycles
-        >>> type(f)
-        <class 'gappy.element.GapFunction'>
+    Examples
+    --------
+
+    >>> f = gap.Cycles
+    >>> type(f)
+    <class 'gappy.element.GapFunction'>
+
     """
+
+    def __cinit__(self):
+        self._doc = None
 
     @property
     def __name__(self):
@@ -2040,6 +2049,14 @@ cdef class GapFunction(GapObj):
         """Return the function's name as a `GapString`."""
 
         return self.parent().NameFunction(self)
+
+    @property
+    def __doc__(self):
+        """
+        The standard Python `help` won't show this, but IPython/Jupyter's
+        ``?`` help will.
+        """
+        return self.help()
 
     def __repr__(self):
         r"""
@@ -2241,6 +2258,9 @@ cdef class GapFunction(GapObj):
 
         cdef bytes line_bytes
 
+        if self._doc is not None:
+            return self._doc
+
         old_text_theme = None
         old_screen_size = None
         libgap = self.parent()
@@ -2302,11 +2322,12 @@ cdef class GapFunction(GapObj):
             else:
                 end = len(lines)
 
-            out = b'\n'.join(lines[start:end])
+            doc = b'\n'.join(lines[start:end])
             # NOTE: There is some metadata in the book object about its
             # encoding type but for now just assuming UTF-8 (which is true
             # e.g. for the GAP Reference Manual)
-            return dedent(out.decode('utf-8', 'surrogageescape')).strip()
+            self._doc = dedent(doc.decode('utf-8', 'surrogageescape')).strip()
+            return self._doc
         finally:
             if old_text_theme is not None:
                 SetGAPDocTextTheme(old_text_theme)
@@ -2314,22 +2335,6 @@ cdef class GapFunction(GapObj):
                 SizeScreen(old_screen_size)
 
             GAP_Leave()
-
-    def _instancedoc_(self):
-        r"""
-        Return the help string
-
-        EXAMPLES::
-
-            >>> f = gap.CyclicGroup
-            >>> 'constructs  the  cyclic  group' in f.__doc__
-            True
-
-        You would get the full help by typing ``f?`` in the command line.
-        """
-        libgap = self.parent()
-        from sage.interfaces.gap import gap
-        return gap.help(libgap.NameFunction(self).sage(), pager=False)
 
 
 ############################################################################
@@ -2895,9 +2900,3 @@ cdef class GapRecordIterator(object):
         val = make_any_gap_element(self.rec.parent(), result)
         self.i += 1
         return (key, val)
-
-
-# Add support for _instancedoc_
-#from sage.docs.instancedoc import instancedoc
-#instancedoc(GapFunction)
-#instancedoc(GapMethodProxy)
