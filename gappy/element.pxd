@@ -30,9 +30,9 @@ cdef GapBoolean make_GapBoolean(parent, Obj obj)
 cdef GapFunction make_GapFunction(parent, Obj obj)
 cdef GapPermutation make_GapPermutation(parent, Obj obj)
 
-cdef char *capture_stdout(Obj, Obj)
-cdef char *gap_element_str(Obj)
-cdef char *gap_element_repr(Obj)
+cdef void capture_stdout(Obj, Obj, Obj)
+cdef void gap_element_str(Obj, Obj)
+cdef void gap_element_repr(Obj, Obj)
 
 
 cdef class GapObj:

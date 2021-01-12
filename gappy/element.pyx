@@ -149,15 +149,15 @@ cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL:
     return l.value
 
 
-cdef char *capture_stdout(Obj func, Obj obj):
+cdef void capture_stdout(Obj func, Obj obj, Obj out):
     """
     Call a single-argument GAP function ``func`` with the argument ``obj``
-    and return the stdout from that function call.
+    and return the stdout from that function call to the GAP string ``out``.
 
     This can be used to capture the output of GAP functions that are used to
     print objects such as ``Print()`` and ``ViewObj()``.
     """
-    cdef Obj s, stream, output_text_string
+    cdef Obj stream, output_text_string
     cdef UInt res
     cdef Obj args[2]
     # The only way to get a string representation of an object that is truly
@@ -171,9 +171,8 @@ cdef char *capture_stdout(Obj func, Obj obj):
     # support from GAP to improve this...
     try:
         GAP_Enter()
-        s = NEW_STRING(0)
         output_text_string = GAP_ValueGlobalVariable("OutputTextString")
-        args[0] = s
+        args[0] = out
         args[1] = GAP_True
         stream = GAP_CallFuncArray(output_text_string, 2, args)
 
@@ -184,12 +183,11 @@ cdef char *capture_stdout(Obj func, Obj obj):
         args[0] = obj
         GAP_CallFuncArray(func, 1, args)
         CloseOutput()
-        return CSTR_STRING(s)
     finally:
         GAP_Leave()
 
 
-cdef char *gap_element_repr(Obj obj):
+cdef void gap_element_repr(Obj obj, Obj out):
     """
     Implement ``repr()`` of ``GapObj``s using the ``ViewObj()`` function,
     which is by default closest to what you get when displaying an object in
@@ -198,10 +196,10 @@ cdef char *gap_element_repr(Obj obj):
     """
 
     cdef Obj func = GAP_ValueGlobalVariable("ViewObj")
-    return capture_stdout(func, obj)
+    capture_stdout(func, obj, out)
 
 
-cdef char *gap_element_str(Obj obj):
+cdef void gap_element_str(Obj obj, Obj out):
     """
     Implement ``str()`` of ``GapObj``s using the ``Print()`` function.
 
@@ -212,7 +210,7 @@ cdef char *gap_element_str(Obj obj):
     difference (though this does not map perfectly onto GAP).
     """
     cdef Obj func = GAP_ValueGlobalVariable("Print")
-    return capture_stdout(func, obj)
+    capture_stdout(func, obj, out)
 
 
 cdef Obj make_gap_record(parent, dct) except NULL:
@@ -420,11 +418,7 @@ cdef GapObj make_any_gap_element(parent, Obj obj):
             return make_GapPermutation(parent, obj)
         elif IS_REC(obj):
             return make_GapRecord(parent, obj)
-        elif GAP_IsList(obj) and GAP_LenList(obj) == 0:
-            # Empty lists are lists and not strings in Python
-            return make_GapList(parent, obj)
-        elif IsStringConv(obj):
-            # GAP strings are lists, too. Make sure this comes before non-empty make_GapList
+        elif GAP_IsString(obj):
             return make_GapString(parent, obj)
         elif GAP_IsList(obj):
             return make_GapList(parent, obj)
@@ -856,11 +850,19 @@ cdef class GapObj:
             >>> gap(0).__str__()
             '0'
         """
-        if  self.value == NULL:
+        cdef Obj out
+
+        if self.value == NULL:
             return 'NULL'
 
-        s = char_to_str(gap_element_str(self.value))
-        return s.strip()
+        try:
+            GAP_Enter()
+            out = GAP_MakeString("")
+            gap_element_str(self.value, out)
+            s = char_to_str(GAP_CSTR_STRING(out))
+            return s.strip()
+        finally:
+            GAP_Leave()
 
     def __repr__(self):
         r"""
@@ -878,11 +880,19 @@ cdef class GapObj:
             >>> gap(0).__repr__()
             '0'
         """
-        if  self.value == NULL:
+        cdef Obj out
+
+        if self.value == NULL:
             return 'NULL'
 
-        s = char_to_str(gap_element_repr(self.value))
-        return s.strip()
+        try:
+            GAP_Enter()
+            out = GAP_MakeString("")
+            gap_element_repr(self.value, out)
+            s = char_to_str(GAP_CSTR_STRING(out))
+            return s.strip()
+        finally:
+            GAP_Leave()
 
     cpdef _set_compare_by_id(self):
         """
@@ -1434,7 +1444,7 @@ cdef class GapObj:
             >>> gap('this is a string').is_string()
             True
         """
-        return IS_STRING(self.value)
+        return bool(GAP_IsString(self.value))
 
     def is_permutation(self):
         r"""
@@ -1994,7 +2004,7 @@ cdef class GapString(GapObj):
             >>> type(_)
             <class 'str'>
         """
-        s = char_to_str(CSTR_STRING(self.value))
+        s = char_to_str(GAP_CSTR_STRING(self.value))
         return s
 
 
@@ -2864,7 +2874,7 @@ cdef class GapRecordIterator(object):
             raise StopIteration
         # note the abs: negative values mean the rec keys are not sorted
         key_index = abs(GET_RNAM_PREC(self.rec.value, i))
-        key = char_to_str(CSTR_STRING(NAME_RNAM(key_index)))
+        key = char_to_str(GAP_CSTR_STRING(NAME_RNAM(key_index)))
         cdef Obj result = GET_ELM_PREC(self.rec.value,i)
         val = make_any_gap_element(self.rec.parent(), result)
         self.i += 1

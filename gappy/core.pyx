@@ -501,7 +501,7 @@ cdef str extract_libgap_errout():
 
     # Grab a pointer to the C string underlying the GAP string libgap_errout
     # then copy it to a Python str (char_to_str contains an implicit strcpy)
-    msg = CSTR_STRING(r)
+    msg = GAP_CSTR_STRING(r)
     if msg != NULL:
         msg_py = char_to_str(msg)
         msg_py = msg_py.replace('For debugging hints type ?Recovery from '
