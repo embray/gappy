@@ -159,6 +159,7 @@ cdef char *capture_stdout(Obj func, Obj obj):
     """
     cdef Obj s, stream, output_text_string
     cdef UInt res
+    cdef Obj args[2]
     # The only way to get a string representation of an object that is truly
     # consistent with how it would be represented at the GAP REPL is to call
     # ViewObj on it.  Unfortunately, ViewObj *prints* to the output stream,
@@ -172,13 +173,16 @@ cdef char *capture_stdout(Obj func, Obj obj):
         GAP_Enter()
         s = NEW_STRING(0)
         output_text_string = GAP_ValueGlobalVariable("OutputTextString")
-        stream = CALL_2ARGS(output_text_string, s, GAP_True)
+        args[0] = s
+        args[1] = GAP_True
+        stream = GAP_CallFuncArray(output_text_string, 2, args)
 
         if not OpenOutputStream(stream):
             raise GAPError("failed to open output capture stream for "
                            "representing GAP object")
 
-        CALL_1ARGS(func, obj)
+        args[0] = obj
+        GAP_CallFuncArray(func, 1, args)
         CloseOutput()
         return CSTR_STRING(s)
     finally:
@@ -2182,55 +2186,15 @@ cdef class GapFunction(GapObj):
             b'hello from the shell\n'
         """
         cdef Obj result = NULL
-        cdef Obj arg_list
-        cdef int i, n = len(args)
+        cdef Obj arglist
 
         libgap = self.parent()
-
-        if n > 0:
-            a = [x if isinstance(x, GapObj) else libgap(x) for x in args]
 
         try:
             sig_GAP_Enter()
             sig_on()
-            if n == 0:
-                result = CALL_0ARGS(self.value)
-            elif n == 1:
-                result = CALL_1ARGS(self.value,
-                                           (<GapObj>a[0]).value)
-            elif n == 2:
-                result = CALL_2ARGS(self.value,
-                                           (<GapObj>a[0]).value,
-                                           (<GapObj>a[1]).value)
-            elif n == 3:
-                result = CALL_3ARGS(self.value,
-                                           (<GapObj>a[0]).value,
-                                           (<GapObj>a[1]).value,
-                                           (<GapObj>a[2]).value)
-            elif n == 4:
-                result = CALL_4ARGS(self.value,
-                                           (<GapObj>a[0]).value,
-                                           (<GapObj>a[1]).value,
-                                           (<GapObj>a[2]).value,
-                                           (<GapObj>a[3]).value)
-            elif n == 5:
-                result = CALL_5ARGS(self.value,
-                                           (<GapObj>a[0]).value,
-                                           (<GapObj>a[1]).value,
-                                           (<GapObj>a[2]).value,
-                                           (<GapObj>a[3]).value,
-                                           (<GapObj>a[4]).value)
-            elif n == 6:
-                result = CALL_6ARGS(self.value,
-                                           (<GapObj>a[0]).value,
-                                           (<GapObj>a[1]).value,
-                                           (<GapObj>a[2]).value,
-                                           (<GapObj>a[3]).value,
-                                           (<GapObj>a[4]).value,
-                                           (<GapObj>a[5]).value)
-            elif n >= 7:
-                arg_list = make_gap_list(libgap, args)
-                result = CALL_XARGS(self.value, arg_list)
+            arglist = make_gap_list(libgap, args)
+            result = GAP_CallFuncList(self.value, arglist)
             sig_off()
         finally:
             GAP_Leave()

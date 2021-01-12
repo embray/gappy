@@ -41,14 +41,6 @@ cdef extern from "gap/bool.h" nogil:
 
 cdef extern from "gap/calls.h" nogil:
     bint IS_FUNC(Obj)
-    Obj CALL_0ARGS(Obj f)              # 0 arguments
-    Obj CALL_1ARGS(Obj f, Obj a1)      # 1 argument
-    Obj CALL_2ARGS(Obj f, Obj a1, Obj a2)
-    Obj CALL_3ARGS(Obj f, Obj a1, Obj a2, Obj a3)
-    Obj CALL_4ARGS(Obj f, Obj a1, Obj a2, Obj a3, Obj a4)
-    Obj CALL_5ARGS(Obj f, Obj a1, Obj a2, Obj a3, Obj a4, Obj a5)
-    Obj CALL_6ARGS(Obj f, Obj a1, Obj a2, Obj a3, Obj a4, Obj a5, Obj a6)
-    Obj CALL_XARGS(Obj f, Obj args)   # more than 6 arguments
 
 
 cdef extern from "gap/gasman.h" nogil:
@@ -88,6 +80,10 @@ cdef extern from "gap/libgap-api.h" nogil:
     cdef void sig_GAP_Enter()
     cdef void GAP_Leave()
     cdef int GAP_Error_Setjmp() except 0
+
+    # Calls
+    Obj GAP_CallFuncArray(Obj, UInt, Obj *)
+    Obj GAP_CallFuncList(Obj, Obj)
 
     # Ints
     cdef int GAP_IsInt(Obj)
