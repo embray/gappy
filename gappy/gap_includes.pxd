@@ -177,4 +177,4 @@ cdef extern from "gap/records.h" nogil:
 
 
 cdef extern from "gap/stringobj.h" nogil:
-    void C_NEW_STRING(Obj new_gap_string, int length, char* c_string)
+    Obj GAP_MakeStringWithLen "MakeStringWithLen" (char *, size_t)

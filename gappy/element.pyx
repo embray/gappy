@@ -343,12 +343,10 @@ cdef Obj make_gap_string(s) except NULL:
         >>> gap('string')  # indirect doctest
         "string"
     """
-    cdef Obj result
     try:
         GAP_Enter()
         b = str_to_bytes(s)
-        C_NEW_STRING(result, len(b), b)
-        return result
+        return GAP_MakeStringWithLen(b, len(b))
     finally:
         GAP_Leave()
 
