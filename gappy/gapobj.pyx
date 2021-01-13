@@ -231,19 +231,17 @@ cdef Obj make_gap_record(parent, dct) except NULL:
         >>> gap({'a': 1, 'b':123})  # indirect doctest
         rec( a := 1, b := 123 )
     """
-    data = [(str(key), parent(value)) for key, value in dct.iteritems()]
 
-    cdef Obj rec
+    cdef Obj rec, name
     cdef GapObj val
-    cdef UInt rnam
 
     try:
         GAP_Enter()
-        rec = NEW_PREC(len(data))
-        for d in data:
-            key, val = d
-            rnam = RNamName(str_to_bytes(key))
-            AssPRec(rec, rnam, val.value)
+        rec = GAP_NewPrecord(len(dct))
+        for key, val in dct.items():
+            name = make_gap_string(str(key))
+            val = parent(val)
+            GAP_AssRecord(rec, name, val.value)
         return rec
     finally:
         GAP_Leave()
@@ -414,7 +412,7 @@ cdef GapObj make_any_gap_obj(parent, Obj obj):
             return make_GapFunction(parent, obj)
         elif num == T_PERM2 or num == T_PERM4:
             return make_GapPermutation(parent, obj)
-        elif IS_REC(obj):
+        elif GAP_IsRecord(obj):
             return make_GapRecord(parent, obj)
         elif GAP_IsString(obj):
             return make_GapString(parent, obj)
@@ -1361,7 +1359,7 @@ cdef class GapObj:
             >>> gap.eval('rec(a:=1, b:=3)').is_record()
             True
         """
-        return IS_REC(self.value)
+        return bool(GAP_IsRecord(self.value))
 
     cpdef is_bool(self):
         r"""
@@ -2659,7 +2657,7 @@ cdef class GapRecord(GapObj):
     We can easily convert a GAP ``rec`` object into a Python ``dict``::
 
         >>> dict(rec)
-        {'a': 123, 'b': 456}
+        {'b': 456, 'a': 123}
         >>> type(_)
         <... 'dict'>
 
@@ -2668,9 +2666,40 @@ cdef class GapRecord(GapObj):
         >>> rec['no_such_element']
         Traceback (most recent call last):
         ...
-        gappy.exceptions.GAPError: Error, Record Element:
-        '<rec>.no_such_element' must have an assigned value
+        KeyError: 'no_such_element'
     """
+
+    def names(self):
+        """
+        Returns the list of names in the record.
+
+        Examples
+        --------
+
+        >>> rec = gap.eval('rec(a:=123, b:=456, S3:=SymmetricGroup(3))')
+        >>> rec.names()
+        ['b', 'a', 'S3']
+        """
+
+        return [str(n) for n in self._names()]
+
+    cdef GapList _names(self):
+        """
+        Implementation of `GapList.names` but returns as a `GapList` instead
+        of a Python `list`.
+        """
+
+        cdef Obj names, RecNames
+        cdef Obj args[1]
+
+        try:
+            GAP_Enter()
+            RecNames = GAP_ValueGlobalVariable('RecNames')
+            args[0] = self.value
+            names = GAP_CallFuncArray(RecNames, 1, args)
+            return make_GapList(self.parent(), names)
+        finally:
+            GAP_Leave()
 
     def __len__(self):
         r"""
@@ -2686,55 +2715,43 @@ cdef class GapRecord(GapObj):
             >>> len(rec)
             3
         """
-        return LEN_PREC(self.value)
+        # TODO: Curiously, GAP does not have a built-in function or an API
+        # call to get the length of a record.  The internal function LEN_PREC
+        # can be used, but otherwise the only way is to use the built-in
+        # RecNames function and return its length.
+        return len(self._names())
 
     def __iter__(self):
         r"""
         Iterate over the elements of the record.
 
-        OUTPUT:
+        Unlike iterating over a `dict` this returns the key/value pairs in
+        the record, which makes it easy to convert to a Python `dict` like
+        ``dict(rec)``.
 
-        A :class:`GapRecordIterator`.
-
-        EXAMPLES::
+        Examples
+        --------
 
             >>> rec = gap.eval('rec(a:=123, b:=456)')
             >>> iter = rec.__iter__()
             >>> type(iter)
-            <class 'gappy.gapobj.GapRecordIterator'>
+            <class 'generator'>
             >>> sorted(rec)
             [('a', 123), ('b', 456)]
+
+        .. note::
+
+            The names of elements in GAP records are not necessarily returned
+            in the same order as they were passed when the record was defined;
+            so when converting to a `dict` the key order will be in whatever
+            order was returned by GAP's ``RecNames`` function.
+
+            >>> dict(rec)
+            {'b': 456, 'a': 123}
         """
-        return GapRecordIterator(self)
 
-    # TODO: This should probably just be an internal method, or even go away
-    # entirely once switching fully to the libgap public API (ref: #2)
-    cpdef UInt record_name_to_index(self, name):
-        r"""
-        Convert string to GAP record index.
-
-        INPUT:
-
-        - ``name`` -- a python string.
-
-        OUTPUT:
-
-        A ``UInt``, which is a GAP hash of the string. If this is the
-        first time the string is encountered, a new integer is
-        returned(!)
-
-        EXAMPLES::
-
-            >>> rec = gap.eval('rec(first:=123, second:=456)')
-            >>> rec.record_name_to_index('first')   # doctest: +IGNORE_OUTPUT
-            1812
-            >>> rec.record_name_to_index(gap('first'))  # doctest: +IGNORE_OUTPUT
-            1812
-            >>> rec.record_name_to_index('no_such_name') # doctest: +IGNORE_OUTPUT
-            3776
-        """
-        name = str_to_bytes(str(name))
-        return RNamName(name)
+        for name in self._names():
+            yield (str(name), self._getitem(name))
 
     def __getitem__(self, name):
         r"""
@@ -2754,79 +2771,28 @@ cdef class GapRecord(GapObj):
             >>> rec['first']
             123
         """
-        cdef UInt i = self.record_name_to_index(name)
+
+        cdef GapString gap_name
+
+        if isinstance(name, GapString):
+            gap_name = <GapString>name
+        else:
+            gap_name = make_GapString(self.parent(), make_gap_string(name))
+
+        return self._getitem(gap_name)
+
+    cdef GapObj _getitem(self, GapString name):
+        """Internal implementation for `GapRecord.__getitem__`."""
+
         cdef Obj result
-        sig_on()
         try:
             GAP_Enter()
-            result = ELM_REC(self.value, i)
+            result = GAP_ElmRecord(self.value, name.value)
+            # GAP_ElmRecord does not raise a GAPError like the previous
+            # approach did, so just raise a KeyError instead
+            if result == NULL:
+                raise KeyError(str(name))
+
+            return make_any_gap_obj(self.parent(), result)
         finally:
             GAP_Leave()
-            sig_off()
-        return make_any_gap_obj(self.parent(), result)
-
-
-cdef class GapRecordIterator(object):
-    r"""
-    Iterator for :class:`GapRecord`
-
-    Since Cython does not support generators yet, we implement the
-    older iterator specification with this auxiliary class.
-
-    INPUT:
-
-    - ``rec`` -- the :class:`GapRecord` to iterate over.
-
-    EXAMPLES::
-
-        >>> rec = gap.eval('rec(a:=123, b:=456)')
-        >>> sorted(rec)
-        [('a', 123), ('b', 456)]
-        >>> dict(rec)
-        {'a': 123, 'b': 456}
-    """
-
-    def __cinit__(self, rec):
-        r"""
-        The Cython constructor.
-
-        INPUT:
-
-        - ``rec`` -- the :class:`GapRecord` to iterate over.
-
-        EXAMPLES::
-
-            >>> gap.eval('rec(a:=123, b:=456)')
-            rec( a := 123, b := 456 )
-        """
-        self.rec = rec
-        self.i = 1
-
-    def __next__(self):
-        r"""
-        Return the next element in the record.
-
-        OUTPUT:
-
-        A tuple ``(key, value)`` where ``key`` is a string and
-        ``value`` is the corresponding :class:`GapObj`.
-
-        EXAMPLES::
-
-            >>> rec = gap.eval('rec(a:=123, b:=456)')
-            >>> iter = rec.__iter__()
-            >>> a = iter.__next__()
-            >>> b = next(iter)
-            >>> sorted([a, b])
-            [('a', 123), ('b', 456)]
-        """
-        cdef UInt i = self.i
-        if i>len(self.rec):
-            raise StopIteration
-        # note the abs: negative values mean the rec keys are not sorted
-        key_index = abs(GET_RNAM_PREC(self.rec.value, i))
-        key = char_to_str(GAP_CSTR_STRING(NAME_RNAM(key_index)))
-        cdef Obj result = GET_ELM_PREC(self.rec.value,i)
-        val = make_any_gap_obj(self.rec.parent(), result)
-        self.i += 1
-        return (key, val)

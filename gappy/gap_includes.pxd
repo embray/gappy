@@ -108,6 +108,11 @@ cdef extern from "gap/libgap-api.h" nogil:
     int GAP_IsList(Obj)
     Obj GAP_NewPlist(Int)
 
+    # Records
+    void GAP_AssRecord(Obj, Obj, Obj)
+    int GAP_IsRecord(Obj)
+    Obj GAP_ElmRecord(Obj, Obj)
+    Obj GAP_NewPrecord(Int)
 
 
 cdef extern from "gap/macfloat.h" nogil:
@@ -159,21 +164,6 @@ cdef extern from "gap/permutat.h" nogil:
     UInt4* ADDR_PERM4(Obj)
     const UInt2* CONST_ADDR_PERM2(Obj)
     const UInt4* CONST_ADDR_PERM4(Obj)
-
-
-cdef extern from "gap/precord.h" nogil:
-    Obj NEW_PREC(int len)
-    int LEN_PREC(Obj rec)
-    int GET_RNAM_PREC(Obj rec, int i)
-    Obj GET_ELM_PREC(Obj rec, int i)
-    void AssPRec(Obj rec, UInt rnam, Obj val)
-
-
-cdef extern from "gap/records.h" nogil:
-    char* NAME_RNAM(UInt rnam)
-    bint IS_REC(Obj obj)
-    Obj ELM_REC(Obj rec, UInt rnam)
-    UInt RNamName(Char* name)
 
 
 cdef extern from "gap/stringobj.h" nogil:

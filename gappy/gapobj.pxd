@@ -99,15 +99,12 @@ cdef class GapFunction(GapObj):
 cdef class GapMethodProxy(GapFunction):
     cdef GapObj first_argument
 
-cdef class GapRecord(GapObj):
-    cpdef UInt record_name_to_index(self, name)
-
-cdef class GapRecordIterator:
-    cdef GapRecord rec
-    cdef UInt i
-
 cdef class GapList(GapObj):
     pass
+
+cdef class GapRecord(GapObj):
+    cdef GapList _names(self)
+    cdef GapObj _getitem(self, GapString name)
 
 cdef class GapPermutation(GapObj):
     pass
