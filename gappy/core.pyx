@@ -32,25 +32,6 @@ from .gap_includes cimport *
 from .gapobj cimport *
 from .utils import get_gap_memory_pool_size
 
-#from sage.cpython.string cimport str_to_bytes, char_to_str
-cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
-    return s.encode(encoding, errors)
-cdef char_to_str(char *s):
-    return s.decode('utf-8')
-
-#from sage.interfaces.gap_workspace import prepare_workspace_dir
-
-ZZ = object()
-
-#from sage.structure.element cimport Vector
-cdef class Vector:
-    pass
-
-
-def cached_method(func):
-    return func
-
-
 def current_randstate():
     pass
 
@@ -443,11 +424,12 @@ cdef Obj gap_eval(str gap_string) except? NULL:
     initialize()
     cdef Obj result
     cdef int i, j, nresults
+    cdef bytes cmd
 
     # Careful: We need to keep a reference to the bytes object here
     # so that Cython doesn't deallocate it before GAP is done with
     # its contents.
-    cmd = str_to_bytes(gap_string + ';\n')
+    cmd = (gap_string + ';\n').encode('utf-8')
     sig_on()
     try:
         GAP_Enter()
@@ -500,10 +482,10 @@ cdef str extract_libgap_errout():
     r = GAP_ValueGlobalVariable("libgap_errout")
 
     # Grab a pointer to the C string underlying the GAP string libgap_errout
-    # then copy it to a Python str (char_to_str contains an implicit strcpy)
+    # then copy it to a Python str
     msg = GAP_CSTR_STRING(r)
     if msg != NULL:
-        msg_py = char_to_str(msg)
+        msg_py = msg.decode('utf-8', 'surrogateescape')
         msg_py = msg_py.replace('For debugging hints type ?Recovery from '
                                 'NoMethodFound\n', '').strip()
     else:
@@ -651,7 +633,7 @@ class Gap:
         initialize()
         if isinstance(x, GapObj):
             return x
-        elif isinstance(x, (list, tuple, Vector)):
+        elif isinstance(x, (list, tuple)):
             return make_GapList(self, make_gap_list(self, x))
         elif isinstance(x, dict):
             return make_GapRecord(self, make_gap_record(self, x))
@@ -731,7 +713,6 @@ class Gap:
                                f"You may want to install gap_packages SPKG.")
         return ret
 
-    @cached_method
     def function_factory(self, function_name):
         """
         Return a GAP function wrapper
@@ -933,7 +914,6 @@ class Gap:
         """
         return 'C library interface to GAP'
 
-    @cached_method
     def __dir__(self):
         """
         Customize tab completion
