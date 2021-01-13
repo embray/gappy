@@ -472,17 +472,6 @@ cdef GapObj make_GapObj(parent, Obj obj):
     return r
 
 
-cpdef _from_sage(gap, elem):
-    """
-    Currently just used for unpickling; equivalent to calling ``gap(elem)``
-    to convert a Sage object to a `GapObj` where possible.
-    """
-    if isinstance(elem, str):
-        return gap.eval(elem)
-
-    return gap(elem)
-
-
 cdef class GapObj:
     r"""
     Wrapper for all GAP objects.
@@ -687,43 +676,6 @@ cdef class GapObj:
             [ [ 0, 1 ], [ 2 ] ]
         """
         return self.deepcopy(0)
-
-    def __reduce__(self):
-        """
-        Attempt to pickle GAP elements from libgap.
-
-        This is inspired in part by
-        ``sage.interfaces.interface.Interface._reduce``, though for a fallback
-        we use ``str(self)`` instead of ``repr(self)``, since the former is
-        equivalent in the libgap interface to the latter in the pexpect
-        interface.
-
-        TESTS:
-
-        This workaround was motivated in particular by this example from the
-        permutation groups implementation::
-
-            >>> CC = gap.eval('ConjugacyClass(SymmetricGroup([ 1 .. 5 ]), (1,2)(3,4))')
-            >>> CC.sage()
-            Traceback (most recent call last):
-            ...
-            NotImplementedError: cannot construct equivalent Sage object
-            >>> gap.eval(str(CC))
-            (1,2)(3,4)^G
-            >>> loads(dumps(CC))
-            (1,2)(3,4)^G
-        """
-
-        if self.is_string():
-            elem = repr(self.sage())
-        try:
-            elem = self.sage()
-        except NotImplementedError:
-            elem = str(self)
-
-        # TODO: This might be broken, since I'm not sure the GAP instance
-        # itself can be successfully pickled.  Will come back to this later.
-        return (_from_sage, (self.parent(), elem))
 
     def __contains__(self, other):
         r"""
