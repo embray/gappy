@@ -704,43 +704,16 @@ cdef class Gap:
             RuntimeError: Error loading GAP package chevie. You may want to
             install gap_packages SPKG.
         """
-        load_package = self.function_factory('LoadPackage')
         # Note: For some reason the default package loading error messages are
         # controlled with InfoWarning and not InfoPackageLoading
         prev_infolevel = self.InfoLevel(self.InfoWarning)
         self.SetInfoLevel(self.InfoWarning, 0)
-        ret = load_package(pkg)
+        ret = self.LoadPackage(pkg)
         self.SetInfoLevel(self.InfoWarning, prev_infolevel)
         if str(ret) == 'fail':
             raise RuntimeError(f"Error loading GAP package {pkg}.  "
                                f"You may want to install gap_packages SPKG.")
         return ret
-
-    def function_factory(self, function_name):
-        """
-        Return a GAP function wrapper
-
-        This is almost the same as calling
-        ``gap.eval(function_name)``, but faster and makes it
-        obvious in your code that you are wrapping a function.
-
-        INPUT:
-
-        - ``function_name`` -- string. The name of a GAP function.
-
-        OUTPUT:
-
-        A function wrapper :class:`~gappy.gapobj.GapFunction` for the GAP
-        function. Calling it from Sage is equivalent to calling the wrapped
-        function from GAP.
-
-        EXAMPLES::
-
-            >>> gap.function_factory('Print')
-            <GAP function "Print">
-        """
-        initialize()
-        return make_GapFunction(self, gap_eval(function_name))
 
     def set_global(self, variable, value):
         """

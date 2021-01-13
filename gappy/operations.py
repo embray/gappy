@@ -34,20 +34,7 @@ class OperationInspector:
 
         self._obj = obj
         self._gap = obj.parent()
-
-        # TODO: These functions/globals were originally module-level globals
-        # instantiated from the global libgap instance.
-        # Currently that is fine, since there can only ever be one GAP
-        # interpreter instance at the moment, but with an eye toward supporting
-        # multiple GAP interpreters and general refactoring, these are moved to
-        # instance-level variables.  However, we could still speed this up by
-        # caching these somewhere on a per-Gap basis (function_factory is
-        # already supposed to be cached so that alone might be good enough once
-        # caching is restored on it).
-        FlagsType = self._gap.function_factory('FlagsType')
-        TypeObj = self._gap.function_factory('TypeObj')
-
-        self.flags = FlagsType(TypeObj(self.obj))
+        self.flags = self._gap.FlagsType(self._gap.TypeObj(self.obj))
 
     def __repr__(self):
         """
@@ -96,13 +83,12 @@ class OperationInspector:
 
             >>> from gappy.operations import OperationInspector
             >>> x = OperationInspector(gap(123))
-            >>> Unknown = gap.function_factory('Unknown')
-            >>> Unknown in x.operations()
+            >>> gap.Unknown in x.operations()
             True
         """
-        IS_SUBSET_FLAGS = self._gap.function_factory('IS_SUBSET_FLAGS')
-        GET_OPER_FLAGS = self._gap.function_factory('GET_OPER_FLAGS')
-        OPERATIONS = self._gap.get_global('OPERATIONS')
+        IS_SUBSET_FLAGS = self._gap.IS_SUBSET_FLAGS
+        GET_OPER_FLAGS = self._gap.GET_OPER_FLAGS
+        OPERATIONS = self._gap.OPERATIONS
 
         def mfi(o):
             filts = GET_OPER_FLAGS(o)
@@ -126,7 +112,7 @@ class OperationInspector:
             >>> 'Sqrt' in x.op_names()
             True
         """
-        NameFunction = self._gap.function_factory('NameFunction')
+        NameFunction = self._gap.NameFunction
         result = set()
         for f in self.operations():
             name = str(NameFunction(f))

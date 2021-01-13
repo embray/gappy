@@ -2175,16 +2175,15 @@ cdef class GapFunction(GapObj):
 
         old_text_theme = None
         old_screen_size = None
-        libgap = self.parent()
+        gap = self.parent()
         width = 80  # TODO: Make this customizable?
 
         try:
             GAP_Enter()
 
-            HELP_GET_MATCHES = libgap.function_factory('HELP_GET_MATCHES')
-            SIMPLE_STRING = libgap.function_factory('SIMPLE_STRING')
-            matches = HELP_GET_MATCHES(libgap.HELP_KNOWN_BOOKS[0],
-                                       SIMPLE_STRING(self._name()), True)
+            matches = gap.HELP_GET_MATCHES(gap.HELP_KNOWN_BOOKS[0],
+                                           gap.SIMPLE_STRING(self._name()),
+                                           True)
 
             # HELP_GET_MATCHES returns 'exact' matches and 'topic' matches; in
             # the latter case we always guess the first match is the one we
@@ -2194,27 +2193,20 @@ cdef class GapFunction(GapObj):
             except StopIteration:
                 return ''
 
-            handler = libgap.HELP_BOOK_HANDLER[book['handler']]
+            handler = gap.HELP_BOOK_HANDLER[book['handler']]
 
             # Save the old text theme and set it to "none"; in particular to
             # strip out terminal control codes
-            try:
-                # In the off-chance GAPDoc is not loaded...
-                SetGAPDocTextTheme = libgap.function_factory(
-                    'SetGAPDocTextTheme')
-            except GAPError:
-                pass
-            else:
-                old_text_theme = libgap.eval('GAPDocTextTheme')
-                SetGAPDocTextTheme('none')
+            if gap.get_global('SetGAPDocTextTheme') is not None:
+                old_text_theme = gap.GAPDocTextTheme
+                gap.SetGAPDocTextTheme('none')
 
             # Set the screen width to 80 (otherwise it will produce text with
             # lines up to 4096, the hard-coded maximum line length)
             # Hard-coding this might be a small problem for other functions
             # that depend on screen width, but this seems to be rare...
-            SizeScreen = libgap.function_factory('SizeScreen')
-            old_screen_size = SizeScreen()
-            SizeScreen([width])
+            old_screen_size = gap.SizeScreen()
+            gap.SizeScreen([width])
 
             line_info = dict(handler['HelpData'](book, entrynum, 'text'))
             # TODO: Add .get() and other dict methods to GapRecord
@@ -2242,9 +2234,9 @@ cdef class GapFunction(GapObj):
             return self._doc
         finally:
             if old_text_theme is not None:
-                SetGAPDocTextTheme(old_text_theme)
+                gap.SetGAPDocTextTheme(old_text_theme)
             if old_screen_size is not None:
-                SizeScreen(old_screen_size)
+                gap.SizeScreen(old_screen_size)
 
             GAP_Leave()
 
