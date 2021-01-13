@@ -577,7 +577,6 @@ cdef class Gap:
     """
 
     def __cinit__(self):
-        self.__dict__ = {}
         gmp_randinit_default(self._gmp_state)
 
     def __call__(self, x):
@@ -759,16 +758,21 @@ cdef class Gap:
             >>> gap.get_global('FooBar')
             1
             >>> gap.unset_global('FooBar')
-            >>> gap.get_global('FooBar')
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, VAL_GVAR: No value bound to FooBar
+            >>> gap.get_global('FooBar') is None
+            True
         """
-        is_bound = self.function_factory('IsBoundGlobal')
-        bind_global = self.function_factory('BindGlobal')
-        if is_bound(variable):
-            self.unset_global(variable)
-        bind_global(variable, value)
+
+        cdef bytes name
+
+        initialize()
+        name = variable.encode('utf-8')
+
+        if not GAP_CanAssignGlobalVariable(name):
+            raise AttributeError(
+                f'Cannot set read-only GAP global variable {variable}')
+
+        obj = self(value)
+        GAP_AssignGlobalVariable(name, (<GapObj>obj).value)
 
     def unset_global(self, variable):
         """
@@ -784,17 +788,20 @@ cdef class Gap:
             >>> gap.get_global('FooBar')
             1
             >>> gap.unset_global('FooBar')
-            >>> gap.get_global('FooBar')
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, VAL_GVAR: No value bound to FooBar
+            >>> gap.get_global('FooBar') is None
+            True
         """
-        is_readonlyglobal = self.function_factory('IsReadOnlyGlobal')
-        make_readwrite = self.function_factory('MakeReadWriteGlobal')
-        unbind_global = self.function_factory('UnbindGlobal')
-        if is_readonlyglobal(variable):
-            make_readwrite(variable)
-        unbind_global(variable)
+
+        cdef bytes name
+
+        initialize()
+        name = variable.encode('utf-8')
+
+        if not GAP_CanAssignGlobalVariable(name):
+            raise AttributeError(
+                f'Cannot unset read-only GAP global variable {variable}')
+
+        GAP_AssignGlobalVariable(name, NULL)
 
     def get_global(self, variable):
         """
@@ -806,8 +813,8 @@ cdef class Gap:
 
         OUTPUT:
 
-        A :class:`~gappy.gapobj.GapObj` wrapping the GAP output. A
-        ``ValueError`` is raised if there is no such variable in GAP.
+        A :class:`~gappy.gapobj.GapObj` wrapping the GAP output.  `None` is
+        returned if there is no such variable in GAP.
 
         EXAMPLES::
 
@@ -815,14 +822,24 @@ cdef class Gap:
             >>> gap.get_global('FooBar')
             1
             >>> gap.unset_global('FooBar')
-            >>> gap.get_global('FooBar')
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, VAL_GVAR: No value bound to
-            FooBar
+            >>> gap.get_global('FooBar') is None
+            True
         """
-        value_global = self.function_factory('ValueGlobal')
-        return value_global(variable)
+        cdef Obj obj
+        cdef bytes name
+
+        initialize()
+        name = variable.encode('utf-8')
+
+        try:
+            GAP_Enter()
+            obj = GAP_ValueGlobalVariable(name)
+            if obj == NULL:
+                return None
+
+            return make_any_gap_obj(self, obj)
+        finally:
+            GAP_Leave()
 
     def global_context(self, variable, value):
         """
@@ -945,7 +962,7 @@ cdef class Gap:
         INPUT:
 
         - ``name`` -- string. The name of the GAP function you want to
-          call.
+          call or another GAP global.
 
         OUTPUT:
 
@@ -959,16 +976,11 @@ cdef class Gap:
             >>> gap.GlobalRandomSource
             <RandomSource in IsGlobalRandomSource>
         """
-        if name in dir(self.__class__):
-            return getattr(self.__class__, name)
 
-        try:
-            g = self.eval(name)
-        except ValueError:
-            raise AttributeError(f'No such attribute: {name}.')
-
-        self.__dict__[name] = g
-        return g
+        val = self.get_global(name)
+        if val is None:
+            raise AttributeError(f'No GAP global variable bound to {name}.')
+        return val
 
     def show(self):
         """

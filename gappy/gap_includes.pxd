@@ -73,6 +73,8 @@ cdef extern from "gap/libgap-api.h" nogil:
             int handleSignals)
     Obj GAP_EvalString(const char *) except *
     Obj GAP_EvalStringNoExcept "GAP_EvalString"(const char *)
+    void GAP_AssignGlobalVariable(const char *, Obj)
+    int GAP_CanAssignGlobalVariable(const char *)
     Obj GAP_ValueGlobalVariable(const char *)
     cdef void GAP_EnterStack()
     cdef void GAP_LeaveStack()
