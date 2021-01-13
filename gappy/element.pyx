@@ -1392,7 +1392,7 @@ cdef class GapObj:
             >>> gap.eval('3/2').is_list()
             False
         """
-        return GAP_IsList(self.value)
+        return bool(GAP_IsList(self.value))
 
     def is_record(self):
         r"""
