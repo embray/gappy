@@ -23,28 +23,11 @@ from cpython.object cimport Py_EQ, Py_NE, Py_LE, Py_GE, Py_LT, Py_GT, Py_SIZE
 from cysignals.signals cimport sig_on, sig_off
 
 from .gap_includes cimport *
+from .gmp cimport *
 from .core cimport *
 from .exceptions import GAPError
 from .operations import OperationInspector
 
-# Some minimal bits from GMP used primarily for converting between GAP integers
-# and Python ints
-cdef extern from "<gmp.h>":
-    ctypedef struct __mpz_struct:
-        pass
-    ctypedef __mpz_struct mpz_t[1]
-
-    # GAP ensures at compile time that sizeof(mp_limb_t) == sizeof(UInt)
-    ctypedef UInt mp_limb_t
-
-    void mpz_init(mpz_t)
-    void mpz_clear(mpz_t)
-    void mpz_neg(mpz_t, const mpz_t)
-    void mpz_import(mpz_t, size_t, int, int, int, size_t, void *)
-    void *mpz_export(void *, size_t *, int, size_t, int, size_t, const mpz_t)
-    size_t mpz_size(const mpz_t)
-    size_t mpz_sizeinbase(const mpz_t, int)
-    const mp_limb_t* mpz_limbs_read(const mpz_t)
 
 #from sage.cpython.string cimport str_to_bytes, char_to_str
 cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):

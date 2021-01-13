@@ -10,6 +10,7 @@
 #*****************************************************************************
 
 from .gap_includes cimport Obj
+from .gmp cimport gmp_randstate_t
 
 ############################################################################
 ### Hooking into the GAP memory management #################################
@@ -37,6 +38,10 @@ cdef void gasman_callback() with gil
 ############################################################################
 
 cdef initialize()
+
+cdef class Gap:
+    cdef dict __dict__
+    cdef gmp_randstate_t _gmp_state
 
 
 ############################################################################

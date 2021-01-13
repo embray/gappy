@@ -30,10 +30,8 @@ from .exceptions import GAPError
 from .gap_globals import common_gap_globals as GAP_GLOBALS
 from .gap_includes cimport *
 from .gapobj cimport *
+from .gmp cimport *
 from .utils import get_gap_memory_pool_size
-
-def current_randstate():
-    pass
 
 
 cdef extern from "<dlfcn.h>" nogil:
@@ -558,7 +556,7 @@ cdef void error_handler_check_exception() except *:
 ### Gap  ###################################################################
 ############################################################################
 
-class Gap:
+cdef class Gap:
     r"""
     The GAP interpreter object.
 
@@ -577,6 +575,10 @@ class Gap:
         >>> gap.eval('SymmetricGroup(4)')
         Sym( [ 1 .. 4 ] )
     """
+
+    def __cinit__(self):
+        self.__dict__ = {}
+        gmp_randinit_default(self._gmp_state)
 
     def __call__(self, x):
         r"""
@@ -850,8 +852,9 @@ class Gap:
         """
         Reseed the standard GAP pseudo-random sources with the given seed.
 
-        Uses a random seed given by ``current_randstate().ZZ_seed()`` if
-        ``seed=None``.  Otherwise the seed should be an integer.
+        Uses a random 128-bit integer as the seed given by GMP's
+        ``mpz_rrandomm`` if ``seed=None``.  Otherwise the seed should be an
+        integer.
 
         EXAMPLES::
 
@@ -860,10 +863,17 @@ class Gap:
             >>> [gap.Random(1, 10) for i in range(5)]
             [2, 3, 3, 4, 2]
         """
-        if seed is None:
-            seed = current_randstate().ZZ_seed()
+        cdef mpz_t z_seed
+        cdef Obj gap_seed
 
-        Reset = self.function_factory("Reset")
+        if seed is None:
+            mpz_init(z_seed)
+            mpz_rrandomb(z_seed, self._gmp_state, 128)
+            gap_seed = GAP_MakeObjInt(<UInt *>mpz_limbs_read(z_seed),
+                                      <Int>mpz_size(z_seed))
+            seed = make_GapInteger(self, gap_seed)
+
+        Reset = self.Reset
         Reset(self.GlobalMersenneTwister, seed)
         Reset(self.GlobalRandomSource, seed)
         return seed
