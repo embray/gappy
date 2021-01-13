@@ -1752,7 +1752,8 @@ cdef GapRational make_GapRational(parent, Obj obj):
 
     EXAMPLES::
 
-        >>> gap(123/456)
+        >>> from fractions import Fraction
+        >>> gap(Fraction(123, 456))
         41/152
         >>> type(_)
         <class 'gappy.gapobj.GapRational'>
@@ -1768,7 +1769,8 @@ cdef class GapRational(GapObj):
 
     EXAMPLES::
 
-        >>> r = gap(123/456)
+        >>> from fractions import Fraction
+        >>> r = gap(Fraction(123, 456))
         >>> type(r)
         <class 'gappy.gapobj.GapRational'>
     """

@@ -24,6 +24,7 @@ import locale
 import os
 import warnings
 import sys
+from numbers import Rational
 
 from .context_managers import GlobalVariableContext
 from .exceptions import GAPError
@@ -646,6 +647,8 @@ cdef class Gap:
             return make_GapInteger(self, make_gap_integer(x))
         elif isinstance(x, float):
             return make_GapFloat(self, make_gap_float(x))
+        elif isinstance(x, Rational):
+            return self(x.numerator) / self(x.denominator)
         elif isinstance(x, str):
             return make_GapString(self, make_gap_string(x))
         # TODO: Add support for bytes
