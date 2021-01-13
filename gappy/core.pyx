@@ -563,9 +563,8 @@ cdef class Gap:
 
     .. NOTE::
 
-        This object must be instantiated exactly once by the
-        libgap.  Always use the provided ``libgap`` instance, and never
-        instantiate :class:`Gap` manually.
+        This object must be instantiated exactly once.  Always use the provided
+        ``gap`` instance, and never instantiate :class:`Gap` manually.
 
         # TODO: Actually this will change when Gap becomes a singleton class; it
         will be safe to initialize Gap() with alternate arguments from the
@@ -682,8 +681,8 @@ cdef class Gap:
         """
         cdef GapObj elem
 
-        if not isinstance(gap_command, basestring):
-            gap_command = str(gap_command._libgap_init_())
+        if not isinstance(gap_command, str):
+            gap_command = str(gap_command._gap_init_())
 
         initialize()
         elem = make_any_gap_obj(self, gap_eval(gap_command))
@@ -988,7 +987,7 @@ cdef class Gap:
         .. note::
 
             Slight complication is that we want to do it without accessing
-            libgap objects, so we don't create new GapObjs as a side effect.
+            GAP objects, so we don't create new GapObjs as a side effect.
 
         EXAMPLES::
 
