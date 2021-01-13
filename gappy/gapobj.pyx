@@ -187,7 +187,7 @@ cdef void capture_stdout(Obj func, Obj obj, Obj out):
         GAP_Leave()
 
 
-cdef void gap_element_repr(Obj obj, Obj out):
+cdef void gap_obj_repr(Obj obj, Obj out):
     """
     Implement ``repr()`` of ``GapObj``s using the ``ViewObj()`` function,
     which is by default closest to what you get when displaying an object in
@@ -199,7 +199,7 @@ cdef void gap_element_repr(Obj obj, Obj out):
     capture_stdout(func, obj, out)
 
 
-cdef void gap_element_str(Obj obj, Obj out):
+cdef void gap_obj_str(Obj obj, Obj out):
     """
     Implement ``str()`` of ``GapObj``s using the ``Print()`` function.
 
@@ -355,9 +355,9 @@ cdef Obj make_gap_string(s) except NULL:
 ### generic construction of GapObjs ########################################
 ############################################################################
 
-cdef GapObj make_any_gap_element(parent, Obj obj):
+cdef GapObj make_any_gap_obj(parent, Obj obj):
     """
-    Return the GAP element wrapper of ``obj``
+    Return the GapObj wrapper of ``obj``
 
     The most suitable subclass of GapObj is determined
     automatically. Use this function to wrap GAP objects unless you
@@ -369,7 +369,7 @@ cdef GapObj make_any_gap_element(parent, Obj obj):
         >>> T_CHAR = gap.eval("'c'");  T_CHAR
         "c"
         >>> type(T_CHAR)
-        <class 'gappy.element.GapString'>
+        <class 'gappy.gapobj.GapString'>
 
         >>> gap.eval("['a', 'b', 'c']")   # gap strings are also lists of chars
         "abc"
@@ -459,7 +459,7 @@ cdef GapObj make_GapObj(parent, Obj obj):
         >>> gap(0)
         0
         >>> type(_)
-        <class 'gappy.element.GapInteger'>
+        <class 'gappy.gapobj.GapInteger'>
 
         >>> gap.eval('')
         >>> gap(None)
@@ -537,7 +537,7 @@ cdef class GapObj:
 
         TESTS::
 
-            >>> from gappy.element import GapObj
+            >>> from gappy.gapobj import GapObj
             >>> GapObj()
             Traceback (most recent call last):
             ...
@@ -625,7 +625,7 @@ cdef class GapObj:
             [ [ 0, -2 ], [ 2, 3, 4 ] ]
         """
         if IS_MUTABLE_OBJ(self.value):
-            return make_any_gap_element(self.parent(), SHALLOW_COPY_OBJ(self.value))
+            return make_any_gap_obj(self.parent(), SHALLOW_COPY_OBJ(self.value))
         else:
             return self
 
@@ -669,7 +669,7 @@ cdef class GapObj:
             true
         """
         if IS_MUTABLE_OBJ(self.value):
-            return make_any_gap_element(self.parent(), CopyObj(self.value, mut))
+            return make_any_gap_obj(self.parent(), CopyObj(self.value, mut))
         else:
             return self
 
@@ -856,7 +856,7 @@ cdef class GapObj:
         try:
             GAP_Enter()
             out = GAP_MakeString("")
-            gap_element_str(self.value, out)
+            gap_obj_str(self.value, out)
             s = char_to_str(GAP_CSTR_STRING(out))
             return s.strip()
         finally:
@@ -886,7 +886,7 @@ cdef class GapObj:
         try:
             GAP_Enter()
             out = GAP_MakeString("")
-            gap_element_repr(self.value, out)
+            gap_obj_repr(self.value, out)
             s = char_to_str(GAP_CSTR_STRING(out))
             return s.strip()
         finally:
@@ -1126,7 +1126,7 @@ cdef class GapObj:
             sig_off()
         finally:
             GAP_Leave()
-        return make_any_gap_element(self.parent(), result)
+        return make_any_gap_obj(self.parent(), result)
 
     def __sub__(left, right):
         if isinstance(left, GapObj):
@@ -1160,7 +1160,7 @@ cdef class GapObj:
             sig_off()
         finally:
             GAP_Leave()
-        return make_any_gap_element(self.parent(), result)
+        return make_any_gap_obj(self.parent(), result)
 
     def __mul__(left, right):
         if isinstance(left, GapObj):
@@ -1195,7 +1195,7 @@ cdef class GapObj:
             sig_off()
         finally:
             GAP_Leave()
-        return make_any_gap_element(self.parent(), result)
+        return make_any_gap_obj(self.parent(), result)
 
     def __truediv__(left, right):
         if isinstance(left, GapObj):
@@ -1236,7 +1236,7 @@ cdef class GapObj:
             sig_off()
         finally:
             GAP_Leave()
-        return make_any_gap_element(self.parent(), result)
+        return make_any_gap_obj(self.parent(), result)
 
     def __mod__(left, right):
         if isinstance(left, GapObj):
@@ -1269,7 +1269,7 @@ cdef class GapObj:
             sig_off()
         finally:
             GAP_Leave()
-        return make_any_gap_element(self.parent(), result)
+        return make_any_gap_obj(self.parent(), result)
 
     def __pow__(left, right, mod):
         if mod is not None:
@@ -1306,11 +1306,11 @@ cdef class GapObj:
             >>> r = gap(5) ^ 2; r
             25
             >>> type(r)
-            <class 'gappy.element.GapInteger'>
+            <class 'gappy.gapobj.GapInteger'>
             >>> r = 5 ^ gap(2); r
             25
             >>> type(r)
-            <class 'gappy.element.GapInteger'>
+            <class 'gappy.gapobj.GapInteger'>
             >>> g, = gap.CyclicGroup(5).GeneratorsOfGroup()
             >>> g ^ 5
             <identity> of ...
@@ -1347,7 +1347,7 @@ cdef class GapObj:
             sig_off()
         finally:
             GAP_Leave()
-        return make_any_gap_element(self._parent, result)
+        return make_any_gap_obj(self._parent, result)
 
     cpdef _pow_int(self, other):
         """
@@ -1478,7 +1478,7 @@ cdef GapInteger make_GapInteger(parent, Obj obj):
         >>> gap(123)
         123
         >>> type(_)
-        <class 'gappy.element.GapInteger'>
+        <class 'gappy.gapobj.GapInteger'>
     """
     cdef GapInteger r = GapInteger.__new__(GapInteger)
     r._initialize(parent, obj)
@@ -1493,7 +1493,7 @@ cdef class GapInteger(GapObj):
 
         >>> i = gap(123)
         >>> type(i)
-        <class 'gappy.element.GapInteger'>
+        <class 'gappy.gapobj.GapInteger'>
         >>> i
         123
     """
@@ -1514,7 +1514,7 @@ cdef class GapInteger(GapObj):
 
             >>> n = gap(1)
             >>> type(n)
-            <class 'gappy.element.GapInteger'>
+            <class 'gappy.gapobj.GapInteger'>
             >>> n.is_C_int()
             True
             >>> n.IsInt()
@@ -1522,7 +1522,7 @@ cdef class GapInteger(GapObj):
 
             >>> N = gap(2**130)
             >>> type(N)
-            <class 'gappy.element.GapInteger'>
+            <class 'gappy.gapobj.GapInteger'>
             >>> N.is_C_int()
             False
             >>> N.IsInt()
@@ -1623,7 +1623,7 @@ cdef GapFloat make_GapFloat(parent, Obj obj):
         >>> gap(123.5)
         123.5
         >>> type(_)
-        <class 'gappy.element.GapFloat'>
+        <class 'gappy.gapobj.GapFloat'>
     """
     cdef GapFloat r = GapFloat.__new__(GapFloat)
     r._initialize(parent, obj)
@@ -1637,7 +1637,7 @@ cdef class GapFloat(GapObj):
 
         >>> i = gap(123.5)
         >>> type(i)
-        <class 'gappy.element.GapFloat'>
+        <class 'gappy.gapobj.GapFloat'>
         >>> i
         123.5
         >>> float(i)
@@ -1669,7 +1669,7 @@ cdef GapIntegerMod make_GapIntegerMod(parent, Obj obj):
         >>> gap(n)
         ZmodnZObj( 13, 123 )
         >>> type(_)
-        <class 'gappy.element.GapIntegerMod'>
+        <class 'gappy.gapobj.GapIntegerMod'>
     """
     cdef GapIntegerMod r = GapIntegerMod.__new__(GapIntegerMod)
     r._initialize(parent, obj)
@@ -1684,7 +1684,7 @@ cdef class GapIntegerMod(GapObj):
         >>> i = gap.eval('One(ZmodnZ(123)) * 13'); i
         ZmodnZObj( 13, 123 )
         >>> type(i)
-        <class 'gappy.element.GapIntegerMod'>
+        <class 'gappy.gapobj.GapIntegerMod'>
     """
 
     cpdef GapInteger lift(self):
@@ -1701,7 +1701,7 @@ cdef class GapIntegerMod(GapObj):
             >>> n.lift()
             13
             >>> type(_)
-            <class 'gappy.element.GapInteger'>
+            <class 'gappy.gapobj.GapInteger'>
         """
         return self.Int()
 
@@ -1719,7 +1719,7 @@ cdef GapFiniteField make_GapFiniteField(parent, Obj obj):
         >>> gap.eval('Z(5)^2')
         Z(5)^2
         >>> type(_)
-        <class 'gappy.element.GapFiniteField'>
+        <class 'gappy.gapobj.GapFiniteField'>
     """
     cdef GapFiniteField r = GapFiniteField.__new__(GapFiniteField)
     r._initialize(parent, obj)
@@ -1735,7 +1735,7 @@ cdef class GapFiniteField(GapObj):
         >>> gap.eval('Z(5)^2')
         Z(5)^2
         >>> type(_)
-        <class 'gappy.element.GapFiniteField'>
+        <class 'gappy.gapobj.GapFiniteField'>
     """
 
     cpdef GapInteger lift(self):
@@ -1753,7 +1753,7 @@ cdef class GapFiniteField(GapObj):
             >>> n.lift()
             4
             >>> type(_)
-            <class 'gappy.element.GapInteger'>
+            <class 'gappy.gapobj.GapInteger'>
 
             >>> n = gap.eval('Z(25)')
             >>> n.lift()
@@ -1789,7 +1789,7 @@ cdef GapCyclotomic make_GapCyclotomic(parent, Obj obj):
         >>> gap.eval('E(3)')
         E(3)
         >>> type(_)
-        <class 'gappy.element.GapCyclotomic'>
+        <class 'gappy.gapobj.GapCyclotomic'>
     """
     cdef GapCyclotomic r = GapCyclotomic.__new__(GapCyclotomic)
     r._initialize(parent, obj)
@@ -1805,7 +1805,7 @@ cdef class GapCyclotomic(GapObj):
         >>> gap.eval('E(3)')
         E(3)
         >>> type(_)
-        <class 'gappy.element.GapCyclotomic'>
+        <class 'gappy.gapobj.GapCyclotomic'>
     """
 
 
@@ -1822,7 +1822,7 @@ cdef GapRational make_GapRational(parent, Obj obj):
         >>> gap(123/456)
         41/152
         >>> type(_)
-        <class 'gappy.element.GapRational'>
+        <class 'gappy.gapobj.GapRational'>
     """
     cdef GapRational r = GapRational.__new__(GapRational)
     r._initialize(parent, obj)
@@ -1837,7 +1837,7 @@ cdef class GapRational(GapObj):
 
         >>> r = gap(123/456)
         >>> type(r)
-        <class 'gappy.element.GapRational'>
+        <class 'gappy.gapobj.GapRational'>
     """
 
 
@@ -1854,7 +1854,7 @@ cdef GapRing make_GapRing(parent, Obj obj):
         >>> gap(GF(5))
         GF(5)
         >>> type(_)
-        <class 'gappy.element.GapRing'>
+        <class 'gappy.gapobj.GapRing'>
     """
     cdef GapRing r = GapRing.__new__(GapRing)
     r._initialize(parent, obj)
@@ -1869,7 +1869,7 @@ cdef class GapRing(GapObj):
 
         >>> i = gap.Integers
         >>> type(i)
-        <class 'gappy.element.GapRing'>
+        <class 'gappy.gapobj.GapRing'>
     """
 
 
@@ -1886,7 +1886,7 @@ cdef GapBoolean make_GapBoolean(parent, Obj obj):
         >>> gap(True)
         true
         >>> type(_)
-        <class 'gappy.element.GapBoolean'>
+        <class 'gappy.gapobj.GapBoolean'>
     """
     cdef GapBoolean r = GapBoolean.__new__(GapBoolean)
     r._initialize(parent, obj)
@@ -1901,7 +1901,7 @@ cdef class GapBoolean(GapObj):
 
         >>> b = gap(True)
         >>> type(b)
-        <class 'gappy.element.GapBoolean'>
+        <class 'gappy.gapobj.GapBoolean'>
     """
 
     def __nonzero__(self):
@@ -1920,13 +1920,13 @@ cdef class GapBoolean(GapObj):
             >>> for x in gap_bool:
             ...     if x:     # this calls __nonzero__
             ...         print("{} {}".format(x, type(x)))
-            true <class 'gappy.element.GapBoolean'>
+            true <class 'gappy.gapobj.GapBoolean'>
 
             >>> for x in gap_bool:
             ...     if not x:     # this calls __nonzero__
             ...         print("{} {}".format( x, type(x)))
-            false <class 'gappy.element.GapBoolean'>
-            fail <class 'gappy.element.GapBoolean'>
+            false <class 'gappy.gapobj.GapBoolean'>
+            fail <class 'gappy.gapobj.GapBoolean'>
         """
         return self.value == GAP_True
 
@@ -1944,7 +1944,7 @@ cdef GapString make_GapString(parent, Obj obj):
         >>> gap('this is a string')
         "this is a string"
         >>> type(_)
-        <class 'gappy.element.GapString'>
+        <class 'gappy.gapobj.GapString'>
     """
     cdef GapString r = GapString.__new__(GapString)
     r._initialize(parent, obj)
@@ -1959,7 +1959,7 @@ cdef class GapString(GapObj):
 
         >>> s = gap('string')
         >>> type(s)
-        <class 'gappy.element.GapString'>
+        <class 'gappy.gapobj.GapString'>
         >>> s
         "string"
         >>> print(s)
@@ -1976,7 +1976,7 @@ cdef class GapString(GapObj):
 
         >>> s = gap('foo')
         >>> type(s)
-        <class 'gappy.element.GapString'>
+        <class 'gappy.gapobj.GapString'>
         >>> len(s)
         3
         """
@@ -1996,7 +1996,7 @@ cdef class GapString(GapObj):
             >>> s = gap.eval(' "string" '); s
             "string"
             >>> type(_)
-            <class 'gappy.element.GapString'>
+            <class 'gappy.gapobj.GapString'>
             >>> str(s)
             'string'
             >>> type(_)
@@ -2029,7 +2029,7 @@ cdef GapFunction make_GapFunction(parent, Obj obj):
         >>> gap.CycleLength
         <GAP function "CycleLength">
         >>> type(_)
-        <class 'gappy.element.GapFunction'>
+        <class 'gappy.gapobj.GapFunction'>
     """
     cdef GapFunction r = GapFunction.__new__(GapFunction)
     r._initialize(parent, obj)
@@ -2049,7 +2049,7 @@ cdef class GapFunction(GapObj):
 
     >>> f = gap.Cycles
     >>> type(f)
-    <class 'gappy.element.GapFunction'>
+    <class 'gappy.gapobj.GapFunction'>
 
     """
 
@@ -2145,7 +2145,7 @@ cdef class GapFunction(GapObj):
             >>> f()
             Traceback (most recent call last):
             ...
-            TypeError: 'gappy.element.GapInteger' object is not callable
+            TypeError: 'gappy.gapobj.GapInteger' object is not callable
 
         We illustrate appending to a list which returns None::
 
@@ -2211,7 +2211,7 @@ cdef class GapFunction(GapObj):
             # We called a procedure that does not return anything
             return None
 
-        return make_any_gap_element(libgap, result)
+        return make_any_gap_obj(libgap, result)
 
     def help(self):
         """
@@ -2323,7 +2323,7 @@ cdef GapMethodProxy make_GapMethodProxy(parent, Obj function, GapObj base_object
     Turn a GAP C rec object (of type ``Obj``) into a Cython ``GapRecord``.
 
     This class implement syntactic sugar so that you can write
-    ``gapelement.f()`` instead of ``gap.f(gapelement)`` for any GAP
+    ``gapobj.f()`` instead of ``gap.f(gapobj)`` for any GAP
     function ``f``.
 
     INPUT:
@@ -2342,7 +2342,7 @@ cdef GapMethodProxy make_GapMethodProxy(parent, Obj function, GapObj base_object
 
         >>> lst = gap([])
         >>> type( lst.Add )
-        <class 'gappy.element.GapMethodProxy'>
+        <class 'gappy.gapobj.GapMethodProxy'>
     """
     cdef GapMethodProxy r = GapMethodProxy.__new__(GapMethodProxy)
     r._initialize(parent, function)
@@ -2365,7 +2365,7 @@ cdef class GapMethodProxy(GapFunction):
         >>> lst.Add
         <GAP function "Add">
         >>> type(_)
-        <class 'gappy.element.GapMethodProxy'>
+        <class 'gappy.gapobj.GapMethodProxy'>
         >>> lst.Add(1)
         >>> lst
         [ 1 ]
@@ -2417,7 +2417,7 @@ cdef GapList make_GapList(parent, Obj obj):
         >>> gap([0, 2, 3])
         [ 0, 2, 3 ]
         >>> type(_)
-        <class 'gappy.element.GapList'>
+        <class 'gappy.gapobj.GapList'>
     """
     cdef GapList r = GapList.__new__(GapList)
     r._initialize(parent, obj)
@@ -2439,7 +2439,7 @@ cdef class GapList(GapObj):
         >>> lst = gap.SymmetricGroup(3).List(); lst
         [ (), (1,3), (1,2,3), (2,3), (1,3,2), (1,2) ]
         >>> type(lst)
-        <class 'gappy.element.GapList'>
+        <class 'gappy.gapobj.GapList'>
         >>> len(lst)
         6
         >>> lst[3]
@@ -2549,7 +2549,7 @@ cdef class GapList(GapObj):
                 raise IndexError('index out of range.')
             obj = GAP_ElmList(obj, j + 1)
 
-        return make_any_gap_element(self.parent(), obj)
+        return make_any_gap_obj(self.parent(), obj)
 
     def __setitem__(self, i, elt):
         r"""
@@ -2564,7 +2564,8 @@ cdef class GapList(GapObj):
             >>> l
             [ 3, 1 ]
 
-        Contrarily to Python lists, setting an element beyond the limit extends the list::
+        Contrarily to Python lists, setting an element beyond the limit extends
+        the list::
 
             >>> l[12] = -2
             >>> l
@@ -2646,7 +2647,7 @@ cdef GapPermutation make_GapPermutation(parent, Obj obj):
         >>> gap.eval('(1,3,2)(4,5,8)')
         (1,3,2)(4,5,8)
         >>> type(_)
-        <class 'gappy.element.GapPermutation'>
+        <class 'gappy.gapobj.GapPermutation'>
     """
     cdef GapPermutation r = GapPermutation.__new__(GapPermutation)
     r._initialize(parent, obj)
@@ -2665,7 +2666,7 @@ cdef class GapPermutation(GapObj):
 
         >>> perm = gap.eval('(1,5,2)(4,3,8)')
         >>> type(perm)
-        <class 'gappy.element.GapPermutation'>
+        <class 'gappy.gapobj.GapPermutation'>
     """
 
 
@@ -2682,7 +2683,7 @@ cdef GapRecord make_GapRecord(parent, Obj obj):
         >>> gap.eval('rec(a:=0, b:=2, c:=3)')
         rec( a := 0, b := 2, c := 3 )
         >>> type(_)
-        <class 'gappy.element.GapRecord'>
+        <class 'gappy.gapobj.GapRecord'>
     """
     cdef GapRecord r = GapRecord.__new__(GapRecord)
     r._initialize(parent, obj)
@@ -2697,7 +2698,7 @@ cdef class GapRecord(GapObj):
 
         >>> rec = gap.eval('rec(a:=123, b:=456)')
         >>> type(rec)
-        <class 'gappy.element.GapRecord'>
+        <class 'gappy.gapobj.GapRecord'>
         >>> len(rec)
         2
         >>> rec['a']
@@ -2748,7 +2749,7 @@ cdef class GapRecord(GapObj):
             >>> rec = gap.eval('rec(a:=123, b:=456)')
             >>> iter = rec.__iter__()
             >>> type(iter)
-            <class 'gappy.element.GapRecordIterator'>
+            <class 'gappy.gapobj.GapRecordIterator'>
             >>> sorted(rec)
             [('a', 123), ('b', 456)]
         """
@@ -2810,7 +2811,7 @@ cdef class GapRecord(GapObj):
         finally:
             GAP_Leave()
             sig_off()
-        return make_any_gap_element(self.parent(), result)
+        return make_any_gap_obj(self.parent(), result)
 
 
 cdef class GapRecordIterator(object):
@@ -2874,6 +2875,6 @@ cdef class GapRecordIterator(object):
         key_index = abs(GET_RNAM_PREC(self.rec.value, i))
         key = char_to_str(GAP_CSTR_STRING(NAME_RNAM(key_index)))
         cdef Obj result = GET_ELM_PREC(self.rec.value,i)
-        val = make_any_gap_element(self.rec.parent(), result)
+        val = make_any_gap_obj(self.rec.parent(), result)
         self.i += 1
         return (key, val)

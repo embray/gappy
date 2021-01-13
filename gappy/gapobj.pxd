@@ -17,8 +17,8 @@ cdef Obj make_gap_record(parent, dct) except NULL
 cdef Obj make_gap_integer(x) except NULL
 cdef Obj make_gap_float(x) except NULL
 cdef Obj make_gap_string(s) except NULL
+cdef GapObj make_any_gap_obj(parent, Obj obj)
 
-cdef GapObj make_any_gap_element(parent, Obj obj)
 cdef GapObj make_GapObj(parent, Obj obj)
 cdef GapList make_GapList(parent, Obj obj)
 cdef GapRecord make_GapRecord(parent, Obj obj)
@@ -31,8 +31,8 @@ cdef GapFunction make_GapFunction(parent, Obj obj)
 cdef GapPermutation make_GapPermutation(parent, Obj obj)
 
 cdef void capture_stdout(Obj, Obj, Obj)
-cdef void gap_element_str(Obj, Obj)
-cdef void gap_element_repr(Obj, Obj)
+cdef void gap_obj_str(Obj, Obj)
+cdef void gap_obj_repr(Obj, Obj)
 
 
 cdef class GapObj:

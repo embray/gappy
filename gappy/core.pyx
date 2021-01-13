@@ -26,10 +26,10 @@ import warnings
 import sys
 
 from .context_managers import GlobalVariableContext
+from .exceptions import GAPError
 from .gap_globals import common_gap_globals as GAP_GLOBALS
 from .gap_includes cimport *
-from .element cimport *
-from .exceptions import GAPError
+from .gapobj cimport *
 from .utils import get_gap_memory_pool_size
 
 #from sage.cpython.string cimport str_to_bytes, char_to_str
@@ -598,7 +598,7 @@ class Gap:
 
     def __call__(self, x):
         r"""
-        Construct GapObj elements from a given object that either has a
+        Construct GapObj instances from a given object that either has a
         registered converter or a ``_gap_`` or ``_gap_init_`` method.
 
         .. todo::
@@ -628,7 +628,7 @@ class Gap:
             ""
 
             A class with a ``_gap_`` method to convert itself to an equivalent
-            `~gappy.element.GapObj`:
+            `~gappy.gapobj.GapObj`:
 
             >>> class MyGroup:
             ...     def _gap_(self):
@@ -671,7 +671,7 @@ class Gap:
             except AttributeError:
                 pass
             x = str(x._gap_init_())
-            return make_any_gap_element(self, gap_eval(x))
+            return make_any_gap_obj(self, gap_eval(x))
 
     def eval(self, gap_command):
         """
@@ -699,7 +699,7 @@ class Gap:
             gap_command = str(gap_command._libgap_init_())
 
         initialize()
-        elem = make_any_gap_element(self, gap_eval(gap_command))
+        elem = make_any_gap_obj(self, gap_eval(gap_command))
 
         # If the element is NULL just return None instead
         if elem.value == NULL:
@@ -746,7 +746,7 @@ class Gap:
 
         OUTPUT:
 
-        A function wrapper :class:`~gappy.element.GapFunction` for the GAP
+        A function wrapper :class:`~gappy.gapobj.GapFunction` for the GAP
         function. Calling it from Sage is equivalent to calling the wrapped
         function from GAP.
 
@@ -821,7 +821,7 @@ class Gap:
 
         OUTPUT:
 
-        A :class:`~gappy.element.GapObj` wrapping the GAP output. A
+        A :class:`~gappy.gapobj.GapObj` wrapping the GAP output. A
         ``ValueError`` is raised if there is no such variable in GAP.
 
         EXAMPLES::
@@ -986,7 +986,7 @@ class Gap:
         ``gap.eval('TotalMemoryAllocated()'), as well as garbage collection
         / object count statistics as returned by
         ``gap.eval('GasmanStatistics')``, and finally the total number of GAP
-        objects held by gappy as :class:`~gappy.element.GapObj` instances.
+        objects held by gappy as :class:`~gappy.gapobj.GapObj` instances.
 
         The value ``livekb + deadkb`` will roughly equal the total memory
         allocated for GAP objects (see
