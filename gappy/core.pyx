@@ -609,7 +609,7 @@ cdef class Gap:
             Any Python object that can be converted to a GAP object.  By
             default the following types are converted: `~gappy.gapobj.GapObj`,
             `list`, `tuple`, `dict`, `bool`, `int`, `float`, `number.Rational`,
-            `str`.
+            `str`, and `None`.
 
         Returns
         -------
@@ -629,6 +629,8 @@ cdef class Gap:
         false
         >>> gap('')
         ""
+        >>> gap(None)
+        NULL
 
         A class with a ``_gap_`` method to convert itself to an equivalent
         `~gappy.gapobj.GapObj`:
@@ -669,6 +671,8 @@ cdef class Gap:
             return self(x.numerator) / self(x.denominator)
         elif isinstance(x, str):
             return make_GapString(self, make_gap_string(x))
+        elif x is None:
+            return make_GapObj(self, NULL)
         # TODO: Add support for bytes
         else:
             try:
