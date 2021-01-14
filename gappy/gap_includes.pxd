@@ -111,11 +111,5 @@ cdef extern from "gap/io.h" nogil:
     UInt CloseOutput()
 
 
-cdef extern from "gap/objects.h" nogil:
-    bint IS_MUTABLE_OBJ(Obj obj)
-    Obj SHALLOW_COPY_OBJ(Obj obj)
-    Obj CopyObj(Obj obj, int mut)
-
-
 cdef extern from "gap/stringobj.h" nogil:
     Obj GAP_MakeStringWithLen "MakeStringWithLen" (char *, size_t)

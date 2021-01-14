@@ -581,8 +581,9 @@ cdef class GapObj:
             >>> a
             [ [ 0, -2 ], [ 2, 3, 4 ] ]
         """
-        if IS_MUTABLE_OBJ(self.value):
-            return make_any_gap_obj(self.parent(), SHALLOW_COPY_OBJ(self.value))
+        gap = self.parent()
+        if gap.IS_MUTABLE_OBJ(self):
+            return gap.SHALLOW_COPY_OBJ(self)
         else:
             return self
 
@@ -625,8 +626,12 @@ cdef class GapObj:
             >>> l.deepcopy(1).IsMutable()
             true
         """
-        if IS_MUTABLE_OBJ(self.value):
-            return make_any_gap_obj(self.parent(), CopyObj(self.value, mut))
+        gap = self.parent()
+        if gap.IS_MUTABLE_OBJ(self):
+            if mut:
+                return gap.DEEP_COPY_OBJ(self)
+            else:
+                return gap.IMMUTABLE_COPY_OBJ(self)
         else:
             return self
 
@@ -2502,7 +2507,10 @@ cdef class GapList(GapObj):
             >>> m
             [ [ 1, 2 ], [ 3, 4 ] ]
         """
-        if not IS_MUTABLE_OBJ(self.value):
+
+        gap = self.parent()
+
+        if not gap.IS_MUTABLE_OBJ(self):
             raise TypeError('immutable GAP object does not support item assignment')
 
         cdef int j
@@ -2526,9 +2534,9 @@ cdef class GapList(GapObj):
 
         cdef GapObj celt
         if isinstance(elt, GapObj):
-            celt = <GapObj> elt
+            celt = <GapObj>elt
         else:
-            celt= self.parent()(elt)
+            celt = gap(elt)
 
         GAP_AssList(obj, j + 1, celt.value)
 
