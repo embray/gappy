@@ -194,10 +194,10 @@ cdef void gasman_callback() with gil:
 cdef bint _gap_is_initialized = False
 
 
-cdef char* _reset_error_output_cmd = """\
-libgap_errout := "";
+cdef char* _reset_error_output_cmd = r"""\
+\$GAPPY_ERROUT := "";
 MakeReadWriteGlobal("ERROR_OUTPUT");
-ERROR_OUTPUT := OutputTextString(libgap_errout, false);
+ERROR_OUTPUT := OutputTextString(\$GAPPY_ERROUT, false);
 MakeReadOnlyGlobal("ERROR_OUTPUT");
 """
 
@@ -206,7 +206,7 @@ CloseStream(ERROR_OUTPUT);
 MakeReadWriteGlobal("ERROR_OUTPUT");
 ERROR_OUTPUT := "*errout*";
 MakeReadOnlyGlobal("ERROR_OUTPUT");
-MakeImmutable(libgap_errout);
+MakeImmutable(\$GAPPY_ERROUT);
 """
 
 
@@ -470,17 +470,17 @@ cdef Obj gap_eval(str gap_string) except? NULL:
 ### Error handler ##########################################################
 ############################################################################
 
-cdef str extract_libgap_errout():
+cdef str extract_errout():
     """
-    Reads the global variable libgap_errout and returns a Python string
+    Reads the global variable $GAPPY_ERROUT and returns a Python string
     containing the error message (with some boilerplate removed).
     """
     cdef Obj r
     cdef char *msg
 
-    r = GAP_ValueGlobalVariable("libgap_errout")
+    r = GAP_ValueGlobalVariable("$GAPPY_ERROUT")
 
-    # Grab a pointer to the C string underlying the GAP string libgap_errout
+    # Grab a pointer to the C string underlying the GAP string $GAPPY_ERROUT
     # then copy it to a Python str
     msg = GAP_CSTR_STRING(r)
     if msg != NULL:
@@ -496,7 +496,7 @@ cdef str extract_libgap_errout():
 
 cdef void error_handler() with gil:
     """
-    The libgap error handler.
+    The gappy error handler.
 
     If an error occurred, we raise a ``GAPError``; when the original
     ``GAP_EvalString`` returns, this exception will be seen.
@@ -518,12 +518,11 @@ cdef void error_handler() with gil:
         # stream segfaults GAP)
         GAP_EvalStringNoExcept(_close_error_output_cmd)
 
-        # Fetch any existing exception before calling
-        # extract_libgap_errout() so that the exception indicator is
-        # cleared
+        # Fetch any existing exception before calling extract_errout() so that
+        # the exception indicator is cleared
         PyErr_Fetch(&exc_type, &exc_val, &exc_tb)
 
-        msg = extract_libgap_errout()
+        msg = extract_errout()
         # Sometimes error_handler() can be called multiple times
         # from a single GAP_EvalString call before it returns.
         # In this case, we just update the exception by appending
