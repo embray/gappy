@@ -51,6 +51,7 @@ cdef extern from "gap/libgap-api.h" nogil:
     Obj GAP_MOD(Obj, Obj)
     int GAP_EQ(Obj opL, Obj opR)
     int GAP_LT(Obj opL, Obj opR)
+    int GAP_IN(Obj, Obj)
 
     # Evaluation
     Obj GAP_EvalString(const char *) except *

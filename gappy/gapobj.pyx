@@ -678,8 +678,14 @@ cdef class GapObj:
             gappy.exceptions.GAPError: Error, no method found! Error, no 1st
             choice method found for `in' on 2 arguments
         """
-        GAP_IN = self.parent().eval(r'\in')
-        return bool(GAP_IN(other, self))
+        if not isinstance(other, GapObj):
+            other = self.parent(other)
+
+        try:
+            GAP_Enter()
+            return bool(GAP_IN((<GapObj>other).value, self.value))
+        finally:
+            GAP_Leave()
 
     cpdef _type_number(self):
         """
