@@ -2394,20 +2394,20 @@ cdef class GapList(GapObj):
         """
         return GAP_LenList(self.value)
 
-    def __getitem__(self, i):
+    def __getitem__(self, idx):
         r"""
-        Return the ``i``-th element of the list.
+        Return the ``idx``-th element of the list.
 
         As usual in Python, indexing starts at `0` and not at `1` (as
         in GAP). This can also be used with multi-indices.
 
         INPUT:
 
-        - ``i`` -- integer.
+        - ``idx`` -- `int` or `tuple`.
 
         OUTPUT:
 
-        The ``i``-th element as a :class:`GapObj`.
+        The ``idx``-th element as a :class:`GapObj`.
 
         EXAMPLES::
 
@@ -2415,48 +2415,64 @@ cdef class GapList(GapObj):
             >>> lst[0]
             "first"
 
+        Negative indices are allowed as in Python::
+
+            >>> lst[-1]
+            "last"
+
+        Multiple indices are allowed à la Numpy arrays for indexing nested
+        lists / matrices::
+
             >>> l = gap.eval('[ [0, 1], [2, 3] ]')
-            >>> l[0,0]
+            >>> l[0, 0]
             0
-            >>> l[0,1]
+            >>> l[0, 1]
             1
-            >>> l[1,0]
+            >>> l[1, 0]
             2
-            >>> l[0,2]
+            >>> l[0, 2]
             Traceback (most recent call last):
             ...
             IndexError: index out of range
-            >>> l[2,0]
+            >>> l[2, 0]
             Traceback (most recent call last):
             ...
             IndexError: index out of range
-            >>> l[0,0,0]
+            >>> l[0, 0, 0]
             Traceback (most recent call last):
             ...
             ValueError: too many indices
         """
-        cdef int j
+        cdef Int jdx
+        cdef Int len_list
         cdef Obj obj = self.value
 
-        if isinstance(i, tuple):
-            for j in i:
+        # NOTE: will there ever be more than max_int elements in a list?
+        len_list = <Int>GAP_LenList(obj)
+
+        if isinstance(idx, tuple):
+            for jdx in idx:
                 if not GAP_IsList(obj):
                     raise ValueError('too many indices')
-                if j < 0 or j >= GAP_LenList(obj):
+                if jdx < 0:
+                    jdx = len_list + jdx
+                if jdx < 0 or jdx >= len_list:
                     raise IndexError('index out of range')
-                obj = GAP_ElmList(obj, j + 1)
+                obj = GAP_ElmList(obj, jdx + 1)
 
         else:
-            j = i
-            if j < 0 or j >= GAP_LenList(obj):
+            jdx = idx
+            if jdx < 0:
+                jdx = len_list + jdx
+            if jdx < 0 or jdx >= len_list:
                 raise IndexError('index out of range.')
-            obj = GAP_ElmList(obj, j + 1)
+            obj = GAP_ElmList(obj, jdx + 1)
 
         return make_any_gap_obj(self.parent(), obj)
 
-    def __setitem__(self, i, elt):
+    def __setitem__(self, idx, elt):
         r"""
-        Set the ``i``-th item of this list
+        Set the ``idx``-th item of this list
 
         EXAMPLES::
 
@@ -2510,23 +2526,29 @@ cdef class GapList(GapObj):
         if not gap.IS_MUTABLE_OBJ(self):
             raise TypeError('immutable GAP object does not support item assignment')
 
-        cdef int j
+        cdef Int jdx, len_list
         cdef Obj obj = self.value
 
-        if isinstance(i, tuple):
-            for j in i[:-1]:
+        len_list = <Int>GAP_LenList(obj)
+
+        if isinstance(idx, tuple):
+            for jdx in idx[:-1]:
                 if not GAP_IsList(obj):
                     raise ValueError('too many indices')
-                if j < 0 or j >= GAP_LenList(obj):
+                if jdx < 0:
+                    jdx = len_list + jdx
+                if jdx < 0 or jdx >= len_list:
                     raise IndexError('index out of range')
-                obj = GAP_ElmList(obj, j + 1)
+                obj = GAP_ElmList(obj, jdx + 1)
             if not GAP_IsList(obj):
                 raise ValueError('too many indices')
-            j = i[-1]
+            jdx = idx[-1]
         else:
-            j = i
+            jdx = idx
+            if jdx < 0:
+                jdx = len_list + jdx
 
-        if j < 0:
+        if jdx < 0:
             raise IndexError('index out of range.')
 
         cdef GapObj celt
@@ -2535,7 +2557,7 @@ cdef class GapList(GapObj):
         else:
             celt = gap(elt)
 
-        GAP_AssList(obj, j + 1, celt.value)
+        GAP_AssList(obj, jdx + 1, celt.value)
 
 
 ############################################################################
