@@ -53,6 +53,10 @@ cdef extern from "gap/libgap-api.h" nogil:
     int GAP_LT(Obj opL, Obj opR)
     int GAP_IN(Obj, Obj)
 
+    # Booleans
+    cdef Obj GAP_True
+    cdef Obj GAP_False
+
     # Evaluation
     Obj GAP_EvalString(const char *) except *
     Obj GAP_EvalStringNoExcept "GAP_EvalString"(const char *)
@@ -94,11 +98,6 @@ cdef extern from "gap/libgap-api.h" nogil:
     int GAP_IsRecord(Obj)
     Obj GAP_ElmRecord(Obj, Obj)
     Obj GAP_NewPrecord(Int)
-
-
-cdef extern from "gap/bool.h" nogil:
-    cdef Obj GAP_True "True"
-    cdef Obj GAP_False "False"
 
 
 cdef extern from "gap/calls.h" nogil:
