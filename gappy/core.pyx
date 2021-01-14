@@ -1,6 +1,4 @@
-"""
-Utility functions for GAP
-"""
+"""Top-level Python interface to GAP."""
 
 #*****************************************************************************
 #       Copyright (C) 2012 Volker Braun <vbraun.name@gmail.com>
