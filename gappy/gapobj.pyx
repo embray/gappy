@@ -306,6 +306,16 @@ cdef Obj make_gap_string(s) except NULL:
 ### generic construction of GapObjs ########################################
 ############################################################################
 
+
+cdef inline int num_eq_tnam(Obj num, char *tnam):
+    """
+    Return 1 if the given GAP integer equals the type constant given by
+    ``tnam``.
+    """
+
+    return GAP_EQ(num, GAP_ValueGlobalVariable(tnam))
+
+
 cdef GapObj make_any_gap_obj(parent, Obj obj):
     """
     Return the GapObj wrapper of ``obj``
@@ -342,43 +352,50 @@ cdef GapObj make_any_gap_obj(parent, Obj obj):
         >>> irr[1]
         0
     """
-    cdef int num
+    cdef Obj TNUM_OBJ, num
+    cdef Obj args[1]
 
     try:
         GAP_Enter()
         if obj is NULL:
             return make_GapObj(parent, obj)
-        num = TNUM_OBJ(obj)
-        if GAP_IsInt(obj):
+        elif GAP_IsInt(obj):
             return make_GapInteger(parent, obj)
-        elif num == T_MACFLOAT:
-            return make_GapFloat(parent, obj)
-        elif num == T_CYC:
-            return make_GapCyclotomic(parent, obj)
-        elif num == T_FFE:
-            return make_GapFiniteField(parent, obj)
-        elif num == T_RAT:
-            return make_GapRational(parent, obj)
-        elif num == T_BOOL:
-            return make_GapBoolean(parent, obj)
-        elif num == T_FUNCTION:
-            return make_GapFunction(parent, obj)
-        elif num == T_PERM2 or num == T_PERM4:
-            return make_GapPermutation(parent, obj)
-        elif GAP_IsRecord(obj):
-            return make_GapRecord(parent, obj)
         elif GAP_IsString(obj):
             return make_GapString(parent, obj)
         elif GAP_IsList(obj):
             return make_GapList(parent, obj)
-        elif num == T_CHAR:
-            ch = make_GapObj(parent, obj).IntChar().sage()
+        elif GAP_IsRecord(obj):
+            return make_GapRecord(parent, obj)
+
+        TNUM_OBJ = GAP_ValueGlobalVariable('TNUM_OBJ')
+        args[0] = obj
+        num = GAP_CallFuncArray(TNUM_OBJ, 1, args)
+
+        if num_eq_tnam(num, 'T_MACFLOAT'):
+            return make_GapFloat(parent, obj)
+        elif num_eq_tnam(num, 'T_CYC'):
+            return make_GapCyclotomic(parent, obj)
+        elif num_eq_tnam(num, 'T_FFE'):
+            return make_GapFiniteField(parent, obj)
+        elif num_eq_tnam(num, 'T_RAT'):
+            return make_GapRational(parent, obj)
+        elif num_eq_tnam(num, 'T_BOOL'):
+            return make_GapBoolean(parent, obj)
+        elif num_eq_tnam(num, 'T_FUNCTION'):
+            return make_GapFunction(parent, obj)
+        elif num_eq_tnam(num, 'T_PERM2') or num_eq_tnam(num, 'T_PERM4'):
+            return make_GapPermutation(parent, obj)
+        elif num_eq_tnam(num, 'T_CHAR'):
+            ch = str(make_GapObj(parent, obj).IntChar())
             return make_GapString(parent, make_gap_string(chr(ch)))
+
         result = make_GapObj(parent, obj)
-        if num == T_POSOBJ:
+
+        if num_eq_tnam(num, 'T_POSOBJ'):
             if result.IsZmodnZObj():
                 return make_GapIntegerMod(parent, obj)
-        if num == T_COMOBJ:
+        elif num_eq_tnam(num, 'T_COMOBJ'):
             if result.IsRing():
                 return make_GapRing(parent, obj)
         return result
@@ -1263,7 +1280,8 @@ cdef class GapObj:
             >>> a.is_function()
             False
         """
-        return IS_FUNC(self.value)
+        gap = self.parent()
+        return gap.TNUM_OBJ(self) == gap.T_FUNCTION
 
     def is_list(self):
         r"""
@@ -1349,8 +1367,9 @@ cdef class GapObj:
             >>> gap('this is a string').is_permutation()
             False
         """
-        return (TNUM_OBJ(self.value) == T_PERM2 or
-                TNUM_OBJ(self.value) == T_PERM4)
+        gap = self.parent()
+        TNUM_OBJ = gap.TNUM_OBJ
+        return TNUM_OBJ(self) == gap.T_PERM2 or TNUM_OBJ(self) == gap.T_PERM4
 
 
 ############################################################################

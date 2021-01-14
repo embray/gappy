@@ -101,10 +101,6 @@ cdef extern from "gap/libgap-api.h" nogil:
     Obj GAP_NewPrecord(Int)
 
 
-cdef extern from "gap/calls.h" nogil:
-    bint IS_FUNC(Obj)
-
-
 cdef extern from "gap/gasman.h" nogil:
     void MarkBag(Obj bag)
     UInt CollectBags(UInt size, UInt full)
@@ -119,34 +115,6 @@ cdef extern from "gap/objects.h" nogil:
     bint IS_MUTABLE_OBJ(Obj obj)
     Obj SHALLOW_COPY_OBJ(Obj obj)
     Obj CopyObj(Obj obj, int mut)
-
-    UInt TNUM_OBJ(Obj obj)
-
-    cdef enum TNUM:
-        T_INT
-        T_INTPOS
-        T_INTNEG
-        T_RAT
-        T_CYC
-        T_FFE
-        T_MACFLOAT
-        T_PERM2
-        T_PERM4
-        T_TRANS2
-        T_TRANS4
-        T_PPERM2
-        T_PPERM4
-        T_BOOL
-        T_CHAR
-        T_FUNCTION
-        T_PLIST
-        T_PLIST_CYC
-        T_BLIST
-        T_STRING
-        T_COMOBJ
-        T_POSOBJ
-        T_DATOBJ
-        T_WPOBJ
 
 
 cdef extern from "gap/stringobj.h" nogil:
