@@ -998,7 +998,7 @@ cdef class GapObj:
         sig_on()
         try:
             GAP_Enter()
-            return EQ(self.value, other.value)
+            return GAP_EQ(self.value, other.value)
         finally:
             GAP_Leave()
             sig_off()
@@ -1020,7 +1020,7 @@ cdef class GapObj:
         sig_on()
         try:
             GAP_Enter()
-            return LT(self.value, other.value)
+            return GAP_LT(self.value, other.value)
         finally:
             GAP_Leave()
             sig_off()
@@ -1055,7 +1055,7 @@ cdef class GapObj:
         try:
             sig_GAP_Enter()
             sig_on()
-            result = SUM(self.value, (<GapObj>right).value)
+            result = GAP_SUM(self.value, (<GapObj>right).value)
             sig_off()
         finally:
             GAP_Leave()
@@ -1089,7 +1089,7 @@ cdef class GapObj:
         try:
             sig_GAP_Enter()
             sig_on()
-            result = DIFF(self.value, (<GapObj>right).value)
+            result = GAP_DIFF(self.value, (<GapObj>right).value)
             sig_off()
         finally:
             GAP_Leave()
@@ -1124,7 +1124,7 @@ cdef class GapObj:
         try:
             sig_GAP_Enter()
             sig_on()
-            result = PROD(self.value, (<GapObj>right).value)
+            result = GAP_PROD(self.value, (<GapObj>right).value)
             sig_off()
         finally:
             GAP_Leave()
@@ -1165,7 +1165,7 @@ cdef class GapObj:
         try:
             sig_GAP_Enter()
             sig_on()
-            result = QUO(self.value, (<GapObj>right).value)
+            result = GAP_QUO(self.value, (<GapObj>right).value)
             sig_off()
         finally:
             GAP_Leave()
@@ -1198,7 +1198,7 @@ cdef class GapObj:
         try:
             sig_GAP_Enter()
             sig_on()
-            result = MOD(self.value, (<GapObj>right).value)
+            result = GAP_MOD(self.value, (<GapObj>right).value)
             sig_off()
         finally:
             GAP_Leave()
@@ -1276,7 +1276,7 @@ cdef class GapObj:
         try:
             sig_GAP_Enter()
             sig_on()
-            result = POW(self.value, (<GapObj>other).value)
+            result = GAP_POW(self.value, (<GapObj>other).value)
             sig_off()
         finally:
             GAP_Leave()

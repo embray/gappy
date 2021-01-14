@@ -42,6 +42,16 @@ cdef extern from "gap/libgap-api.h" nogil:
             GAP_CallbackFunc markBagsCallback, GAP_CallbackFunc errorCallback,
             int handleSignals)
 
+    # Arithmetic and operators
+    Obj GAP_SUM(Obj, Obj)
+    Obj GAP_DIFF(Obj, Obj)
+    Obj GAP_PROD(Obj, Obj)
+    Obj GAP_QUO(Obj, Obj)
+    Obj GAP_POW(Obj, Obj)
+    Obj GAP_MOD(Obj, Obj)
+    int GAP_EQ(Obj opL, Obj opR)
+    int GAP_LT(Obj opL, Obj opR)
+
     # Evaluation
     Obj GAP_EvalString(const char *) except *
     Obj GAP_EvalStringNoExcept "GAP_EvalString"(const char *)
@@ -83,17 +93,6 @@ cdef extern from "gap/libgap-api.h" nogil:
     int GAP_IsRecord(Obj)
     Obj GAP_ElmRecord(Obj, Obj)
     Obj GAP_NewPrecord(Int)
-
-
-cdef extern from "gap/ariths.h" nogil:
-    Obj SUM(Obj, Obj)
-    Obj DIFF(Obj, Obj)
-    Obj PROD(Obj, Obj)
-    Obj QUO(Obj, Obj)
-    Obj POW(Obj, Obj)
-    Obj MOD(Obj, Obj)
-    bint EQ(Obj opL, Obj opR)
-    bint LT(Obj opL, Obj opR)
 
 
 cdef extern from "gap/bool.h" nogil:
