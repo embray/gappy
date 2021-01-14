@@ -18,11 +18,12 @@ def get_gap_memory_pool_size(unit='m'):
     """
     Get the gap memory pool size for new GAP processes.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> from gappy.utils import get_gap_memory_pool_size
-        >>> get_gap_memory_pool_size()  # system-specific output
-        '...m'
+    >>> from gappy.utils import get_gap_memory_pool_size
+    >>> get_gap_memory_pool_size()  # system-specific output
+    '...m'
     """
     allowed_units = ('k', 'm', 'g')
     unit = unit.lower()
@@ -52,17 +53,20 @@ def virtual_memory_limit():
     practical limit if no limit is set. In any case, the value is
     bounded by ``sys.maxsize``.
 
-    OUTPUT:
+    Returns
+    -------
 
-    Integer. The virtual memory limit in bytes.
+    int
+        The virtual memory limit in bytes.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> from gappy.utils import virtual_memory_limit
-        >>> virtual_memory_limit() > 0
-        True
-        >>> virtual_memory_limit() <= sys.maxsize
-        True
+    >>> from gappy.utils import virtual_memory_limit
+    >>> virtual_memory_limit() > 0
+    True
+    >>> virtual_memory_limit() <= sys.maxsize
+    True
     """
     try:
         vmax = resource.getrlimit(resource.RLIMIT_AS)[0]

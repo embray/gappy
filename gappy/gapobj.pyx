@@ -37,13 +37,18 @@ cdef Obj make_gap_list(parent, lst) except NULL:
     """
     Convert Python lists into GAP lists.
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``a`` -- list of :class:`GapObj`.
+    a : list
+        A `list` of `GapObj` and/or Python objects that can be converted
+        to `GapObj`.
 
-    OUTPUT:
+    Returns
+    -------
 
-    The list of the elements in ``a`` as a GAP ``Obj``.
+    ``Obj``
+        A GAP C ``Obj`` representing a GAP list.
     """
     cdef Obj l
     cdef GapObj elem
@@ -70,19 +75,24 @@ cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL:
 
         Perhaps support Numpy arrays as well.
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``lst`` -- list of :class:`GapObj` or objects that can converted to one
+    a : list
+        A `list` of `GapObj` and/or Python objects that can be converted
+        to `GapObj`.
+    gap_ring : GapRing
+        The base ring.
 
-    - ``gap_ring`` -- the base ring
+    If ``gap_ring`` is ``None``, nothing is made to make sure that all
+    coefficients live in the same GAP ring.  The resulting GAP list may not be
+    recognized as a matrix by GAP.
 
-    If ``gap_ring`` is ``None``, nothing is made to make sure
-    that all coefficients live in the same GAP ring. The resulting GAP list
-    may not be recognized as a matrix by GAP.
+    Returns
+    -------
 
-    OUTPUT:
-
-    The list of the elements in ``lst`` as a GAP ``Obj``.
+    ``Obj``
+        A GAP C ``Obj`` representing a GAP list.
     """
     cdef GapObj l = parent.eval('[]')
     cdef GapObj elem
@@ -170,19 +180,18 @@ cdef Obj make_gap_record(parent, dct) except NULL:
     """
     Convert Python dicts into GAP records.
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``a`` -- a dict mapping stringifiable keys to values of :class:`GapObj`
-      or that can be converted to one
+    dct : dict
+        A `dict` mapping stringifiable keys to values of `GapObj` or that can
+        be converted to one.
 
-    OUTPUT:
+    Returns
+    -------
 
-    A `GapRecord` instance.
-
-    TESTS::
-
-        >>> gap({'a': 1, 'b':123})  # indirect doctest
-        rec( a := 1, b := 123 )
+    ``Obj``
+        A GAP C ``Obj`` representing a GAP record.
     """
 
     cdef Obj rec, name
@@ -204,18 +213,16 @@ cdef Obj make_gap_integer(x) except NULL:
     """
     Convert a Python int to a GAP integer
 
-    INPUT:
+    Parameters
+    ----------
+    x : int
+        A Python integer.
 
-    - ``x`` -- a Python integer.
+    Returns
+    -------
 
-    OUTPUT:
-
-    The integer as a GAP ``Obj``.
-
-    TESTS::
-
-        >>> gap(1)   # indirect doctest
-        1
+    ``Obj``
+        A GAP C ``Obj`` representing a GAP integer.
     """
 
     cdef Obj result
@@ -253,21 +260,21 @@ cdef Obj make_gap_integer(x) except NULL:
 
 cdef Obj make_gap_float(x) except NULL:
     """
-    Convert a Python float to a GAP machine float
+    Convert a Python float to a GAP machine float.
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``x`` -- a Python float.
+    x : float
+        A Python `float`.
 
-    OUTPUT:
+    Returns
+    -------
 
-    The float as a GAP ``Obj``.
-
-    TESTS::
-
-        >>> gap(1.23)  # indirect doctest
-        1.23
+    ``Obj``
+        A GAP C ``Obj`` representing a GAP machine float.
     """
+
     cdef Obj result
     try:
         GAP_Enter()
@@ -281,19 +288,19 @@ cdef Obj make_gap_string(s) except NULL:
     """
     Convert a Python string to a GAP string
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``s`` -- a Python str.
+    s : str
+        A Python `str`.
 
-    OUTPUT:
+    Returns
+    -------
 
-    The string as a GAP ``Obj``.
-
-    TESTS::
-
-        >>> gap('string')  # indirect doctest
-        "string"
+    ``Obj``
+        A GAP C ``Obj`` representing a GAP string.
     """
+
     try:
         GAP_Enter()
         b = s.encode('utf-8')
@@ -325,32 +332,33 @@ cdef GapObj make_any_gap_obj(parent, Obj obj):
     know exactly which type it is (then you can use the specialized
     ``make_GapElement_...``)
 
-    TESTS::
+    Tests
+    -----
 
-        >>> T_CHAR = gap.eval("'c'");  T_CHAR
-        "c"
-        >>> type(T_CHAR)
-        <class 'gappy.gapobj.GapString'>
+    >>> T_CHAR = gap.eval("'c'");  T_CHAR
+    "c"
+    >>> type(T_CHAR)
+    <class 'gappy.gapobj.GapString'>
 
-        >>> gap.eval("['a', 'b', 'c']")   # gap strings are also lists of chars
-        "abc"
-        >>> t = gap.UnorderedTuples('abc', 2);  t
-        [ "aa", "ab", "ac", "bb", "bc", "cc" ]
-        >>> t[1]
-        "ab"
-        >>> str(t[1])
-        'ab'
-        >>> list(t)
-        ['aa', 'ab', 'ac', 'bb', 'bc', 'cc']
+    >>> gap.eval("['a', 'b', 'c']")   # gap strings are also lists of chars
+    "abc"
+    >>> t = gap.UnorderedTuples('abc', 2);  t
+    [ "aa", "ab", "ac", "bb", "bc", "cc" ]
+    >>> t[1]
+    "ab"
+    >>> str(t[1])
+    'ab'
+    >>> list(t)
+    ['aa', 'ab', 'ac', 'bb', 'bc', 'cc']
 
-    Check that :trac:`18158` is fixed::
+    Check that :trac:`18158` is fixed:
 
-        >>> S = SymmetricGroup(5)
-        >>> irr = gap.Irr(S)[3]
-        >>> irr[0]
-        6
-        >>> irr[1]
-        0
+    >>> S = SymmetricGroup(5)
+    >>> irr = gap.Irr(S)[3]
+    >>> irr[0]
+    6
+    >>> irr[1]
+    0
     """
     cdef Obj TNUM_OBJ, num
     cdef Obj args[1]
@@ -411,29 +419,34 @@ cdef GapObj make_GapObj(parent, Obj obj):
     r"""
     Turn a GAP C object (of type ``Obj``) into a Cython ``GapObj``.
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``parent`` -- the parent of the new :class:`GapObj`
+    parent : `~gappy.core.Gap`
+        The GAP interpreter wrapper currently in use.
+    obj : ``Obj``
+        A C GAP ``Obj`` to wrap.
 
-    - ``obj`` -- a GAP object.
+    Returns
+    -------
 
-    OUTPUT:
+    `GapObj`
+        A `GapObj` instance, or one of its derived classes if it is a better
+        fit for the GAP object.
 
-    A :class:`GapFunction` instance, or one of its derived
-    classes if it is a better fit for the GAP object.
+    Examples
+    --------
 
-    EXAMPLES::
+    >>> gap(0)
+    0
+    >>> type(_)
+    <class 'gappy.gapobj.GapInteger'>
 
-        >>> gap(0)
-        0
-        >>> type(_)
-        <class 'gappy.gapobj.GapInteger'>
-
-        >>> gap.eval('')
-        >>> gap(None)
-        Traceback (most recent call last):
-        ...
-        AttributeError: 'NoneType' object has no attribute '_gap_init_'
+    >>> gap.eval('')
+    >>> gap(None)
+    Traceback (most recent call last):
+    ...
+    AttributeError: 'NoneType' object has no attribute '_gap_init_'
     """
     cdef GapObj r = GapObj.__new__(GapObj)
     r._initialize(parent, obj)
@@ -444,43 +457,38 @@ cdef class GapObj:
     r"""
     Wrapper for all GAP objects.
 
-    .. NOTE::
+    .. note::
 
         In order to create ``GapObjs`` you should use the ``gap`` instance (the
         parent of all GAP elements) to convert things into ``GapObj``. You must
         not create ``GapObj`` instances manually.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap(0)
-        0
+    >>> gap(0)
+    0
 
     If GAP finds an error while evaluating, a :class:`GAPError`
-    exception is raised::
+    exception is raised:
 
-        >>> gap.eval('1/0')
-        Traceback (most recent call last):
-        ...
-        gappy.exceptions.GAPError: Error, Rational operations: <divisor> must
-        not be zero
+    >>> gap.eval('1/0')
+    Traceback (most recent call last):
+    ...
+    gappy.exceptions.GAPError: Error, Rational operations: <divisor> must
+    not be zero
 
-    Also, a ``GAPError`` is raised if the input is not a simple expression::
+    Also, a ``GAPError`` is raised if the input is not a simple expression:
 
-        >>> gap.eval('1; 2; 3')
-        Traceback (most recent call last):
-        ...
-        gappy.exceptions.GAPError: can only evaluate a single statement
+    >>> gap.eval('1; 2; 3')
+    Traceback (most recent call last):
+    ...
+    gappy.exceptions.GAPError: can only evaluate a single statement
     """
 
     def __cinit__(self):
-        """
-        The Cython constructor.
+        """The Cython constructor."""
 
-        EXAMPLES::
-
-            >>> gap.eval('1')
-            1
-        """
         self.value = NULL
         self._compare_by_id = False
 
@@ -492,13 +500,14 @@ cdef class GapObj:
         :class:`GapObj`. Cython programmers must use :func:`make_GapObj`
         factory function.
 
-        TESTS::
+        Tests
+        -----
 
-            >>> from gappy.gapobj import GapObj
-            >>> GapObj()
-            Traceback (most recent call last):
-            ...
-            TypeError: this class cannot be instantiated from Python
+        >>> from gappy.gapobj import GapObj
+        >>> GapObj()
+        Traceback (most recent call last):
+        ...
+        TypeError: this class cannot be instantiated from Python
         """
         raise TypeError('this class cannot be instantiated from Python')
 
@@ -510,19 +519,20 @@ cdef class GapObj:
         initialize the newly-constructed object. You must never call
         it manually.
 
-        TESTS::
+        Tests
+        -----
 
-            >>> n_before = gap.count_GAP_objects()
-            >>> a = gap.eval('123')
-            >>> b = gap.eval('456')
-            >>> c = gap.eval('CyclicGroup(3)')
-            >>> d = gap.eval('"a string"')
-            >>> gap.collect()
-            >>> del c
-            >>> gap.collect()
-            >>> n_after = gap.count_GAP_objects()
-            >>> n_after - n_before
-            3
+        >>> n_before = gap.count_GAP_objects()
+        >>> a = gap.eval('123')
+        >>> b = gap.eval('456')
+        >>> c = gap.eval('CyclicGroup(3)')
+        >>> d = gap.eval('"a string"')
+        >>> gap.collect()
+        >>> del c
+        >>> gap.collect()
+        >>> n_after = gap.count_GAP_objects()
+        >>> n_after - n_before
+        3
         """
         assert self.value is NULL
         self._parent = parent
@@ -535,17 +545,18 @@ cdef class GapObj:
         r"""
         The Cython destructor
 
-        TESTS::
+        Tests
+        -----
 
-            >>> pre_refcount = gap.count_GAP_objects()
-            >>> def f():
-            ...     local_variable = gap.eval('"This is a new string"')
-            >>> f()
-            >>> f()
-            >>> f()
-            >>> post_refcount = gap.count_GAP_objects()
-            >>> post_refcount - pre_refcount
-            0
+        >>> pre_refcount = gap.count_GAP_objects()
+        >>> def f():
+        ...     local_variable = gap.eval('"This is a new string"')
+        >>> f()
+        >>> f()
+        >>> f()
+        >>> post_refcount = gap.count_GAP_objects()
+        >>> post_refcount - pre_refcount
+        0
         """
         if self.value is NULL:
             return
@@ -553,34 +564,39 @@ cdef class GapObj:
 
     def __copy__(self):
         r"""
-        TESTS::
+        Perform a shallow copy of a GAP object, or return the same object if
+        it is immutable.
 
-            >>> a = gap(1)
-            >>> a.__copy__() is a
-            True
+        Examples
+        --------
 
-            >>> a = gap(1/3)
-            >>> a.__copy__() is a
-            True
+        >>> a = gap(1)
+        >>> a.__copy__() is a
+        True
 
-            >>> a = gap([1,2])
-            >>> b = a.__copy__()
-            >>> a is b
-            False
-            >>> a[0] = 3
-            >>> a
-            [ 3, 2 ]
-            >>> b
-            [ 1, 2 ]
+        >>> a = gap(1/3)
+        >>> a.__copy__() is a
+        True
 
-            >>> a = gap([[0,1],[2,3,4]])
-            >>> b = a.__copy__()
-            >>> b[0][1] = -2
-            >>> b
-            [ [ 0, -2 ], [ 2, 3, 4 ] ]
-            >>> a
-            [ [ 0, -2 ], [ 2, 3, 4 ] ]
+        >>> a = gap([1,2])
+        >>> b = a.__copy__()
+        >>> a is b
+        False
+        >>> a[0] = 3
+        >>> a
+        [ 3, 2 ]
+        >>> b
+        [ 1, 2 ]
+
+        >>> a = gap([[0,1],[2,3,4]])
+        >>> b = a.__copy__()
+        >>> b[0][1] = -2
+        >>> b
+        [ [ 0, -2 ], [ 2, 3, 4 ] ]
+        >>> a
+        [ [ 0, -2 ], [ 2, 3, 4 ] ]
         """
+
         gap = self.parent()
         if gap.IS_MUTABLE_OBJ(self):
             return gap.SHALLOW_COPY_OBJ(self)
@@ -606,25 +622,28 @@ cdef class GapObj:
         Note that this is the same thing as calling ``StructuralCopy`` but much
         faster.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``mut`` - (boolean) wheter to return an mutable copy
+        mut : bool
+            Whether or not to return a mutable copy.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> a = gap([[0,1],[2,3]])
-            >>> b = a.deepcopy(1)
-            >>> b[0,0] = 5
-            >>> a
-            [ [ 0, 1 ], [ 2, 3 ] ]
-            >>> b
-            [ [ 5, 1 ], [ 2, 3 ] ]
+        >>> a = gap([[0,1],[2,3]])
+        >>> b = a.deepcopy(1)
+        >>> b[0,0] = 5
+        >>> a
+        [ [ 0, 1 ], [ 2, 3 ] ]
+        >>> b
+        [ [ 5, 1 ], [ 2, 3 ] ]
 
-            >>> l = gap([0,1])
-            >>> l.deepcopy(0).IsMutable()
-            false
-            >>> l.deepcopy(1).IsMutable()
-            true
+        >>> l = gap([0,1])
+        >>> l.deepcopy(0).IsMutable()
+        false
+        >>> l.deepcopy(1).IsMutable()
+        true
         """
         gap = self.parent()
         if gap.IS_MUTABLE_OBJ(self):
@@ -637,38 +656,45 @@ cdef class GapObj:
 
     def __deepcopy__(self, memo):
         r"""
-        TESTS::
+        Perform a deep copy of a GAP object.
 
-            >>> from copy import deepcopy
-            >>> a = gap([[0,1],[2]])
-            >>> b = deepcopy(a)
-            >>> a[0,0] = -1
-            >>> a
-            [ [ -1, 1 ], [ 2 ] ]
-            >>> b
-            [ [ 0, 1 ], [ 2 ] ]
+        Examples
+        --------
+
+        >>> from copy import deepcopy
+        >>> a = gap([[0,1],[2]])
+        >>> b = deepcopy(a)
+        >>> a[0,0] = -1
+        >>> a
+        [ [ -1, 1 ], [ 2 ] ]
+        >>> b
+        [ [ 0, 1 ], [ 2 ] ]
         """
         return self.deepcopy(0)
 
     def __contains__(self, other):
         r"""
-        TESTS::
+        Check if one GAP object (or its Python equivalent) is contained in
+        this GAP object.
 
-            >>> gap(1) in gap.eval('Integers')
-            True
-            >>> 1 in gap.eval('Integers')
-            True
+        Examples
+        --------
 
-            >>> 3 in gap([1,5,3,2])
-            True
-            >>> -5 in gap([1,5,3,2])
-            False
+        >>> gap(1) in gap.eval('Integers')
+        True
+        >>> 1 in gap.eval('Integers')
+        True
 
-            >>> gap.eval('Integers') in gap(1)
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found! Error, no 1st
-            choice method found for `in' on 2 arguments
+        >>> 3 in gap([1,5,3,2])
+        True
+        >>> -5 in gap([1,5,3,2])
+        False
+
+        >>> gap.eval('Integers') in gap(1)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found! Error, no 1st
+        choice method found for `in' on 2 arguments
         """
         if not isinstance(other, GapObj):
             other = self.parent(other)
@@ -683,16 +709,17 @@ cdef class GapObj:
         """
         Customize tab completion
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> G = gap.DihedralGroup(4)
-            >>> 'GeneratorsOfMagmaWithInverses' in dir(G)
-            True
-            >>> 'GeneratorsOfGroup' in dir(G)    # known bug
-            False
-            >>> x = gap(1)
-            >>> len(dir(x)) > 100
-            True
+        >>> G = gap.DihedralGroup(4)
+        >>> 'GeneratorsOfMagmaWithInverses' in dir(G)
+        True
+        >>> 'GeneratorsOfGroup' in dir(G)    # known bug
+        False
+        >>> x = gap(1)
+        >>> len(dir(x)) > 100
+        True
         """
         ops = OperationInspector(self).op_names()
         return dir(self.__class__) + ops
@@ -701,35 +728,37 @@ cdef class GapObj:
         r"""
         Return functionoid implementing the function ``name``.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> lst = gap([])
-            >>> 'Add' in dir(lst)    # This is why tab-completion works
-            True
-            >>> lst.Add(1)    # this is the syntactic sugar
-            >>> lst
-            [ 1 ]
+        >>> lst = gap([])
+        >>> 'Add' in dir(lst)    # This is why tab-completion works
+        True
+        >>> lst.Add(1)    # this is the syntactic sugar
+        >>> lst
+        [ 1 ]
 
-        The above is equivalent to the following calls::
+        The above is equivalent to the following calls:
 
-            >>> lst = gap.eval('[]')
-            >>> gap.eval('Add') (lst, 1)
-            >>> lst
-            [ 1 ]
+        >>> lst = gap.eval('[]')
+        >>> gap.eval('Add') (lst, 1)
+        >>> lst
+        [ 1 ]
 
-        TESTS::
+        Tests
+        ^^^^^
 
-            >>> lst.Adddddd(1)
-            Traceback (most recent call last):
-            ...
-            AttributeError: 'Adddddd' is not defined in GAP
+        >>> lst.Adddddd(1)
+        Traceback (most recent call last):
+        ...
+        AttributeError: 'Adddddd' is not defined in GAP
 
-            >>> gap.eval('some_name := 1')
-            1
-            >>> lst.some_name
-            Traceback (most recent call last):
-            ...
-            AttributeError: 'some_name' does not define a GAP function
+        >>> gap.eval('some_name := 1')
+        1
+        >>> lst.some_name
+        Traceback (most recent call last):
+        ...
+        AttributeError: 'some_name' does not define a GAP function
         """
         if name in ('__dict__', '_getAttributeNames', '__custom_name', 'keys'):
             raise AttributeError('Python special name, not a GAP function.')
@@ -745,18 +774,19 @@ cdef class GapObj:
         r"""
         Return a string representation of ``self`` for printing.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap(0)
-            0
-            >>> print(gap.eval(''))
-            None
-            >>> print(gap('a'))
-            a
-            >>> print(gap.eval('SymmetricGroup(3)'))
-            SymmetricGroup( [ 1 .. 3 ] )
-            >>> gap(0).__str__()
-            '0'
+        >>> gap(0)
+        0
+        >>> print(gap.eval(''))
+        None
+        >>> print(gap('a'))
+        a
+        >>> print(gap.eval('SymmetricGroup(3)'))
+        SymmetricGroup( [ 1 .. 3 ] )
+        >>> gap(0).__str__()
+        '0'
         """
         cdef Obj out
 
@@ -776,17 +806,18 @@ cdef class GapObj:
         r"""
         Return a string representation of ``self``.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap(0)
-            0
-            >>> gap.eval('')
-            >>> gap('a')
-            "a"
-            >>> gap.eval('SymmetricGroup(3)')
-            Sym( [ 1 .. 3 ] )
-            >>> gap(0).__repr__()
-            '0'
+        >>> gap(0)
+        0
+        >>> gap.eval('')
+        >>> gap('a')
+        "a"
+        >>> gap.eval('SymmetricGroup(3)')
+        Sym( [ 1 .. 3 ] )
+        >>> gap(0).__repr__()
+        '0'
         """
         cdef Obj out
 
@@ -817,26 +848,27 @@ cdef class GapObj:
         not mix GAP objects with different sort methods in the same
         container.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> F1 = gap.FreeGroup(['a'])
-            >>> F2 = gap.FreeGroup(['a'])
-            >>> F1 < F2
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found!
-            Error, no 1st choice method found for `<' on 2 arguments
+        >>> F1 = gap.FreeGroup(['a'])
+        >>> F2 = gap.FreeGroup(['a'])
+        >>> F1 < F2
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found!
+        Error, no 1st choice method found for `<' on 2 arguments
 
-            >>> F1._set_compare_by_id()
-            >>> F1 != F2
-            Traceback (most recent call last):
-            ...
-            ValueError: comparison style must be the same for both operands
+        >>> F1._set_compare_by_id()
+        >>> F1 != F2
+        Traceback (most recent call last):
+        ...
+        ValueError: comparison style must be the same for both operands
 
-            >>> F1._set_compare_by_id()
-            >>> F2._set_compare_by_id()
-            >>> F1 != F2
-            True
+        >>> F1._set_compare_by_id()
+        >>> F2._set_compare_by_id()
+        >>> F1 != F2
+        True
         """
         self._compare_by_id = True
 
@@ -846,21 +878,24 @@ cdef class GapObj:
 
         See :meth:`_set_compare_by_id`.
 
-        OUTPUT:
+        Raises
+        ------
 
-        This method returns nothing. A ``ValueError`` is raised if
-        :meth:`_set_compare_by_id` has not been called on this GAP object.
+        ValueError
+            This method returns nothing. A `ValueError` is raised if
+            :meth:`_set_compare_by_id` has not been called on this GAP object.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> x = gap.FreeGroup(1)
-            >>> x._assert_compare_by_id()
-            Traceback (most recent call last):
-            ...
-            ValueError: this requires a GAP object whose comparison is by "id"
+        >>> x = gap.FreeGroup(1)
+        >>> x._assert_compare_by_id()
+        Traceback (most recent call last):
+        ...
+        ValueError: this requires a GAP object whose comparison is by "id"
 
-            >>> x._set_compare_by_id()
-            >>> x._assert_compare_by_id()
+        >>> x._set_compare_by_id()
+        >>> x._assert_compare_by_id()
         """
         if not self._compare_by_id:
             raise ValueError('this requires a GAP object whose comparison is by "id"')
@@ -869,10 +904,11 @@ cdef class GapObj:
         """
         Make hashable.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> hash(gap(123))  # doctest: +IGNORE_OUTPUT
-            163512108404620371
+        >>> hash(gap(123))  # doctest: +IGNORE_OUTPUT
+        163512108404620371
         """
         return hash(str(self))
 
@@ -886,59 +922,67 @@ cdef class GapObj:
         Uses the GAP comparison by default, or the Python ``id`` if
         :meth:`_set_compare_by_id` was called.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean, depending on the comparison of ``self`` and
-        ``other``.  Raises a ``ValueError`` if GAP does not support
-        comparison of ``self`` and ``other``, unless
-        :meth:`_set_compare_by_id` was called on both ``self`` and
+        bool
+            Result of comparison of ``self`` and
         ``other``.
 
-        EXAMPLES::
+        Raises
+        ------
 
-            >>> a = gap(123)
-            >>> a == a
-            True
-            >>> b = gap('string')
-            >>> a._richcmp_(b, 0)
-            1
-            >>> (a < b) or (a > b)
-            True
-            >>> a._richcmp_(gap(123), 2)
-            True
+        ValueError
+            Raises a `ValueError` if GAP does not support comparison of
+            ``self`` and ``other``, unless :meth:`_set_compare_by_id` was
+            called on both ``self`` and ``other``.
+
+        Examples
+        --------
+
+        >>> a = gap(123)
+        >>> a == a
+        True
+        >>> b = gap('string')
+        >>> a._richcmp_(b, 0)
+        1
+        >>> (a < b) or (a > b)
+        True
+        >>> a._richcmp_(gap(123), 2)
+        True
 
         GAP does not have a comparison function for two ``FreeGroup``
-        objects. LibGAP signals this by raising a ``ValueError`` ::
+        objects. LibGAP signals this by raising a ``ValueError``:
 
-            >>> F1 = gap.FreeGroup(['a'])
-            >>> F2 = gap.FreeGroup(['a'])
-            >>> F1 < F2
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found!
-            Error, no 1st choice method found for `<' on 2 arguments
+        >>> F1 = gap.FreeGroup(['a'])
+        >>> F2 = gap.FreeGroup(['a'])
+        >>> F1 < F2
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found!
+        Error, no 1st choice method found for `<' on 2 arguments
 
-            >>> F1._set_compare_by_id()
-            >>> F1 < F2
-            Traceback (most recent call last):
-            ...
-            ValueError: comparison style must be the same for both operands
+        >>> F1._set_compare_by_id()
+        >>> F1 < F2
+        Traceback (most recent call last):
+        ...
+        ValueError: comparison style must be the same for both operands
 
-            >>> F1._set_compare_by_id()
-            >>> F2._set_compare_by_id()
-            >>> F1 < F2 or F1 > F2
-            True
+        >>> F1._set_compare_by_id()
+        >>> F2._set_compare_by_id()
+        >>> F1 < F2 or F1 > F2
+        True
 
-        Check that :trac:`26388` is fixed::
+        Check that :trac:`26388` is fixed:
 
-            >>> 1 > gap(1)
-            False
-            >>> gap(1) > 1
-            False
-            >>> 1 >= gap(1)
-            True
-            >>> gap(1) >= 1
-            True
+        >>> 1 > gap(1)
+        False
+        >>> gap(1) > 1
+        False
+        >>> 1 >= gap(1)
+        True
+        >>> gap(1) >= 1
+        True
         """
         if self._compare_by_id != (<GapObj>other)._compare_by_id:
             raise ValueError("comparison style must be the same for both operands")
@@ -963,10 +1007,11 @@ cdef class GapObj:
 
         Helper for :meth:`_richcmp_`
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap(1) == gap(1)   # indirect doctest
-            True
+        >>> gap(1) == gap(1)   # indirect doctest
+        True
         """
         if self._compare_by_id:
             return id(self) == id(other)
@@ -985,10 +1030,11 @@ cdef class GapObj:
 
         Helper for :meth:`_richcmp_`
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap(1) < gap(2)   # indirect doctest
-            True
+        >>> gap(1) < gap(2)   # indirect doctest
+        True
         """
         if self._compare_by_id:
             return id(self) < id(other)
@@ -1012,20 +1058,21 @@ cdef class GapObj:
         r"""
         Add two GapObj objects.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> g1 = gap(1)
-            >>> g2 = gap(2)
-            >>> g1._add_(g2)
-            3
-            >>> g1 + g2    # indirect doctest
-            3
+        >>> g1 = gap(1)
+        >>> g2 = gap(2)
+        >>> g1._add_(g2)
+        3
+        >>> g1 + g2    # indirect doctest
+        3
 
-            >>> gap(1) + gap.CyclicGroup(2)
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found!
-            Error, no 1st choice method found for `+' on 2 arguments
+        >>> gap(1) + gap.CyclicGroup(2)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found!
+        Error, no 1st choice method found for `+' on 2 arguments
         """
         cdef Obj result
         try:
@@ -1047,19 +1094,20 @@ cdef class GapObj:
         r"""
         Subtract two GapObj objects.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> g1 = gap(1)
-            >>> g2 = gap(2)
-            >>> g1._sub_(g2)
-            -1
-            >>> g1 - g2  # indirect doctest
-            -1
+        >>> g1 = gap(1)
+        >>> g2 = gap(2)
+        >>> g1._sub_(g2)
+        -1
+        >>> g1 - g2  # indirect doctest
+        -1
 
-            >>> gap(1) - gap.CyclicGroup(2)
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found! ...
+        >>> gap(1) - gap.CyclicGroup(2)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found! ...
         """
         cdef Obj result
         try:
@@ -1081,20 +1129,21 @@ cdef class GapObj:
         r"""
         Multiply two GapObj objects.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> g1 = gap(3)
-            >>> g2 = gap(5)
-            >>> g1._mul_(g2)
-            15
-            >>> g1 * g2    # indirect doctest
-            15
+        >>> g1 = gap(3)
+        >>> g2 = gap(5)
+        >>> g1._mul_(g2)
+        15
+        >>> g1 * g2    # indirect doctest
+        15
 
-            >>> gap(1) * gap.CyclicGroup(2)
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found!
-            Error, no 1st choice method found for `*' on 2 arguments
+        >>> gap(1) * gap.CyclicGroup(2)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found!
+        Error, no 1st choice method found for `*' on 2 arguments
         """
         cdef Obj result
         try:
@@ -1116,26 +1165,27 @@ cdef class GapObj:
         r"""
         Divide two GapObj objects.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> g1 = gap(3)
-            >>> g2 = gap(5)
-            >>> g1._div_(g2)
-            3/5
-            >>> g1 / g2    # indirect doctest
-            3/5
+        >>> g1 = gap(3)
+        >>> g2 = gap(5)
+        >>> g1._div_(g2)
+        3/5
+        >>> g1 / g2    # indirect doctest
+        3/5
 
-            >>> gap(1) / gap.CyclicGroup(2)
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found!
-            Error, no 1st choice method found for `/' on 2 arguments
+        >>> gap(1) / gap.CyclicGroup(2)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found!
+        Error, no 1st choice method found for `/' on 2 arguments
 
-            >>> gap(1) / gap(0)
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, Rational operations: <divisor>
-            must not be zero
+        >>> gap(1) / gap(0)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, Rational operations: <divisor>
+        must not be zero
         """
         cdef Obj result
         try:
@@ -1157,18 +1207,19 @@ cdef class GapObj:
         r"""
         Modulus of two GapObj objects.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> g1 = gap(5)
-            >>> g2 = gap(2)
-            >>> g1 % g2
-            1
+        >>> g1 = gap(5)
+        >>> g2 = gap(2)
+        >>> g1 % g2
+        1
 
-            >>> gap(1) % gap.CyclicGroup(2)
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found!
-            Error, no 1st choice method found for `mod' on 2 arguments
+        >>> gap(1) % gap.CyclicGroup(2)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found!
+        Error, no 1st choice method found for `mod' on 2 arguments
         """
         cdef Obj result
         try:
@@ -1210,44 +1261,46 @@ cdef class GapObj:
         r"""
         Exponentiation of two GapObj objects.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> r = gap(5) ^ 2; r
-            25
-            >>> type(r)
-            <class 'gappy.gapobj.GapInteger'>
-            >>> r = 5 ^ gap(2); r
-            25
-            >>> type(r)
-            <class 'gappy.gapobj.GapInteger'>
-            >>> g, = gap.CyclicGroup(5).GeneratorsOfGroup()
-            >>> g ^ 5
-            <identity> of ...
+        >>> r = gap(5) ^ 2; r
+        25
+        >>> type(r)
+        <class 'gappy.gapobj.GapInteger'>
+        >>> r = 5 ^ gap(2); r
+        25
+        >>> type(r)
+        <class 'gappy.gapobj.GapInteger'>
+        >>> g, = gap.CyclicGroup(5).GeneratorsOfGroup()
+        >>> g ^ 5
+        <identity> of ...
 
-        TESTS:
+        Tests
+        ^^^^^
 
-        Check that this can be interrupted gracefully::
+        Check that this can be interrupted gracefully:
 
-            >>> from cysignals.alarm import alarm, AlarmInterrupt
-            >>> a, b = gap.GL(1000, 3).GeneratorsOfGroup(); g = a * b
-            >>> try:
-            ...     alarm(0.5); g ^ (2 ^ 10000)
-            ... except AlarmInterrupt:
-            ...     print('interrupted long computation')
-            ...
-            interrupted long computation
+        >>> from cysignals.alarm import alarm, AlarmInterrupt
+        >>> a, b = gap.GL(1000, 3).GeneratorsOfGroup(); g = a * b
+        >>> try:
+        ...     alarm(0.5); g ^ (2 ^ 10000)
+        ... except AlarmInterrupt:
+        ...     print('interrupted long computation')
+        ...
+        interrupted long computation
 
-            >>> gap.CyclicGroup(2) ^ 2
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found!
-            Error, no 1st choice method found for `^' on 2 arguments
+        >>> gap.CyclicGroup(2) ^ 2
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found!
+        Error, no 1st choice method found for `^' on 2 arguments
 
-            >>> gap(3) ^ gap.infinity
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found! Error, no 1st choice
-            method found for `InverseMutable' on 1 arguments
+        >>> gap(3) ^ gap.infinity
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found! Error, no 1st choice
+        method found for `InverseMutable' on 1 arguments
         """
         try:
             sig_GAP_Enter()
@@ -1260,7 +1313,8 @@ cdef class GapObj:
 
     cpdef _pow_int(self, other):
         """
-        TESTS::
+        Tests
+        -----
 
             >>> gap(5)._pow_int(int(2))
             25
@@ -1271,18 +1325,20 @@ cdef class GapObj:
         """
         Return whether the wrapped GAP object is a function.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> a = gap.eval("NormalSubgroups")
-            >>> a.is_function()
-            True
-            >>> a = gap(2/3)
-            >>> a.is_function()
-            False
+        >>> a = gap.eval("NormalSubgroups")
+        >>> a.is_function()
+        True
+        >>> a = gap(2/3)
+        >>> a.is_function()
+        False
         """
         gap = self.parent()
         return gap.TNUM_OBJ(self) == gap.T_FUNCTION
@@ -1291,16 +1347,18 @@ cdef class GapObj:
         r"""
         Return whether the wrapped GAP object is a GAP List.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.eval('[1, 2,,,, 5]').is_list()
-            True
-            >>> gap.eval('3/2').is_list()
-            False
+        >>> gap.eval('[1, 2,,,, 5]').is_list()
+        True
+        >>> gap.eval('3/2').is_list()
+        False
         """
         return bool(GAP_IsList(self.value))
 
@@ -1308,16 +1366,18 @@ cdef class GapObj:
         r"""
         Return whether the wrapped GAP object is a GAP record.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.eval('[1, 2,,,, 5]').is_record()
-            False
-            >>> gap.eval('rec(a:=1, b:=3)').is_record()
-            True
+        >>> gap.eval('[1, 2,,,, 5]').is_record()
+        False
+        >>> gap.eval('rec(a:=1, b:=3)').is_record()
+        True
         """
         return bool(GAP_IsRecord(self.value))
 
@@ -1325,14 +1385,16 @@ cdef class GapObj:
         r"""
         Return whether the wrapped GAP object is a GAP boolean.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap(True).is_bool()
-            True
+        >>> gap(True).is_bool()
+        True
         """
         gap = self.parent()
         return bool(gap.IsBool(self))
@@ -1341,14 +1403,16 @@ cdef class GapObj:
         r"""
         Return whether the wrapped GAP object is a GAP string.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap('this is a string').is_string()
-            True
+        >>> gap('this is a string').is_string()
+        True
         """
         return bool(GAP_IsString(self.value))
 
@@ -1356,18 +1420,20 @@ cdef class GapObj:
         r"""
         Return whether the wrapped GAP object is a GAP permutation.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> perm = gap.PermList( gap([1,5,2,3,4]) );  perm
-            (2,5,4,3)
-            >>> perm.is_permutation()
-            True
-            >>> gap('this is a string').is_permutation()
-            False
+        >>> perm = gap.PermList([1, 5, 2, 3, 4]); perm
+        (2,5,4,3)
+        >>> perm.is_permutation()
+        True
+        >>> gap('this is a string').is_permutation()
+        False
         """
         gap = self.parent()
         TNUM_OBJ = gap.TNUM_OBJ
@@ -1382,12 +1448,13 @@ cdef GapInteger make_GapInteger(parent, Obj obj):
     r"""
     Turn a GAP integer object into a Python GapInteger object.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap(123)
-        123
-        >>> type(_)
-        <class 'gappy.gapobj.GapInteger'>
+    >>> gap(123)
+    123
+    >>> type(_)
+    <class 'gappy.gapobj.GapInteger'>
     """
     cdef GapInteger r = GapInteger.__new__(GapInteger)
     r._initialize(parent, obj)
@@ -1398,13 +1465,14 @@ cdef class GapInteger(GapObj):
     r"""
     Derived class of GapObj for GAP integers.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> i = gap(123)
-        >>> type(i)
-        <class 'gappy.gapobj.GapInteger'>
-        >>> i
-        123
+    >>> i = gap(123)
+    >>> type(i)
+    <class 'gappy.gapobj.GapInteger'>
+    >>> i
+    123
     """
 
     cpdef is_C_int(self):
@@ -1415,27 +1483,29 @@ cdef class GapInteger(GapObj):
         is subject to the usual size limits. Larger integers are
         stored in GAP as GMP integers.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> n = gap(1)
-            >>> type(n)
-            <class 'gappy.gapobj.GapInteger'>
-            >>> n.is_C_int()
-            True
-            >>> n.IsInt()
-            true
+        >>> n = gap(1)
+        >>> type(n)
+        <class 'gappy.gapobj.GapInteger'>
+        >>> n.is_C_int()
+        True
+        >>> n.IsInt()
+        true
 
-            >>> N = gap(2**130)
-            >>> type(N)
-            <class 'gappy.gapobj.GapInteger'>
-            >>> N.is_C_int()
-            False
-            >>> N.IsInt()
-            true
+        >>> N = gap(2**130)
+        >>> type(N)
+        <class 'gappy.gapobj.GapInteger'>
+        >>> N.is_C_int()
+        False
+        >>> N.IsInt()
+        true
         """
         return bool(GAP_IsSmallInt(self.value))
 
@@ -1443,25 +1513,26 @@ cdef class GapInteger(GapObj):
         r"""
         Convert a GAP integer to a Python `int`.
 
-        TESTS::
+        Examples
+        --------
 
-            >>> int(gap(3))
-            3
-            >>> type(_)
-            <class 'int'>
-            >>> int(gap(-3))
-            -3
-            >>> type(_)
-            <class 'int'>
+        >>> int(gap(3))
+        3
+        >>> type(_)
+        <class 'int'>
+        >>> int(gap(-3))
+        -3
+        >>> type(_)
+        <class 'int'>
 
-            >>> int(gap(2**128))
-            340282366920938463463374607431768211456
-            >>> type(_)
-            <class 'int'>
-            >>> int(gap(-2**128))
-            -340282366920938463463374607431768211456
-            >>> type(_)
-            <class 'int'>
+        >>> int(gap(2**128))
+        340282366920938463463374607431768211456
+        >>> type(_)
+        <class 'int'>
+        >>> int(gap(-2**128))
+        -340282366920938463463374607431768211456
+        >>> type(_)
+        <class 'int'>
         """
 
         cdef Int size, sign
@@ -1508,13 +1579,14 @@ cdef class GapInteger(GapObj):
 
     def __index__(self):
         r"""
-        TESTS:
+        Tests
+        -----
 
-        Check that gap integers can be used as indices (:trac:`23878`)::
+        Check that gap integers can be used as indices (:trac:`23878`):
 
-            >>> s = 'abcd'
-            >>> s[gap(1)]
-            'b'
+        >>> s = 'abcd'
+        >>> s[gap(1)]
+        'b'
         """
         return int(self)
 
@@ -1527,38 +1599,44 @@ cdef GapFloat make_GapFloat(parent, Obj obj):
     r"""
     Turn a GAP machine float object into a Python GapFloat object.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap(123.5)
-        123.5
-        >>> type(_)
-        <class 'gappy.gapobj.GapFloat'>
+    >>> gap(123.5)
+    123.5
+    >>> type(_)
+    <class 'gappy.gapobj.GapFloat'>
     """
     cdef GapFloat r = GapFloat.__new__(GapFloat)
     r._initialize(parent, obj)
     return r
 
+
 cdef class GapFloat(GapObj):
     r"""
     Derived class of GapObj for GAP floating point numbers.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> i = gap(123.5)
-        >>> type(i)
-        <class 'gappy.gapobj.GapFloat'>
-        >>> i
-        123.5
-        >>> float(i)
-        123.5
+    >>> i = gap(123.5)
+    >>> type(i)
+    <class 'gappy.gapobj.GapFloat'>
+    >>> i
+    123.5
+    >>> float(i)
+    123.5
     """
 
     def __float__(self):
         r"""
-        TESTS::
+        Convert to a Python `float`.
 
-            >>> float(gap.eval("Float(3.5)"))
-            3.5
+        Examples
+        --------
+
+        >>> float(gap.eval("Float(3.5)"))
+        3.5
         """
         return GAP_ValueMacFloat(self.value)
 
@@ -1572,13 +1650,14 @@ cdef GapIntegerMod make_GapIntegerMod(parent, Obj obj):
     r"""
     Turn a GAP integer object into a Python `GapIntegerMod` object.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> n = IntegerModRing(123)(13)
-        >>> gap(n)
-        ZmodnZObj( 13, 123 )
-        >>> type(_)
-        <class 'gappy.gapobj.GapIntegerMod'>
+    >>> n = IntegerModRing(123)(13)
+    >>> gap(n)
+    ZmodnZObj( 13, 123 )
+    >>> type(_)
+    <class 'gappy.gapobj.GapIntegerMod'>
     """
     cdef GapIntegerMod r = GapIntegerMod.__new__(GapIntegerMod)
     r._initialize(parent, obj)
@@ -1588,29 +1667,33 @@ cdef class GapIntegerMod(GapObj):
     r"""
     Derived class of GapObj for GAP integers modulo an integer.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> i = gap.eval('One(ZmodnZ(123)) * 13'); i
-        ZmodnZObj( 13, 123 )
-        >>> type(i)
-        <class 'gappy.gapobj.GapIntegerMod'>
+    >>> i = gap.eval('One(ZmodnZ(123)) * 13'); i
+    ZmodnZObj( 13, 123 )
+    >>> type(i)
+    <class 'gappy.gapobj.GapIntegerMod'>
     """
 
     cpdef GapInteger lift(self):
         """
         Return an integer lift.
 
-        OUTPUT:
+        Returns
+        -------
 
-        A :class:`GapInteger` that equals ``self`` in the integer mod ring.
+        `GapInteger`
+            A `GapInteger` that equals ``self`` in the integer mod ring.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> n = gap.eval('One(ZmodnZ(123)) * 13')
-            >>> n.lift()
-            13
-            >>> type(_)
-            <class 'gappy.gapobj.GapInteger'>
+        >>> n = gap.eval('One(ZmodnZ(123)) * 13')
+        >>> n.lift()
+        13
+        >>> type(_)
+        <class 'gappy.gapobj.GapInteger'>
         """
         return self.Int()
 
@@ -1623,12 +1706,13 @@ cdef GapFiniteField make_GapFiniteField(parent, Obj obj):
     r"""
     Turn a GAP finite field object into a Python `GapFiniteField`.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap.eval('Z(5)^2')
-        Z(5)^2
-        >>> type(_)
-        <class 'gappy.gapobj.GapFiniteField'>
+    >>> gap.eval('Z(5)^2')
+    Z(5)^2
+    >>> type(_)
+    <class 'gappy.gapobj.GapFiniteField'>
     """
     cdef GapFiniteField r = GapFiniteField.__new__(GapFiniteField)
     r._initialize(parent, obj)
@@ -1639,35 +1723,39 @@ cdef class GapFiniteField(GapObj):
     r"""
     Derived class of GapObj for GAP finite field elements.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap.eval('Z(5)^2')
-        Z(5)^2
-        >>> type(_)
-        <class 'gappy.gapobj.GapFiniteField'>
+    >>> gap.eval('Z(5)^2')
+    Z(5)^2
+    >>> type(_)
+    <class 'gappy.gapobj.GapFiniteField'>
     """
 
     cpdef GapInteger lift(self):
         """
         Return an integer lift.
 
-        OUTPUT:
+        Returns
+        -------
 
-        The smallest positive :class:`GapInteger` that equals ``self`` in the
-        prime finite field.
+        `GapInteger`
+            The smallest positive `GapInteger` that equals ``self`` in the
+            prime finite field.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> n = gap.eval('Z(5)^2')
-            >>> n.lift()
-            4
-            >>> type(_)
-            <class 'gappy.gapobj.GapInteger'>
+        >>> n = gap.eval('Z(5)^2')
+        >>> n.lift()
+        4
+        >>> type(_)
+        <class 'gappy.gapobj.GapInteger'>
 
-            >>> n = gap.eval('Z(25)')
-            >>> n.lift()
-            Traceback (most recent call last):
-            TypeError: not in prime subfield
+        >>> n = gap.eval('Z(25)')
+        >>> n.lift()
+        Traceback (most recent call last):
+        TypeError: not in prime subfield
         """
         if self.DegreeFFE() == 1:
             return self.IntFFE()
@@ -1676,10 +1764,11 @@ cdef class GapFiniteField(GapObj):
 
     def __int__(self):
         r"""
-        TESTS::
+        Tests
+        -----
 
-            >>> int(gap.eval("Z(53)"))
-            2
+        >>> int(gap.eval("Z(53)"))
+        2
         """
         return int(self.Int())
 
@@ -1693,12 +1782,13 @@ cdef GapCyclotomic make_GapCyclotomic(parent, Obj obj):
     Turn a GAP cyclotomic object into a Python `GapCyclotomic` object.
     object.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap.eval('E(3)')
-        E(3)
-        >>> type(_)
-        <class 'gappy.gapobj.GapCyclotomic'>
+    >>> gap.eval('E(3)')
+    E(3)
+    >>> type(_)
+    <class 'gappy.gapobj.GapCyclotomic'>
     """
     cdef GapCyclotomic r = GapCyclotomic.__new__(GapCyclotomic)
     r._initialize(parent, obj)
@@ -1709,12 +1799,13 @@ cdef class GapCyclotomic(GapObj):
     r"""
     Derived class of GapObj for GAP universal cyclotomics.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap.eval('E(3)')
-        E(3)
-        >>> type(_)
-        <class 'gappy.gapobj.GapCyclotomic'>
+    >>> gap.eval('E(3)')
+    E(3)
+    >>> type(_)
+    <class 'gappy.gapobj.GapCyclotomic'>
     """
 
 
@@ -1726,13 +1817,14 @@ cdef GapRational make_GapRational(parent, Obj obj):
     r"""
     Turn a GAP Rational number (of type ``Obj``) into a Cython ``GapRational``.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> from fractions import Fraction
-        >>> gap(Fraction(123, 456))
-        41/152
-        >>> type(_)
-        <class 'gappy.gapobj.GapRational'>
+    >>> from fractions import Fraction
+    >>> gap(Fraction(123, 456))
+    41/152
+    >>> type(_)
+    <class 'gappy.gapobj.GapRational'>
     """
     cdef GapRational r = GapRational.__new__(GapRational)
     r._initialize(parent, obj)
@@ -1743,12 +1835,13 @@ cdef class GapRational(GapObj):
     r"""
     Derived class of GapObj for GAP rational numbers.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> from fractions import Fraction
-        >>> r = gap(Fraction(123, 456))
-        >>> type(r)
-        <class 'gappy.gapobj.GapRational'>
+    >>> from fractions import Fraction
+    >>> r = gap(Fraction(123, 456))
+    >>> type(r)
+    <class 'gappy.gapobj.GapRational'>
     """
 
 
@@ -1760,12 +1853,13 @@ cdef GapRing make_GapRing(parent, Obj obj):
     r"""
     Turn a GAP integer object into a Python `GapRing` object.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap(GF(5))
-        GF(5)
-        >>> type(_)
-        <class 'gappy.gapobj.GapRing'>
+    >>> gap(GF(5))
+    GF(5)
+    >>> type(_)
+    <class 'gappy.gapobj.GapRing'>
     """
     cdef GapRing r = GapRing.__new__(GapRing)
     r._initialize(parent, obj)
@@ -1776,11 +1870,12 @@ cdef class GapRing(GapObj):
     r"""
     Derived class of GapObj for GAP rings (parents of ring elements).
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> i = gap.Integers
-        >>> type(i)
-        <class 'gappy.gapobj.GapRing'>
+    >>> i = gap.Integers
+    >>> type(i)
+    <class 'gappy.gapobj.GapRing'>
     """
 
 
@@ -1792,12 +1887,13 @@ cdef GapBoolean make_GapBoolean(parent, Obj obj):
     r"""
     Turn a GAP Boolean number (of type ``Obj``) into a Cython ``GapBoolean``.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap(True)
-        true
-        >>> type(_)
-        <class 'gappy.gapobj.GapBoolean'>
+    >>> gap(True)
+    true
+    >>> type(_)
+    <class 'gappy.gapobj.GapBoolean'>
     """
     cdef GapBoolean r = GapBoolean.__new__(GapBoolean)
     r._initialize(parent, obj)
@@ -1808,11 +1904,12 @@ cdef class GapBoolean(GapObj):
     r"""
     Derived class of GapObj for GAP boolean values.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> b = gap(True)
-        >>> type(b)
-        <class 'gappy.gapobj.GapBoolean'>
+    >>> b = gap(True)
+    >>> type(b)
+    <class 'gappy.gapobj.GapBoolean'>
     """
 
     def __bool__(self):
@@ -1821,23 +1918,25 @@ cdef class GapBoolean(GapObj):
 
         See the examples below.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap_bool = [gap.eval('true'), gap.eval('false'), gap.eval('fail')]
-            >>> for x in gap_bool:
-            ...     if x:     # this calls __nonzero__
-            ...         print("{} {}".format(x, type(x)))
-            true <class 'gappy.gapobj.GapBoolean'>
+        >>> gap_bool = [gap.eval('true'), gap.eval('false'), gap.eval('fail')]
+        >>> for x in gap_bool:
+        ...     if x:     # this calls __bool__
+        ...         print("{} {}".format(x, type(x)))
+        true <class 'gappy.gapobj.GapBoolean'>
 
-            >>> for x in gap_bool:
-            ...     if not x:     # this calls __nonzero__
-            ...         print("{} {}".format( x, type(x)))
-            false <class 'gappy.gapobj.GapBoolean'>
-            fail <class 'gappy.gapobj.GapBoolean'>
+        >>> for x in gap_bool:
+        ...     if not x:     # this calls __bool__
+        ...         print("{} {}".format( x, type(x)))
+        false <class 'gappy.gapobj.GapBoolean'>
+        fail <class 'gappy.gapobj.GapBoolean'>
         """
         return self.value == GAP_True
 
@@ -1850,12 +1949,13 @@ cdef GapString make_GapString(parent, Obj obj):
     r"""
     Turn a GAP String (of type ``Obj``) into a Cython ``GapString``.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap('this is a string')
-        "this is a string"
-        >>> type(_)
-        <class 'gappy.gapobj.GapString'>
+    >>> gap('this is a string')
+    "this is a string"
+    >>> type(_)
+    <class 'gappy.gapobj.GapString'>
     """
     cdef GapString r = GapString.__new__(GapString)
     r._initialize(parent, obj)
@@ -1866,15 +1966,16 @@ cdef class GapString(GapObj):
     r"""
     Derived class of GapObj for GAP strings.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> s = gap('string')
-        >>> type(s)
-        <class 'gappy.gapobj.GapString'>
-        >>> s
-        "string"
-        >>> print(s)
-        string
+    >>> s = gap('string')
+    >>> type(s)
+    <class 'gappy.gapobj.GapString'>
+    >>> s
+    "string"
+    >>> print(s)
+    string
     """
 
     # TODO: Add other sequence methods for GAP strings
@@ -1898,20 +1999,22 @@ cdef class GapString(GapObj):
         r"""
         Convert this :class:`GapString` to a Python string.
 
-        OUTPUT:
+        Returns
+        -------
 
-        A Python string.
+        str
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> s = gap.eval(' "string" '); s
-            "string"
-            >>> type(_)
-            <class 'gappy.gapobj.GapString'>
-            >>> str(s)
-            'string'
-            >>> type(_)
-            <class 'str'>
+        >>> s = gap.eval(' "string" '); s
+        "string"
+        >>> type(_)
+        <class 'gappy.gapobj.GapString'>
+        >>> str(s)
+        'string'
+        >>> type(_)
+        <class 'str'>
         """
         s = GAP_CSTR_STRING(self.value).decode('utf-8', 'surrogateescape')
         return s
@@ -1923,24 +2026,29 @@ cdef class GapString(GapObj):
 
 cdef GapFunction make_GapFunction(parent, Obj obj):
     r"""
-    Turn a GAP C function object (of type ``Obj``) into a Cython ``GapFunction``.
+    Turn a GAP C function object (of type ``Obj``) into a Python `GapFunction`.
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``parent`` -- the parent of the new :class:`GapObj`
+    parent : `~gappy.core.Gap`
+        The GAP interpreter wrapper currently in use.
+    obj : ``Obj``
+        A C GAP ``Obj`` of type ``T_FUNCTION`` to wrap.
 
-    - ``obj`` -- a GAP function object.
+    Returns
+    -------
 
-    OUTPUT:
+    `GapFunction`
+        A `GapFunction` instance.
 
-    A :class:`GapFunction` instance.
+    Examples
+    --------
 
-    EXAMPLES::
-
-        >>> gap.CycleLength
-        <GAP function "CycleLength">
-        >>> type(_)
-        <class 'gappy.gapobj.GapFunction'>
+    >>> gap.CycleLength
+    <GAP function "CycleLength">
+    >>> type(_)
+    <class 'gappy.gapobj.GapFunction'>
     """
     cdef GapFunction r = GapFunction.__new__(GapFunction)
     r._initialize(parent, obj)
@@ -1990,14 +2098,16 @@ cdef class GapFunction(GapObj):
         r"""
         Return a string representation
 
-        OUTPUT:
+        Returns
+        -------
 
-        String.
+        str
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.Orbits
-            <GAP function "Orbits">
+        >>> gap.Orbits
+        <GAP function "Orbits">
         """
         return f'<GAP function "{self.__name__}">'
 
@@ -2005,104 +2115,109 @@ cdef class GapFunction(GapObj):
         r"""
         Call syntax for functions.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``*args`` -- arguments. Will be converted to `GapObj` if
-          they are not already of this type.
+        *args : iterable
+            Will be converted to `GapObj` if they are not already of this type.
 
-        OUTPUT:
+        Returns
+        -------
 
-        A :class:`GapObj` encapsulating the functions return
-        value, or ``None`` if it does not return anything.
+        `GapObj`
+            A `GapObj` encapsulating the function's return value, or `None` if
+            it does not return anything.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> a = gap.NormalSubgroups
-            >>> b = gap.SymmetricGroup(4)
-            >>> gap.collect()
-            >>> a
-            <GAP function "NormalSubgroups">
-            >>> b
-            Sym( [ 1 .. 4 ] )
-            >>> sorted(a(b))
-            [Group(()),
-             Sym( [ 1 .. 4 ] ),
-             Alt( [ 1 .. 4 ] ),
-             Group([ (1,4)(2,3), (...)(...) ])]
+        >>> a = gap.NormalSubgroups
+        >>> b = gap.SymmetricGroup(4)
+        >>> gap.collect()
+        >>> a
+        <GAP function "NormalSubgroups">
+        >>> b
+        Sym( [ 1 .. 4 ] )
+        >>> sorted(a(b))
+        [Group(()),
+         Sym( [ 1 .. 4 ] ),
+         Alt( [ 1 .. 4 ] ),
+         Group([ (1,4)(2,3), (...)(...) ])]
 
-            >>> gap.eval("a := NormalSubgroups")
-            <GAP function "NormalSubgroups">
-            >>> gap.eval("b := SymmetricGroup(4)")
-            Sym( [ 1 .. 4 ] )
-            >>> gap.collect()
-            >>> sorted(gap.eval('a') (gap.eval('b')))
-            [Group(()),
-             Sym( [ 1 .. 4 ] ),
-             Alt( [ 1 .. 4 ] ),
-             Group([ (1,4)(2,3), (...)(...) ])]
+        >>> gap.eval("a := NormalSubgroups")
+        <GAP function "NormalSubgroups">
+        >>> gap.eval("b := SymmetricGroup(4)")
+        Sym( [ 1 .. 4 ] )
+        >>> gap.collect()
+        >>> sorted(gap.eval('a') (gap.eval('b')))
+        [Group(()),
+         Sym( [ 1 .. 4 ] ),
+         Alt( [ 1 .. 4 ] ),
+         Group([ (1,4)(2,3), (...)(...) ])]
 
-            >>> a = gap.eval('a')
-            >>> b = gap.eval('b')
-            >>> gap.collect()
-            >>> sorted(a(b))
-            [Group(()),
-             Sym( [ 1 .. 4 ] ),
-             Alt( [ 1 .. 4 ] ),
-             Group([ (1,4)(2,3), (...)(...) ])]
+        >>> a = gap.eval('a')
+        >>> b = gap.eval('b')
+        >>> gap.collect()
+        >>> sorted(a(b))
+        [Group(()),
+         Sym( [ 1 .. 4 ] ),
+         Alt( [ 1 .. 4 ] ),
+         Group([ (1,4)(2,3), (...)(...) ])]
 
-        Not every ``GapObj`` is callable::
+        Not every ``GapObj`` is callable:
 
-            >>> f = gap(3)
-            >>> f()
-            Traceback (most recent call last):
-            ...
-            TypeError: 'gappy.gapobj.GapInteger' object is not callable
+        >>> f = gap(3)
+        >>> f()
+        Traceback (most recent call last):
+        ...
+        TypeError: 'gappy.gapobj.GapInteger' object is not callable
 
-        We illustrate appending to a list which returns None::
+        We illustrate appending to a list which returns None:
 
-            >>> a = gap([]); a
-            [  ]
-            >>> a.Add(5); a
-            [ 5 ]
-            >>> a.Add(10); a
-            [ 5, 10 ]
+        >>> a = gap([]); a
+        [  ]
+        >>> a.Add(5); a
+        [ 5 ]
+        >>> a.Add(10); a
+        [ 5, 10 ]
 
-        TESTS::
+        Tests
+        ^^^^^
 
-            >>> s = gap.Sum
-            >>> s(gap([1,2]))
-            3
-            >>> s(gap(1), gap(2))
-            Traceback (most recent call last):
-            ...
-            gappy.exceptions.GAPError: Error, no method found!
-            Error, no 1st choice method found for `SumOp' on 2 arguments
+        >>> s = gap.Sum
+        >>> s(gap([1,2]))
+        3
+        >>> s(gap(1), gap(2))
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found!
+        Error, no 1st choice method found for `SumOp' on 2 arguments
 
-            >>> from random import randint
-            >>> for i in range(0,100):
-            ...     rnd = [randint(-10, 10) for i in range(0, randint(0, 7))]
-            ...     # compute the sum in GAP
-            ...     _ = gap.Sum(rnd)
-            ...     try:
-            ...         gap.Sum(*rnd)
-            ...         print('This should have triggered a ValueError')
-            ...         print('because Sum needs a list as argument')
-            ...     except ValueError:
-            ...         pass
+        >>> from random import randint
+        >>> for i in range(0,100):
+        ...     rnd = [randint(-10, 10) for i in range(0, randint(0, 7))]
+        ...     # compute the sum in GAP
+        ...     _ = gap.Sum(rnd)
+        ...     try:
+        ...         gap.Sum(*rnd)
+        ...         print('This should have triggered a ValueError')
+        ...         print('because Sum needs a list as argument')
+        ...     except ValueError:
+        ...         pass
 
         Note, for this test the ``Exec`` call outputs to the system stdout,
         bypassing Python's ``sys.stdout`` so the output is not picked up by
-        doctest automatically::
+        doctest automatically:
 
-            >>> import os, tempfile
-            >>> with tempfile.TemporaryFile() as f:
-            ...     _ = os.dup2(1, f.fileno())
-            ...     gap_exec = gap.eval("Exec")
-            ...     gap_exec('echo hello from the shell')
-            ...     _ = f.seek(0)
-            ...     f.read()
-            ...
-            b'hello from the shell\n'
+        >>> import os, tempfile
+        >>> with tempfile.TemporaryFile() as f:
+        ...     _ = os.dup2(1, f.fileno())
+        ...     gap_exec = gap.eval("Exec")
+        ...     gap_exec('echo hello from the shell')
+        ...     _ = f.seek(0)
+        ...     f.read()
+        ...
+        b'hello from the shell\n'
         """
         cdef Obj result = NULL
         cdef Obj arglist
@@ -2221,31 +2336,37 @@ cdef class GapFunction(GapObj):
 ### GapMethodProxy #########################################################
 ############################################################################
 
-cdef GapMethodProxy make_GapMethodProxy(parent, Obj function, GapObj base_object):
+cdef GapMethodProxy make_GapMethodProxy(parent, Obj function,
+                                        GapObj base_object):
     r"""
-    Turn a GAP C rec object (of type ``Obj``) into a Cython ``GapRecord``.
+    Turn a GAP C function object (of type ``Obj``) into a Python
+    `GapMethodProxy`.
 
-    This class implement syntactic sugar so that you can write
-    ``gapobj.f()`` instead of ``gap.f(gapobj)`` for any GAP
-    function ``f``.
+    This class implement syntactic sugar so that you can write ``gapobj.f()``
+    instead of ``gap.f(gapobj)`` for any GAP function ``f``.
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``parent`` -- the parent of the new :class:`GapObj`
+    parent : `~gappy.core.Gap`
+        The GAP interpreter wrapper currently in use.
+    obj : ``Obj``
+        A C GAP ``Obj`` of type ``T_FUNCTION`` to wrap.
+    base_object : `GapObj`
+        The GAP object this method is "bound" to.
 
-    - ``obj`` -- a GAP function object.
+    Returns
+    -------
 
-    - ``base_object`` -- The first argument to be inserted into the function.
+    `GapMethodProxy`
+        A `GapMethodProxy` instance.
 
-    OUTPUT:
+    Examples
+    --------
 
-    A :class:`GapMethodProxy` instance.
-
-    EXAMPLES::
-
-        >>> lst = gap([])
-        >>> type( lst.Add )
-        <class 'gappy.gapobj.GapMethodProxy'>
+    >>> lst = gap([])
+    >>> type( lst.Add )
+    <class 'gappy.gapobj.GapMethodProxy'>
     """
     cdef GapMethodProxy r = GapMethodProxy.__new__(GapMethodProxy)
     r._initialize(parent, function)
@@ -2262,43 +2383,47 @@ cdef class GapMethodProxy(GapFunction):
     difference is that a fixed first argument is prepended to the
     argument list.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> lst = gap([])
-        >>> lst.Add
-        <GAP function "Add">
-        >>> type(_)
-        <class 'gappy.gapobj.GapMethodProxy'>
-        >>> lst.Add(1)
-        >>> lst
-        [ 1 ]
+    >>> lst = gap([])
+    >>> lst.Add
+    <GAP function "Add">
+    >>> type(_)
+    <class 'gappy.gapobj.GapMethodProxy'>
+    >>> lst.Add(1)
+    >>> lst
+    [ 1 ]
     """
 
     def __call__(self, *args):
         """
         Call syntax for methods.
 
-        This method is analogous to
-        :meth:`GapFunction.__call__`, except that it inserts a
-        fixed :class:`GapObj` in the first slot of the function.
+        This method is analogous to :meth:`GapFunction.__call__`, except that
+        it inserts a fixed :class:`GapObj` in the first slot of the function.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``*args`` -- arguments. Will be converted to `GapObj` if
-          they are not already of this type.
+        *args : iterable
+            Will be converted to `GapObj` if they are not already of this type.
 
-        OUTPUT:
+        Returns
+        -------
 
-        A :class:`GapObj` encapsulating the functions return
-        value, or ``None`` if it does not return anything.
+        `GapObj`
+            A `GapObj` encapsulating the function's return value, or `None` if
+            it does not return anything.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> lst = gap.eval('[1,,3]')
-            >>> lst.Add.__call__(4)
-            >>> lst.Add(5)
-            >>> lst
-            [ 1,, 3, 4, 5 ]
+        >>> lst = gap.eval('[1,,3]')
+        >>> lst.Add.__call__(4)
+        >>> lst.Add(5)
+        >>> lst
+        [ 1,, 3, 4, 5 ]
         """
         if len(args) > 0:
             return GapFunction.__call__(self, * ([self.first_argument] + list(args)))
@@ -2315,12 +2440,13 @@ cdef GapList make_GapList(parent, Obj obj):
     r"""
     Turn a GAP C List object (of type ``Obj``) into a Cython ``GapList``.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap([0, 2, 3])
-        [ 0, 2, 3 ]
-        >>> type(_)
-        <class 'gappy.gapobj.GapList'>
+    >>> gap([0, 2, 3])
+    [ 0, 2, 3 ]
+    >>> type(_)
+    <class 'gappy.gapobj.GapList'>
     """
     cdef GapList r = GapList.__new__(GapList)
     r._initialize(parent, obj)
@@ -2337,44 +2463,46 @@ cdef class GapList(GapObj):
         Python. This differs from the GAP convention where lists start
         at `1`.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> lst = gap.SymmetricGroup(3).List(); lst
-        [ (), (1,3), (1,2,3), (2,3), (1,3,2), (1,2) ]
-        >>> type(lst)
-        <class 'gappy.gapobj.GapList'>
-        >>> len(lst)
-        6
-        >>> lst[3]
-        (2,3)
+    >>> lst = gap.SymmetricGroup(3).List(); lst
+    [ (), (1,3), (1,2,3), (2,3), (1,3,2), (1,2) ]
+    >>> type(lst)
+    <class 'gappy.gapobj.GapList'>
+    >>> len(lst)
+    6
+    >>> lst[3]
+    (2,3)
 
-    We can easily convert a GAP ``List`` object into a Python ``list``::
+    We can easily convert a GAP ``List`` object into a Python ``list``:
 
-        >>> list(lst)
-        [(), (1,3), (1,2,3), (2,3), (1,3,2), (1,2)]
-        >>> type(_)
-        <... 'list'>
+    >>> list(lst)
+    [(), (1,3), (1,2,3), (2,3), (1,3,2), (1,2)]
+    >>> type(_)
+    <... 'list'>
 
-    Range checking is performed::
+    Range checking is performed:
 
-        >>> lst[10]
-        Traceback (most recent call last):
-        ...
-        IndexError: index out of range.
+    >>> lst[10]
+    Traceback (most recent call last):
+    ...
+    IndexError: index out of range.
     """
 
     def __bool__(self):
         r"""
-        Return True if the list is non-empty, as with Python ``list``s.
+        Return True if the list is non-empty, as with Python `list`\s.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> lst = gap.eval('[1,,,4]')
-            >>> bool(lst)
-            True
-            >>> lst = gap.eval('[]')
-            >>> bool(lst)
-            False
+        >>> lst = gap.eval('[1,,,4]')
+        >>> bool(lst)
+        True
+        >>> lst = gap.eval('[]')
+        >>> bool(lst)
+        False
         """
         return bool(len(self))
 
@@ -2382,15 +2510,17 @@ cdef class GapList(GapObj):
         r"""
         Return the length of the list.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Integer.
+        int
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> lst = gap.eval('[1,,,4]')   # a sparse list
-            >>> len(lst)
-            4
+        >>> lst = gap.eval('[1,,,4]')   # a sparse list
+        >>> len(lst)
+        4
         """
         return GAP_LenList(self.value)
 
@@ -2398,50 +2528,62 @@ cdef class GapList(GapObj):
         r"""
         Return the ``idx``-th element of the list.
 
-        As usual in Python, indexing starts at `0` and not at `1` (as
-        in GAP). This can also be used with multi-indices.
+        As usual in Python, indexing starts at ``0`` and not at ``1`` (as in
+        GAP) so be careful when passing the results of GAP functions that
+        return indices into a list to subtract 1. This can also be used with
+        multi-indices.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``idx`` -- `int` or `tuple`.
+        idx : int or tuple
 
-        OUTPUT:
+        Returns
+        -------
 
-        The ``idx``-th element as a :class:`GapObj`.
+        `GapObj`
+            The ``idx``-th element as a `GapObj`.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> lst = gap.eval('["first",,,"last"]')   # a sparse list
-            >>> lst[0]
-            "first"
+        >>> lst = gap.eval('["first",,,"last"]')   # a sparse list
+        >>> lst[0]
+        "first"
 
-        Negative indices are allowed as in Python::
+        In the case of sparse lists, the special `GapObj` ``NULL`` is returned
+        for missing values:
 
-            >>> lst[-1]
-            "last"
+        >>> lst[1]
+        NULL
+
+        Negative indices are allowed as in Python:
+
+        >>> lst[-1]
+        "last"
 
         Multiple indices are allowed à la Numpy arrays for indexing nested
-        lists / matrices::
+        lists / matrices:
 
-            >>> l = gap.eval('[ [0, 1], [2, 3] ]')
-            >>> l[0, 0]
-            0
-            >>> l[0, 1]
-            1
-            >>> l[1, 0]
-            2
-            >>> l[0, 2]
-            Traceback (most recent call last):
-            ...
-            IndexError: index out of range
-            >>> l[2, 0]
-            Traceback (most recent call last):
-            ...
-            IndexError: index out of range
-            >>> l[0, 0, 0]
-            Traceback (most recent call last):
-            ...
-            ValueError: too many indices
+        >>> l = gap.eval('[ [0, 1], [2, 3] ]')
+        >>> l[0, 0]
+        0
+        >>> l[0, 1]
+        1
+        >>> l[1, 0]
+        2
+        >>> l[0, 2]
+        Traceback (most recent call last):
+        ...
+        IndexError: index out of range
+        >>> l[2, 0]
+        Traceback (most recent call last):
+        ...
+        IndexError: index out of range
+        >>> l[0, 0, 0]
+        Traceback (most recent call last):
+        ...
+        ValueError: too many indices
         """
         cdef Int jdx
         cdef Int len_list
@@ -2472,53 +2614,55 @@ cdef class GapList(GapObj):
 
     def __setitem__(self, idx, elt):
         r"""
-        Set the ``idx``-th item of this list
+        Set the ``idx``-th item of this list.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> l = gap.eval('[0, 1]')
-            >>> l
-            [ 0, 1 ]
-            >>> l[0] = 3
-            >>> l
-            [ 3, 1 ]
+        >>> l = gap.eval('[0, 1]')
+        >>> l
+        [ 0, 1 ]
+        >>> l[0] = 3
+        >>> l
+        [ 3, 1 ]
 
         Contrarily to Python lists, setting an element beyond the limit extends
-        the list::
+        the list:
 
-            >>> l[12] = -2
-            >>> l
-            [ 3, 1,,,,,,,,,,, -2 ]
+        >>> l[12] = -2
+        >>> l
+        [ 3, 1,,,,,,,,,,, -2 ]
 
-        This function also handles multi-indices::
+        This function also handles multi-indices:
 
-            >>> l = gap.eval('[[[0,1],[2,3]],[[4,5], [6,7]]]')
-            >>> l[0,1,0] = -18
-            >>> l
-            [ [ [ 0, 1 ], [ -18, 3 ] ], [ [ 4, 5 ], [ 6, 7 ] ] ]
-            >>> l[0,0,0,0]
-            Traceback (most recent call last):
-            ...
-            ValueError: too many indices
+        >>> l = gap.eval('[[[0,1],[2,3]],[[4,5], [6,7]]]')
+        >>> l[0,1,0] = -18
+        >>> l
+        [ [ [ 0, 1 ], [ -18, 3 ] ], [ [ 4, 5 ], [ 6, 7 ] ] ]
+        >>> l[0,0,0,0]
+        Traceback (most recent call last):
+        ...
+        ValueError: too many indices
 
-        Assignment to immutable objects gives error::
+        Assignment to immutable objects gives error:
 
-            >>> l = gap([0,1])
-            >>> u = l.deepcopy(0)
-            >>> u[0] = 5
-            Traceback (most recent call last):
-            ...
-            TypeError: immutable GAP object does not support item assignment
+        >>> l = gap([0,1])
+        >>> u = l.deepcopy(0)
+        >>> u[0] = 5
+        Traceback (most recent call last):
+        ...
+        TypeError: immutable GAP object does not support item assignment
 
-        TESTS::
+        Tests
+        ^^^^^
 
-            >>> m = gap.eval('[[0,0],[0,0]]')
-            >>> m[0,0] = 1
-            >>> m[0,1] = 2
-            >>> m[1,0] = 3
-            >>> m[1,1] = 4
-            >>> m
-            [ [ 1, 2 ], [ 3, 4 ] ]
+        >>> m = gap.eval('[[0,0],[0,0]]')
+        >>> m[0,0] = 1
+        >>> m[0,1] = 2
+        >>> m[1,0] = 3
+        >>> m[1,1] = 4
+        >>> m
+        [ [ 1, 2 ], [ 3, 4 ] ]
         """
 
         gap = self.parent()
@@ -2567,15 +2711,16 @@ cdef class GapList(GapObj):
 
 cdef GapPermutation make_GapPermutation(parent, Obj obj):
     r"""
-    Turn a GAP C permutation object (of type ``Obj``) into a Cython
-    ``GapPermutation``.
+    Turn a GAP C permutation object (of type ``Obj``) into a Python
+    `GapPermutation`.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap.eval('(1,3,2)(4,5,8)')
-        (1,3,2)(4,5,8)
-        >>> type(_)
-        <class 'gappy.gapobj.GapPermutation'>
+    >>> gap.eval('(1,3,2)(4,5,8)')
+    (1,3,2)(4,5,8)
+    >>> type(_)
+    <class 'gappy.gapobj.GapPermutation'>
     """
     cdef GapPermutation r = GapPermutation.__new__(GapPermutation)
     r._initialize(parent, obj)
@@ -2590,11 +2735,12 @@ cdef class GapPermutation(GapObj):
 
         Permutations in GAP act on the numbers starting with 1.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> perm = gap.eval('(1,5,2)(4,3,8)')
-        >>> type(perm)
-        <class 'gappy.gapobj.GapPermutation'>
+    >>> perm = gap.eval('(1,5,2)(4,3,8)')
+    >>> type(perm)
+    <class 'gappy.gapobj.GapPermutation'>
     """
 
 
@@ -2604,14 +2750,15 @@ cdef class GapPermutation(GapObj):
 
 cdef GapRecord make_GapRecord(parent, Obj obj):
     r"""
-    Turn a GAP C rec object (of type ``Obj``) into a Cython ``GapRecord``.
+    Turn a GAP C rec object (of type ``Obj``) into a Python `GapRecord`.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap.eval('rec(a:=0, b:=2, c:=3)')
-        rec( a := 0, b := 2, c := 3 )
-        >>> type(_)
-        <class 'gappy.gapobj.GapRecord'>
+    >>> gap.eval('rec(a:=0, b:=2, c:=3)')
+    rec( a := 0, b := 2, c := 3 )
+    >>> type(_)
+    <class 'gappy.gapobj.GapRecord'>
     """
     cdef GapRecord r = GapRecord.__new__(GapRecord)
     r._initialize(parent, obj)
@@ -2622,29 +2769,30 @@ cdef class GapRecord(GapObj):
     r"""
     Derived class of GapObj for GAP records.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> rec = gap.eval('rec(a:=123, b:=456)')
-        >>> type(rec)
-        <class 'gappy.gapobj.GapRecord'>
-        >>> len(rec)
-        2
-        >>> rec['a']
-        123
+    >>> rec = gap.eval('rec(a:=123, b:=456)')
+    >>> type(rec)
+    <class 'gappy.gapobj.GapRecord'>
+    >>> len(rec)
+    2
+    >>> rec['a']
+    123
 
-    We can easily convert a GAP ``rec`` object into a Python ``dict``::
+    We can easily convert a GAP record object into a Python `dict`:
 
-        >>> dict(rec)
-        {'b': 456, 'a': 123}
-        >>> type(_)
-        <... 'dict'>
+    >>> dict(rec)
+    {'b': 456, 'a': 123}
+    >>> type(_)
+    <... 'dict'>
 
-    Range checking is performed::
+    Key checking is performed:
 
-        >>> rec['no_such_element']
-        Traceback (most recent call last):
-        ...
-        KeyError: 'no_such_element'
+    >>> rec['no_such_element']
+    Traceback (most recent call last):
+    ...
+    KeyError: 'no_such_element'
     """
 
     def names(self):
@@ -2683,15 +2831,17 @@ cdef class GapRecord(GapObj):
         r"""
         Return the length of the record.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Integer. The number of entries in the record.
+        int
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> rec = gap.eval('rec(a:=123, b:=456, S3:=SymmetricGroup(3))')
-            >>> len(rec)
-            3
+        >>> rec = gap.eval('rec(a:=123, b:=456, S3:=SymmetricGroup(3))')
+        >>> len(rec)
+        3
         """
         # TODO: Curiously, GAP does not have a built-in function or an API
         # call to get the length of a record.  The internal function LEN_PREC
@@ -2710,12 +2860,12 @@ cdef class GapRecord(GapObj):
         Examples
         --------
 
-            >>> rec = gap.eval('rec(a:=123, b:=456)')
-            >>> iter = rec.__iter__()
-            >>> type(iter)
-            <class 'generator'>
-            >>> sorted(rec)
-            [('a', 123), ('b', 456)]
+        >>> rec = gap.eval('rec(a:=123, b:=456)')
+        >>> iter = rec.__iter__()
+        >>> type(iter)
+        <class 'generator'>
+        >>> sorted(rec)
+        [('a', 123), ('b', 456)]
 
         .. note::
 
@@ -2735,19 +2885,23 @@ cdef class GapRecord(GapObj):
         r"""
         Return the ``name``-th element of the GAP record.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``name`` -- string.
+        name : str
 
-        OUTPUT:
+        Returns
+        -------
 
-        The record element labelled by ``name`` as a :class:`GapObj`.
+        `GapObj`
+            The record element labelled by ``name`` as a :class:`GapObj`.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> rec = gap.eval('rec(first:=123, second:=456)')
-            >>> rec['first']
-            123
+        >>> rec = gap.eval('rec(first:=123, second:=456)')
+        >>> rec['first']
+        123
         """
 
         cdef GapString gap_name

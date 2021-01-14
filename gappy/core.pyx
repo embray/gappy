@@ -63,36 +63,43 @@ cdef class ObjWrapper(object):
     """
     Wrapper for GAP master pointers
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> from gappy.core import ObjWrapper
-        >>> x = ObjWrapper()
-        >>> y = ObjWrapper()
-        >>> x == y
-        True
+    >>> from gappy.core import ObjWrapper
+    >>> x = ObjWrapper()
+    >>> y = ObjWrapper()
+    >>> x == y
+    True
     """
 
     def __richcmp__(ObjWrapper self, ObjWrapper other, int op):
         r"""
         Comparison wrapped Obj.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``lhs``, ``rhs`` -- :class:`ObjWrapper`.
+        other : `ObjWrapper`
+            The other `ObjWrapper` to compare to.
 
-        - ``op`` -- integer. The comparison operation to be performed.
+        op : int
+            The comparison operation to be performed.
 
-        OUTPUT:
+        Returns
+        -------
 
-        Boolean.
+        bool
+            The result of the comparison.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> from gappy.core import ObjWrapper
-            >>> x = ObjWrapper()
-            >>> y = ObjWrapper()
-            >>> x == y
-            True
+        >>> from gappy.core import ObjWrapper
+        >>> x = ObjWrapper()
+        >>> y = ObjWrapper()
+        >>> x == y
+        True
         """
         cdef result
         cdef Obj self_value = self.value
@@ -116,12 +123,13 @@ cdef class ObjWrapper(object):
         """
         Return a hash value
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> from gappy.core import ObjWrapper
-            >>> x = ObjWrapper()
-            >>> hash(x)
-            0
+        >>> from gappy.core import ObjWrapper
+        >>> x = ObjWrapper()
+        >>> hash(x)
+        0
         """
         return <Py_hash_t>(self.value)
 
@@ -211,13 +219,9 @@ MakeImmutable(\$GAPPY_ERROUT);
 # TODO: Change autoload=True by default
 cdef initialize(gap_root=None, libgap_soname=None, autoload=False):
     """
-    Initialize the GAP library, if it hasn't already been
-    initialized.  It is safe to call this multiple times.
+    Initialize the GAP library, if it hasn't already been initialized.
 
-    TESTS::
-
-        >>> gap(123)   # indirect doctest
-        123
+    It is safe to call this multiple times.
     """
     cdef link_map lm
     cdef int ret
@@ -357,66 +361,77 @@ cdef Obj gap_eval(str gap_string) except? NULL:
     r"""
     Evaluate a string in GAP.
 
-    INPUT:
+    Parameters
+    ----------
 
-    - ``gap_string`` -- string. A valid statement in GAP.
+    gap_string : str
+        A valid statement in GAP.
 
-    OUTPUT:
+    Returns
+    -------
+    GapObj
+        The resulting GAP object or NULL+Python Exception in case of error.
+        The result object may also be NULL without a Python exception set for
+        statements that do not return a value.
 
-    The resulting GAP object or NULL+Python Exception in case of error.
-    The result object may also be NULL without a Python exception set for
-    statements that do not return a value.
+    Raises
+    ------
+    GAPError
+        If there was any error in evaluating the statement, be it a syntax
+        error, an error in the arguments, etc.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap.eval('if 4>3 then\nPrint("hi");\nfi')
-        >>> gap.eval('1+1')   # testing that we have successfully recovered
-        2
+    >>> gap.eval('if 4>3 then\nPrint("hi");\nfi')
+    >>> gap.eval('1+1')   # testing that we have successfully recovered
+    2
 
-        >>> gap.eval('if 4>3 thenPrint("hi");\nfi')
-        Traceback (most recent call last):
-        ...
-        gappy.exceptions.GAPError: Syntax error: then expected in stream:1
-        if 4>3 thenPrint("hi");
-               ^^^^^^^^^
-        >>> gap.eval('1+1')   # testing that we have successfully recovered
-        2
+    >>> gap.eval('if 4>3 thenPrint("hi");\nfi')
+    Traceback (most recent call last):
+    ...
+    gappy.exceptions.GAPError: Syntax error: then expected in stream:1
+    if 4>3 thenPrint("hi");
+           ^^^^^^^^^
+    >>> gap.eval('1+1')   # testing that we have successfully recovered
+    2
 
-    TESTS:
+    Tests
+    ^^^^^
 
     A bad eval string that results in multiple statement evaluations by GAP
     and hence multiple errors should still result in a single exception
-    with a message capturing all errors that occurrer::
+    with a message capturing all errors that occurrer:
 
-        >>> gap.eval('Complex Field with 53 bits of precision;')
-        Traceback (most recent call last):
-        ...
-        gappy.exceptions.GAPError: Error, Variable: 'Complex' must have a value
-        Syntax error: ; expected in stream:1
-        Complex Field with 53 bits of precision;;
-         ^^^^^^^^^^^^
-        Error, Variable: 'with' must have a value
-        Syntax error: ; expected in stream:1
-        Complex Field with 53 bits of precision;;
-         ^^^^^^^^^^^^^^^^^^^^
-        Error, Variable: 'bits' must have a value
-        Syntax error: ; expected in stream:1
-        Complex Field with 53 bits of precision;;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        Error, Variable: 'precision' must have a value
+    >>> gap.eval('Complex Field with 53 bits of precision;')
+    Traceback (most recent call last):
+    ...
+    gappy.exceptions.GAPError: Error, Variable: 'Complex' must have a value
+    Syntax error: ; expected in stream:1
+    Complex Field with 53 bits of precision;;
+     ^^^^^^^^^^^^
+    Error, Variable: 'with' must have a value
+    Syntax error: ; expected in stream:1
+    Complex Field with 53 bits of precision;;
+     ^^^^^^^^^^^^^^^^^^^^
+    Error, Variable: 'bits' must have a value
+    Syntax error: ; expected in stream:1
+    Complex Field with 53 bits of precision;;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Error, Variable: 'precision' must have a value
 
     Test that on a subsequent attempt we get the same message (no garbage was
-    left in the error stream)::
+    left in the error stream):
 
-        >>> gap.eval('Complex Field with 53 bits of precision;')
-        Traceback (most recent call last):
-        ...
-        gappy.exceptions.GAPError: Error, Variable: 'Complex' must have a value
-        ...
-        Error, Variable: 'precision' must have a value
+    >>> gap.eval('Complex Field with 53 bits of precision;')
+    Traceback (most recent call last):
+    ...
+    gappy.exceptions.GAPError: Error, Variable: 'Complex' must have a value
+    ...
+    Error, Variable: 'precision' must have a value
 
-        >>> gap.eval('1+1')  # test that we successfully recover
-        2
+    >>> gap.eval('1+1')  # test that we successfully recover
+    2
     """
     initialize()
     cdef Obj result
@@ -567,10 +582,11 @@ cdef class Gap:
         will be safe to initialize Gap() with alternate arguments from the
         defaults before its first use; after that it cannot be re-initialized.
 
-    EXAMPLES::
+    Examples
+    --------
 
-        >>> gap.eval('SymmetricGroup(4)')
-        Sym( [ 1 .. 4 ] )
+    >>> gap.eval('SymmetricGroup(4)')
+    Sym( [ 1 .. 4 ] )
     """
 
     def __cinit__(self):
@@ -586,46 +602,53 @@ cdef class Gap:
             Actually implement the converter registry interface.  For now some
             of the hand-coded conversions from Sage are implemented.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``x`` -- anything that defines a GAP object.
+        x
+            Any Python object that can be converted to a GAP object.  By
+            default the following types are converted: `~gappy.gapobj.GapObj`,
+            `list`, `tuple`, `dict`, `bool`, `int`, `float`, `number.Rational`,
+            `str`.
 
-        OUTPUT:
+        Returns
+        -------
 
-        A :class:`GapObj`.
+        `GapObj`
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap(0)
-            0
-            >>> gap([])
-            [ ]
-            >>> gap({})
-            rec( )
-            >>> gap(False)
-            false
-            >>> gap('')
-            ""
+        >>> gap(0)
+        0
+        >>> gap([])
+        [ ]
+        >>> gap({})
+        rec( )
+        >>> gap(False)
+        false
+        >>> gap('')
+        ""
 
-            A class with a ``_gap_`` method to convert itself to an equivalent
-            `~gappy.gapobj.GapObj`:
+        A class with a ``_gap_`` method to convert itself to an equivalent
+        `~gappy.gapobj.GapObj`:
 
-            >>> class MyGroup:
-            ...     def _gap_(self):
-            ...         return gap.SymmetricGroup(3)
-            ...
-            >>> gap(MyGroup())
-            Sym( [ 1 .. 3 ] )
+        >>> class MyGroup:
+        ...     def _gap_(self):
+        ...         return gap.SymmetricGroup(3)
+        ...
+        >>> gap(MyGroup())
+        Sym( [ 1 .. 3 ] )
 
-            A class with a ``_gap_init_`` method; same concept but returns a string
-            containing any arbitrary GAP code for initializing the object:
+        A class with a ``_gap_init_`` method; same concept but returns a string
+        containing any arbitrary GAP code for initializing the object:
 
-            >>> class MyGroup2:
-            ...     def _gap_init_(self):
-            ...         return 'SymmetricGroup(3)'
-            ...
-            >>> gap(MyGroup2())
-            Sym( [ 1 .. 3 ] )
+        >>> class MyGroup2:
+        ...     def _gap_init_(self):
+        ...         return 'SymmetricGroup(3)'
+        ...
+        >>> gap(MyGroup2())
+        Sym( [ 1 .. 3 ] )
 
         """
         initialize()
@@ -659,21 +682,26 @@ cdef class Gap:
         """
         Evaluate a gap command and wrap the result.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``gap_command`` -- a string containing a valid gap command
-          without the trailing semicolon.
+        gap_command : str
+            A string containing a valid GAP command with or without the
+            trailing semicolon.
 
-        OUTPUT:
+        Returns
+        -------
 
-        A :class:`GapObj`.
+        `GapObj`
+            The result of the GAP statement.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.eval('0')
-            0
-            >>> gap.eval('"string"')
-            "string"
+        >>> gap.eval('0')
+        0
+        >>> gap.eval('"string"')
+        "string"
         """
         cdef GapObj elem
 
@@ -693,13 +721,13 @@ cdef class Gap:
         """
         If loading fails, raise a RuntimeError exception.
 
-        TESTS::
+        Examples
+        --------
 
-            >>> gap.load_package("chevie")
-            Traceback (most recent call last):
-            ...
-            RuntimeError: Error loading GAP package chevie. You may want to
-            install gap_packages SPKG.
+        >>> gap.load_package("chevie")
+        Traceback (most recent call last):
+        ...
+        RuntimeError: Error loading GAP package chevie.
         """
         # Note: For some reason the default package loading error messages are
         # controlled with InfoWarning and not InfoPackageLoading
@@ -708,28 +736,37 @@ cdef class Gap:
         ret = self.LoadPackage(pkg)
         self.SetInfoLevel(self.InfoWarning, prev_infolevel)
         if str(ret) == 'fail':
-            raise RuntimeError(f"Error loading GAP package {pkg}.  "
-                               f"You may want to install gap_packages SPKG.")
+            raise RuntimeError(f'Error loading GAP package {pkg}.')
         return ret
 
     def set_global(self, variable, value):
         """
         Set a GAP global variable
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``variable`` -- string. The variable name.
+        variable : str
+            The GAP global variable name.
+        value
+            Any `~gappy.gapobj.GapObj` or Python object that can be converted
+            to a GAP object.  Passing `None` is equivalent to `Gap.unset_global`.
 
-        - ``value`` -- anything that defines a GAP object.
+        Examples
+        --------
 
-        EXAMPLES::
-
-            >>> gap.set_global('FooBar', 1)
-            >>> gap.get_global('FooBar')
-            1
-            >>> gap.unset_global('FooBar')
-            >>> gap.get_global('FooBar') is None
-            True
+        >>> gap.set_global('FooBar', 1)
+        >>> gap.get_global('FooBar')
+        1
+        >>> gap.unset_global('FooBar')
+        >>> gap.get_global('FooBar') is None
+        True
+        >>> gap.set_global('FooBar', 1)
+        >>> gap.get_global('FooBar')
+        1
+        >>> gap.set_global('FooBar', None)
+        >>> gap.get_global('FooBar') is None
+        True
         """
 
         cdef bytes name
@@ -748,18 +785,21 @@ cdef class Gap:
         """
         Remove a GAP global variable
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``variable`` -- string. The variable name.
+        variable : str
+            The GAP global variable name.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.set_global('FooBar', 1)
-            >>> gap.get_global('FooBar')
-            1
-            >>> gap.unset_global('FooBar')
-            >>> gap.get_global('FooBar') is None
-            True
+        >>> gap.set_global('FooBar', 1)
+        >>> gap.get_global('FooBar')
+        1
+        >>> gap.unset_global('FooBar')
+        >>> gap.get_global('FooBar') is None
+        True
         """
 
         cdef bytes name
@@ -777,23 +817,28 @@ cdef class Gap:
         """
         Get a GAP global variable
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``variable`` -- string. The variable name.
+        variable : str
+            The GAP global variable name.
 
-        OUTPUT:
+        Returns
+        -------
 
-        A :class:`~gappy.gapobj.GapObj` wrapping the GAP output.  `None` is
-        returned if there is no such variable in GAP.
+        `GapObj` or `None`
+            `GapObj` wrapping the GAP output.  `None` is returned if there is
+            no such variable in GAP.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.set_global('FooBar', 1)
-            >>> gap.get_global('FooBar')
-            1
-            >>> gap.unset_global('FooBar')
-            >>> gap.get_global('FooBar') is None
-            True
+        >>> gap.set_global('FooBar', 1)
+        >>> gap.get_global('FooBar')
+        1
+        >>> gap.unset_global('FooBar')
+        >>> gap.get_global('FooBar') is None
+        True
         """
         cdef Obj obj
         cdef bytes name
@@ -815,24 +860,30 @@ cdef class Gap:
         """
         Temporarily change a global variable
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``variable`` -- string. The variable name.
+        variable : str
+            The GAP global variable name.
+        value
+            Any `~gappy.gapobj.GapObj` or Python object that can be converted
+            to a GAP object.  Passing `None` is equivalent to `Gap.unset_global`.
 
-        - ``value`` -- anything that defines a GAP object.
+        Returns
+        -------
 
-        OUTPUT:
+        `GlobalVariableContext`
+            A context manager that sets/reverts the given global variable.
 
-        A context manager that sets/reverts the given global variable.
+        Examples
+        --------
 
-        EXAMPLES::
-
-            >>> gap.set_global('FooBar', 1)
-            >>> with gap.global_context('FooBar', 2):
-            ...     print(gap.get_global('FooBar'))
-            2
-            >>> gap.get_global('FooBar')
-            1
+        >>> gap.set_global('FooBar', 1)
+        >>> with gap.global_context('FooBar', 2):
+        ...     print(gap.get_global('FooBar'))
+        2
+        >>> gap.get_global('FooBar')
+        1
         """
         initialize()
         return GlobalVariableContext(self, variable, value)
@@ -845,12 +896,13 @@ cdef class Gap:
         ``mpz_rrandomm`` if ``seed=None``.  Otherwise the seed should be an
         integer.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.set_seed(0)
-            0
-            >>> [gap.Random(1, 10) for i in range(5)]
-            [2, 3, 3, 4, 2]
+        >>> gap.set_seed(0)
+        0
+        >>> [gap.Random(1, 10) for i in range(5)]
+        [2, 3, 3, 4, 2]
         """
         cdef mpz_t z_seed
         cdef Obj gap_seed
@@ -874,14 +926,16 @@ cdef class Gap:
         r"""
         Return a string representation of ``self``.
 
-        OUTPUT:
+        Returns
+        -------
 
-        String.
+        str
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap
-            C library interface to GAP
+        >>> gap
+        C library interface to GAP
         """
         return 'C library interface to GAP'
 
@@ -889,10 +943,11 @@ cdef class Gap:
         """
         Customize tab completion
 
-        EXAMPLES::
+        Examples
+        --------
 
-           >>> 'OctaveAlgebra' in dir(gap)
-           True
+        >>> 'OctaveAlgebra' in dir(gap)
+        True
         """
         return dir(self.__class__) + sorted(GAP_GLOBALS)
 
@@ -901,22 +956,35 @@ cdef class Gap:
         The attributes of the GAP object are the GAP functions, and in some
         cases other global variables from GAP.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``name`` -- string. The name of the GAP function you want to
-          call or another GAP global.
+        name : str
+            The name of the GAP function you want to call or another GAP
+            global.
 
-        OUTPUT:
+        Returns
+        -------
 
-        A :class:`GapObj`. A ``AttributeError`` is raised
-        if there is no such function or global variable.
+        `GapObj`
+            A `GapObj` wrapping the specified global variable in GAP. An
+            `AttributeError` is raised if there is no such function or global
+            variable.
 
-        EXAMPLES::
+        Raises
+        ------
 
-            >>> gap.List
-            <GAP function "List">
-            >>> gap.GlobalRandomSource
-            <RandomSource in IsGlobalRandomSource>
+        AttributeError
+            The global variable with the name of the attribute is not bound in
+            GAP.
+
+        Examples
+        --------
+
+        >>> gap.List
+        <GAP function "List">
+        >>> gap.GlobalRandomSource
+        <RandomSource in IsGlobalRandomSource>
         """
 
         val = self.get_global(name)
@@ -943,27 +1011,29 @@ cdef class Gap:
             Slight complication is that we want to do it without accessing
             GAP objects, so we don't create new GapObjs as a side effect.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> a = gap(123)
-            >>> b = gap(456)
-            >>> c = gap(789)
-            >>> del b
-            >>> gap.collect()
-            >>> gap.show()  # doctest: +IGNORE_OUTPUT
-            {'gasman_stats': {'full': {'cumulative': 110,
-               'deadbags': 321400,
-               'deadkb': 12967,
-               'freekb': 15492,
-               'livebags': 396645,
-               'livekb': 37730,
-               'time': 110,
-               'totalkb': 65536},
-              'nfull': 1,
-              'npartial': 1},
-             'nelements': 23123,
-             'total_alloc': 3234234}
+        >>> a = gap(123)
+        >>> b = gap(456)
+        >>> c = gap(789)
+        >>> del b
+        >>> gap.collect()
+        >>> gap.show()  # doctest: +IGNORE_OUTPUT
+        {'gasman_stats': {'full': {'cumulative': 110,
+           'deadbags': 321400,
+           'deadkb': 12967,
+           'freekb': 15492,
+           'livebags': 396645,
+           'livekb': 37730,
+           'time': 110,
+           'totalkb': 65536},
+          'nfull': 1,
+          'npartial': 1},
+         'nelements': 23123,
+         'total_alloc': 3234234}
         """
+
         d = {'nelements': self.count_GAP_objects()}
         d['total_alloc'] = int(self.eval('TotalMemoryAllocated()'))
         d['gasman_stats'] = dict(self.eval('GasmanStatistics()'))
@@ -974,14 +1044,16 @@ cdef class Gap:
         Return the number of GAP objects that are being tracked by
         GAP.
 
-        OUTPUT:
+        Returns
+        -------
 
-        An integer
+        int
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.count_GAP_objects()  # doctest: +IGNORE_OUTPUT
-            5
+        >>> gap.count_GAP_objects()  # doctest: +IGNORE_OUTPUT
+        5
         """
         return len(get_owned_objects())
 
@@ -989,11 +1061,12 @@ cdef class Gap:
         """
         Manually run the garbage collector
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> a = gap(123)
-            >>> del a
-            >>> gap.collect()
+        >>> a = gap(123)
+        >>> del a
+        >>> gap.collect()
         """
         initialize()
         rc = GAP_CollectBags(1)

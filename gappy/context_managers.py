@@ -53,20 +53,22 @@ class GlobalVariableContext:
         :meth:`~gappy.core.Gap.global_context` method and not construct objects
         of this class manually.
 
-        INPUT:
+        Parameters
+        ----------
+        variable : str
+            The GAP variable name.
+        value
+            Anything that defines or can be converted to a GAP object.
 
-        - ``variable`` -- string. The variable name.
+        Examples
+        --------
 
-        - ``value`` -- anything that defines a GAP object.
-
-        EXAMPLES::
-
-            >>> gap.set_global('FooBar', 1)
-            >>> with gap.global_context('FooBar', 2):
-            ...     print(gap.get_global('FooBar'))
-            2
-            >>> gap.get_global('FooBar')
-            1
+        >>> gap.set_global('FooBar', 1)
+        >>> with gap.global_context('FooBar', 2):
+        ...     print(gap.get_global('FooBar'))
+        2
+        >>> gap.get_global('FooBar')
+        1
         """
         self._gap = gap
         self._variable = variable
@@ -76,14 +78,15 @@ class GlobalVariableContext:
         """
         Called when entering the with-block
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.set_global('FooBar', 1)
-            >>> with gap.global_context('FooBar', 2):
-            ...     print(gap.get_global('FooBar'))
-            2
-            >>> gap.get_global('FooBar')
-            1
+        >>> gap.set_global('FooBar', 1)
+        >>> with gap.global_context('FooBar', 2):
+        ...     print(gap.get_global('FooBar'))
+        2
+        >>> gap.get_global('FooBar')
+        1
         """
         self._old_value = self._gap.get_global(self._variable)
         self._gap.set_global(self._variable, self._new_value)
@@ -92,14 +95,15 @@ class GlobalVariableContext:
         """
         Called when exiting the with-block
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> gap.set_global('FooBar', 1)
-            >>> with gap.global_context('FooBar', 2):
-            ...     print(gap.get_global('FooBar'))
-            2
-            >>> gap.get_global('FooBar')
-            1
+        >>> gap.set_global('FooBar', 1)
+        >>> with gap.global_context('FooBar', 2):
+        ...     print(gap.get_global('FooBar'))
+        2
+        >>> gap.get_global('FooBar')
+        1
         """
         self._gap.set_global(self._variable, self._old_value)
         return False

@@ -19,17 +19,20 @@ NAME_RE = re.compile(r'(Setter|Getter|Tester)\((.*)\)')
 class OperationInspector:
     def __init__(self, obj):
         """
-        Information about operations that can act on a given LibGAP element
+        Information about operations that can act on a given GAP object.
 
-        INPUT:
+        Parameters
+        ----------
 
-        - ``obj`` -- a `~gappy.element.GapObj`.
+        obj : `~gappy.element.GapObj`
+            A `~gappy.element.GapObj` to query.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> from gappy.operations import OperationInspector
-            >>> OperationInspector(gap(123))
-            Operations on 123
+        >>> from gappy.operations import OperationInspector
+        >>> OperationInspector(gap(123))
+        Operations on 123
         """
 
         self._obj = obj
@@ -40,16 +43,18 @@ class OperationInspector:
         """
         Return the string representation
 
-        OUTPUT:
+        Returns
+        -------
 
-        String
+        str
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> from gappy.operations import OperationInspector
-            >>> opr = OperationInspector(gap(123))
-            >>> opr.__repr__()
-            'Operations on 123'
+        >>> from gappy.operations import OperationInspector
+        >>> opr = OperationInspector(gap(123))
+        >>> opr.__repr__()
+        'Operations on 123'
         """
         return 'Operations on {0}'.format(repr(self._obj))
 
@@ -58,16 +63,18 @@ class OperationInspector:
         """
         The first argument for the operations
 
-        OUTPUT:
+        Returns
+        -------
 
-        A Libgap object.
+        `GapObj`
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> from gappy.operations import OperationInspector
-            >>> x = OperationInspector(gap(123))
-            >>> print(x.obj)
-            123
+        >>> from gappy.operations import OperationInspector
+        >>> x = OperationInspector(gap(123))
+        >>> print(x.obj)
+        123
         """
         return self._obj
 
@@ -75,16 +82,19 @@ class OperationInspector:
         """
         Return the GAP operations for :meth:`obj`
 
-        OUTPUT:
+        Returns
+        -------
 
-        List of GAP operations
+        generator
+            Generator iterating over all operations.
 
-        EXAMPLES::
+        Examples
+        --------
 
-            >>> from gappy.operations import OperationInspector
-            >>> x = OperationInspector(gap(123))
-            >>> gap.Unknown in x.operations()
-            True
+        >>> from gappy.operations import OperationInspector
+        >>> x = OperationInspector(gap(123))
+        >>> gap.Unknown in x.operations()
+        True
         """
         IS_SUBSET_FLAGS = self._gap.IS_SUBSET_FLAGS
         GET_OPER_FLAGS = self._gap.GET_OPER_FLAGS
@@ -99,18 +109,20 @@ class OperationInspector:
 
     def op_names(self):
         """
-        Return the names of the operations
+        Return the names of the operations.
 
-        OUTPUT:
+        Returns
+        -------
+        list
+            Sorted list of names.
 
-        List of strings
+        Examples
+        --------
 
-        EXAMPLES::
-
-            >>> from gappy.operations import OperationInspector
-            >>> x = OperationInspector(gap(123))
-            >>> 'Sqrt' in x.op_names()
-            True
+        >>> from gappy.operations import OperationInspector
+        >>> x = OperationInspector(gap(123))
+        >>> 'Sqrt' in x.op_names()
+        True
         """
         NameFunction = self._gap.NameFunction
         result = set()
