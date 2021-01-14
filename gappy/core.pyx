@@ -259,7 +259,17 @@ cdef initialize(gap_root=None, libgap_soname=None, autoload=False):
                     f'cannot determine path to GAP_ROOT')
 
             so_path = lm.l_name.decode(_FS_ENCODING, 'surrogateescape')
+            # if libgap is in GAP_ROOT/.libs/
             gap_root = os.path.dirname(os.path.dirname(so_path))
+            # On conda and sage (and maybe some other distros) we are in
+            # <prefix>/ and gap is in share/gap
+            # TODO: Add some other paths to try here as we find them
+            for pth in [('.',), ('share', 'gap')]:
+                gap_root = os.path.join(gap_root, *pth)
+                if os.path.exists(os.path.join(gap_root, 'lib', 'init.g')):
+                    break
+            else:
+                gap_root = None
 
     dlclose(handle)
 
