@@ -29,29 +29,6 @@ from .exceptions import GAPError
 from .operations import OperationInspector
 
 
-decode_type_number = {
-    0: 'T_INT (integer)',
-    T_INTPOS: 'T_INTPOS (positive integer)',
-    T_INTNEG: 'T_INTNEG (negative integer)',
-    T_RAT: 'T_RAT (rational number)',
-    T_CYC: 'T_CYC (universal cyclotomic)',
-    T_FFE: 'T_FFE (finite field element)',
-    T_PERM2: 'T_PERM2',
-    T_PERM4: 'T_PERM4',
-    T_BOOL: 'T_BOOL',
-    T_CHAR: 'T_CHAR',
-    T_FUNCTION: 'T_FUNCTION',
-    T_PLIST: 'T_PLIST',
-    T_PLIST_CYC: 'T_PLIST_CYC',
-    T_BLIST: 'T_BLIST',
-    T_STRING: 'T_STRING',
-    T_MACFLOAT: 'T_MACFLOAT (hardware floating point number)',
-    T_COMOBJ: 'T_COMOBJ (component object)',
-    T_POSOBJ: 'T_POSOBJ (positional object)',
-    T_DATOBJ: 'T_DATOBJ (data object)',
-    T_WPOBJ:  'T_WPOBJ (weak pointer object)',
-    }
-
 ############################################################################
 ### helper functions to construct lists and records ########################
 ############################################################################
@@ -679,27 +656,6 @@ cdef class GapObj:
             return bool(GAP_IN((<GapObj>other).value, self.value))
         finally:
             GAP_Leave()
-
-    cpdef _type_number(self):
-        """
-        Return the GAP internal type number.
-
-        This is only useful for libgap development purposes.
-
-        OUTPUT:
-
-        Integer.
-
-        EXAMPLES::
-
-            >>> x = gap(1)
-            >>> x._type_number()
-            (0, 'T_INT (integer)')
-        """
-        n = TNUM_OBJ(self.value)
-        global decode_type_number
-        name = decode_type_number.get(n, 'unknown')
-        return (n, name)
 
     def __dir__(self):
         """

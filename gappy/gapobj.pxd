@@ -52,7 +52,6 @@ cdef class GapObj:
     cpdef _assert_compare_by_id(self)
 
     cdef _initialize(self, parent, Obj obj)
-    cpdef _type_number(self)
     cpdef is_bool(self)
     cpdef _add_(self, other)
     cpdef _div_(self, other)
