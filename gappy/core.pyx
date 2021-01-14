@@ -284,6 +284,8 @@ cdef initialize(gap_root=None, libgap_soname=None, autoload=False):
             f'GAP_ROOT path {gap_root} does not contain lib/init.g which is '
             f'needed for GAP to work.  {hint}')
 
+    gap_root = os.path.normpath(gap_root)
+
     # Define argv variable, which we will pass in to
     # initialize GAP. Note that we must pass define the memory pool
     # size!
