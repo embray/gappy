@@ -223,7 +223,7 @@ cdef initialize(gap_root=None, libgap_soname=None, autoload=False):
 
     It is safe to call this multiple times.
     """
-    cdef link_map lm
+    cdef link_map *lm
     cdef int ret
     cdef char *error
 
