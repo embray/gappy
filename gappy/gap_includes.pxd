@@ -79,6 +79,7 @@ cdef extern from "gap/libgap-api.h" nogil:
 
     # Floats
     cdef Obj GAP_NewMacFloat(double)
+    double GAP_ValueMacFloat(Obj)
 
     # Strings
     cdef char *GAP_CSTR_STRING(Obj)
@@ -122,9 +123,6 @@ cdef extern from "gap/gvars.h" nogil:
 cdef extern from "gap/io.h" nogil:
     UInt OpenOutputStream(Obj stream)
     UInt CloseOutput()
-
-cdef extern from "gap/macfloat.h" nogil:
-    double VAL_MACFLOAT(Obj obj)
 
 
 cdef extern from "gap/objects.h" nogil:

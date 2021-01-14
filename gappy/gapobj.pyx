@@ -1590,7 +1590,7 @@ cdef class GapFloat(GapObj):
             >>> float(gap.eval("Float(3.5)"))
             3.5
         """
-        return VAL_MACFLOAT(self.value)
+        return GAP_ValueMacFloat(self.value)
 
 
 
