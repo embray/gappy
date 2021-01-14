@@ -35,7 +35,7 @@ from .operations import OperationInspector
 
 cdef Obj make_gap_list(parent, lst) except NULL:
     """
-    Convert Sage lists into GAP lists
+    Convert Python lists into GAP lists.
 
     INPUT:
 
@@ -157,9 +157,9 @@ cdef void gap_obj_str(Obj obj, Obj out):
     Implement ``str()`` of ``GapObj``s using the ``Print()`` function.
 
     This mirrors somewhat how Python uses ``str()`` on an object when passing
-    it to the ``print()`` function.  This is also how the GAP pexpect interface
-    has traditionally repr'd objects; for the libgap interface we take a
-    slightly different approach more closely mirroring Python's str/repr
+    it to the ``print()`` function.  This is also how Sage's GAP pexpect
+    interface has traditionally repr'd objects; for the gappy interface we take
+    a slightly different approach more closely mirroring Python's str/repr
     difference (though this does not map perfectly onto GAP).
     """
     cdef Obj func = GAP_ValueGlobalVariable("Print")
@@ -433,7 +433,7 @@ cdef GapObj make_GapObj(parent, Obj obj):
         >>> gap(None)
         Traceback (most recent call last):
         ...
-        AttributeError: 'NoneType' object has no attribute '_libgap_init_'
+        AttributeError: 'NoneType' object has no attribute '_gap_init_'
     """
     cdef GapObj r = GapObj.__new__(GapObj)
     r._initialize(parent, obj)
@@ -849,8 +849,7 @@ cdef class GapObj:
         OUTPUT:
 
         This method returns nothing. A ``ValueError`` is raised if
-        :meth:`_set_compare_by_id` has not been called on this libgap
-        object.
+        :meth:`_set_compare_by_id` has not been called on this GAP object.
 
         EXAMPLES::
 
@@ -1335,10 +1334,8 @@ cdef class GapObj:
             >>> gap(True).is_bool()
             True
         """
-        libgap = self.parent()
-        cdef GapObj r_sage = libgap.IsBool(self)
-        cdef Obj r_gap = r_sage.value
-        return r_gap == GAP_True
+        gap = self.parent()
+        return bool(gap.IsBool(self))
 
     def is_string(self):
         r"""
@@ -1383,7 +1380,7 @@ cdef class GapObj:
 
 cdef GapInteger make_GapInteger(parent, Obj obj):
     r"""
-    Turn a GAP integer object into a GapInteger Sage object
+    Turn a GAP integer object into a Python GapInteger object.
 
     EXAMPLES::
 
@@ -1528,7 +1525,7 @@ cdef class GapInteger(GapObj):
 
 cdef GapFloat make_GapFloat(parent, Obj obj):
     r"""
-    Turn a GAP machine float object into a GapFloat Sage object
+    Turn a GAP machine float object into a Python GapFloat object.
 
     EXAMPLES::
 
@@ -1573,7 +1570,7 @@ cdef class GapFloat(GapObj):
 
 cdef GapIntegerMod make_GapIntegerMod(parent, Obj obj):
     r"""
-    Turn a GAP integer object into a :class:`GapIntegerMod` Sage object
+    Turn a GAP integer object into a Python `GapIntegerMod` object.
 
     EXAMPLES::
 
@@ -1624,7 +1621,7 @@ cdef class GapIntegerMod(GapObj):
 
 cdef GapFiniteField make_GapFiniteField(parent, Obj obj):
     r"""
-    Turn a GAP finite field object into a :class:`GapFiniteField` Sage object
+    Turn a GAP finite field object into a Python `GapFiniteField`.
 
     EXAMPLES::
 
@@ -1693,7 +1690,7 @@ cdef class GapFiniteField(GapObj):
 
 cdef GapCyclotomic make_GapCyclotomic(parent, Obj obj):
     r"""
-    Turn a GAP cyclotomic object into a :class:`GapCyclotomic` Sage
+    Turn a GAP cyclotomic object into a Python `GapCyclotomic` object.
     object.
 
     EXAMPLES::
@@ -1761,7 +1758,7 @@ cdef class GapRational(GapObj):
 
 cdef GapRing make_GapRing(parent, Obj obj):
     r"""
-    Turn a GAP integer object into a :class:`GapRing` Sage object.
+    Turn a GAP integer object into a Python `GapRing` object.
 
     EXAMPLES::
 
@@ -1818,11 +1815,11 @@ cdef class GapBoolean(GapObj):
         <class 'gappy.gapobj.GapBoolean'>
     """
 
-    def __nonzero__(self):
+    def __bool__(self):
         """
         Check that the boolean is "true".
 
-        This is syntactic sugar for using libgap. See the examples below.
+        See the examples below.
 
         OUTPUT:
 
@@ -2110,12 +2107,12 @@ cdef class GapFunction(GapObj):
         cdef Obj result = NULL
         cdef Obj arglist
 
-        libgap = self.parent()
+        gap = self.parent()
 
         try:
             sig_GAP_Enter()
             sig_on()
-            arglist = make_gap_list(libgap, args)
+            arglist = make_gap_list(gap, args)
             result = GAP_CallFuncList(self.value, arglist)
             sig_off()
         finally:
@@ -2125,7 +2122,7 @@ cdef class GapFunction(GapObj):
             # We called a procedure that does not return anything
             return None
 
-        return make_any_gap_obj(libgap, result)
+        return make_any_gap_obj(gap, result)
 
     def help(self):
         """
