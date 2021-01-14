@@ -182,7 +182,7 @@ cdef void gasman_callback() with gil:
     """
     global owned_objects_refcount
     for obj in owned_objects_refcount:
-        MarkBag((<ObjWrapper>obj).value)
+        GAP_MarkBag((<ObjWrapper>obj).value)
 
 
 ############################################################################
@@ -999,7 +999,7 @@ cdef class Gap:
             >>> gap.collect()
         """
         initialize()
-        rc = CollectBags(0, 1)
+        rc = GAP_CollectBags(1)
         if rc != 1:
             raise RuntimeError('Garbage collection failed.')
 

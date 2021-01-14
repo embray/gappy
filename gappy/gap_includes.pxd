@@ -102,8 +102,11 @@ cdef extern from "gap/libgap-api.h" nogil:
 
 
 cdef extern from "gap/gasman.h" nogil:
-    void MarkBag(Obj bag)
-    UInt CollectBags(UInt size, UInt full)
+    """
+    #define GAP_CollectBags(full) CollectBags(0, full)
+    """
+    void GAP_MarkBag "MarkBag" (Obj bag)
+    UInt GAP_CollectBags(UInt full)
 
 
 cdef extern from "gap/io.h" nogil:
