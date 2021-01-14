@@ -29,13 +29,6 @@ from .exceptions import GAPError
 from .operations import OperationInspector
 
 
-#from sage.cpython.string cimport str_to_bytes, char_to_str
-cdef str_to_bytes(str s, str encoding='utf-8', str errors='strict'):
-    return s.encode(encoding, errors)
-cdef char_to_str(char *s):
-    return s.decode('utf-8')
-
-
 decode_type_number = {
     0: 'T_INT (integer)',
     T_INTPOS: 'T_INTPOS (positive integer)',
@@ -326,7 +319,7 @@ cdef Obj make_gap_string(s) except NULL:
     """
     try:
         GAP_Enter()
-        b = str_to_bytes(s)
+        b = s.encode('utf-8')
         return GAP_MakeStringWithLen(b, len(b))
     finally:
         GAP_Leave()
@@ -796,7 +789,7 @@ cdef class GapObj:
             GAP_Enter()
             out = GAP_MakeString("")
             gap_obj_str(self.value, out)
-            s = char_to_str(GAP_CSTR_STRING(out))
+            s = GAP_CSTR_STRING(out).decode('utf-8', 'surrogateescape')
             return s.strip()
         finally:
             GAP_Leave()
@@ -826,7 +819,7 @@ cdef class GapObj:
             GAP_Enter()
             out = GAP_MakeString("")
             gap_obj_repr(self.value, out)
-            s = char_to_str(GAP_CSTR_STRING(out))
+            s = GAP_CSTR_STRING(out).decode('utf-8', 'surrogateescape')
             return s.strip()
         finally:
             GAP_Leave()
@@ -1943,7 +1936,7 @@ cdef class GapString(GapObj):
             >>> type(_)
             <class 'str'>
         """
-        s = char_to_str(GAP_CSTR_STRING(self.value))
+        s = GAP_CSTR_STRING(self.value).decode('utf-8', 'surrogateescape')
         return s
 
 
