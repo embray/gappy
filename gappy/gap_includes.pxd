@@ -106,18 +106,8 @@ cdef extern from "gap/calls.h" nogil:
 
 
 cdef extern from "gap/gasman.h" nogil:
-    Obj NewBag "NewBag"(UInt type, UInt size)
     void MarkBag(Obj bag)
     UInt CollectBags(UInt size, UInt full)
-
-
-cdef extern from "gap/gasman_intern.h" nogil:
-    void CallbackForAllBags(void (*func)(Obj))
-
-
-cdef extern from "gap/gvars.h" nogil:
-    UInt GVarName "GVarName"(char* name)
-    void AssGVar "AssGVar"(UInt gvar, Obj val)
 
 
 cdef extern from "gap/io.h" nogil:
@@ -130,9 +120,7 @@ cdef extern from "gap/objects.h" nogil:
     Obj SHALLOW_COPY_OBJ(Obj obj)
     Obj CopyObj(Obj obj, int mut)
 
-    UInt SIZE_OBJ(Obj obj)
     UInt TNUM_OBJ(Obj obj)
-    char* TNAM_OBJ(Obj obj)
 
     cdef enum TNUM:
         T_INT
@@ -159,17 +147,6 @@ cdef extern from "gap/objects.h" nogil:
         T_POSOBJ
         T_DATOBJ
         T_WPOBJ
-
-
-cdef extern from "gap/permutat.h" nogil:
-    UInt DEG_PERM2(Obj)
-    UInt DEG_PERM4(Obj)
-    Obj NEW_PERM2(UInt)
-    Obj NEW_PERM4(UInt)
-    UInt2* ADDR_PERM2(Obj)
-    UInt4* ADDR_PERM4(Obj)
-    const UInt2* CONST_ADDR_PERM2(Obj)
-    const UInt4* CONST_ADDR_PERM4(Obj)
 
 
 cdef extern from "gap/stringobj.h" nogil:
