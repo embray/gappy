@@ -870,34 +870,6 @@ cdef class Gap:
         Reset(self.GlobalRandomSource, seed)
         return seed
 
-    def zero(self):
-        """
-        Return (integer) zero in GAP.
-
-        OUTPUT:
-
-        A :class:`GapObj`.
-
-        EXAMPLES::
-
-            >>> gap.zero()
-            0
-        """
-        return self(0)
-
-    def one(self):
-        r"""
-        Return (integer) one in GAP.
-
-        EXAMPLES::
-
-            >>> gap.one()
-            1
-            >>> _.parent()
-            C library interface to GAP
-        """
-        return self(1)
-
     # TODO: Update this to display something more useful, such as the
     # arguments Gap was initialized with (e.g. gap_root path).
     # For that matter, gap_root should also be exposed as a property.
