@@ -114,5 +114,14 @@ cdef extern from "gap/io.h" nogil:
     UInt CloseOutput()
 
 
+# TODO: Replace this with a GAP_MakeStringWithLen from the public API;
+# see https://github.com/gap-system/gap/issues/4211
 cdef extern from "gap/stringobj.h" nogil:
-    Obj GAP_MakeStringWithLen "MakeStringWithLen" (char *, size_t)
+    """
+    static inline Obj GAP_MakeStringWithLen(char *s, size_t len) {
+        Obj ret;
+        C_NEW_STRING(ret, len, s);
+        return ret;
+    }
+    """
+    Obj GAP_MakeStringWithLen(char *, size_t)

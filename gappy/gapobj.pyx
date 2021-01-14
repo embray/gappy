@@ -2250,7 +2250,7 @@ cdef class GapFunction(GapObj):
         --------
 
         >>> print(gap.SymmetricGroup.help())
-        50.1-12 SymmetricGroup
+        50.1-... SymmetricGroup
         <BLANKLINE>
         ‣ SymmetricGroup( [filt, ]deg ) ─────────────────────────────────── function
         ‣ SymmetricGroup( [filt, ]dom ) ─────────────────────────────────── function
