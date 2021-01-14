@@ -12,7 +12,13 @@
 
 from libc.stdint cimport uintptr_t, uint8_t, uint16_t, uint32_t, uint64_t
 
-cdef extern from "gap/system.h" nogil:
+
+cdef extern from "gap/libgap-api.h" nogil:
+    """
+    #define sig_GAP_Enter()  {int t = GAP_Enter(); if (!t) sig_error();}
+    """
+
+    # Basic types
     ctypedef char Char
     ctypedef int Int
     ctypedef uintptr_t UInt
@@ -21,6 +27,62 @@ cdef extern from "gap/system.h" nogil:
     ctypedef uint32_t UInt4
     ctypedef uint64_t UInt8
     ctypedef void* Obj
+
+    # Stack management
+    cdef void GAP_EnterStack()
+    cdef void GAP_LeaveStack()
+    cdef int GAP_Enter() except 0
+    cdef void sig_GAP_Enter()
+    cdef void GAP_Leave()
+    cdef int GAP_Error_Setjmp() except 0
+
+    # Initialization
+    ctypedef void (*GAP_CallbackFunc)()
+    void GAP_Initialize(int argc, char ** argv,
+            GAP_CallbackFunc markBagsCallback, GAP_CallbackFunc errorCallback,
+            int handleSignals)
+
+    # Evaluation
+    Obj GAP_EvalString(const char *) except *
+    Obj GAP_EvalStringNoExcept "GAP_EvalString"(const char *)
+
+    # Global variables
+    void GAP_AssignGlobalVariable(const char *, Obj)
+    int GAP_CanAssignGlobalVariable(const char *)
+    Obj GAP_ValueGlobalVariable(const char *)
+
+    # Calls
+    Obj GAP_CallFuncArray(Obj, UInt, Obj *)
+    Obj GAP_CallFuncList(Obj, Obj)
+
+    # Ints
+    cdef int GAP_IsInt(Obj)
+    cdef int GAP_IsSmallInt(Obj)
+    cdef Obj GAP_MakeObjInt(UInt *, Int)
+    cdef Int GAP_SizeInt(Obj)
+    cdef UInt *GAP_AddrInt(Obj)
+
+    # Floats
+    cdef Obj GAP_NewMacFloat(double)
+
+    # Strings
+    cdef char *GAP_CSTR_STRING(Obj)
+    cdef int GAP_IsString(Obj)
+    cdef UInt GAP_LenString(Obj)
+    cdef Obj GAP_MakeString(const char *)
+
+    # Lists
+    void GAP_AssList(Obj, UInt, Obj val)
+    Obj GAP_ElmList(Obj, UInt)
+    UInt GAP_LenList(Obj)
+    int GAP_IsList(Obj)
+    Obj GAP_NewPlist(Int)
+
+    # Records
+    void GAP_AssRecord(Obj, Obj, Obj)
+    int GAP_IsRecord(Obj)
+    Obj GAP_ElmRecord(Obj, Obj)
+    Obj GAP_NewPrecord(Int)
 
 
 cdef extern from "gap/ariths.h" nogil:
@@ -61,61 +123,6 @@ cdef extern from "gap/gvars.h" nogil:
 cdef extern from "gap/io.h" nogil:
     UInt OpenOutputStream(Obj stream)
     UInt CloseOutput()
-
-
-cdef extern from "gap/libgap-api.h" nogil:
-    """
-    #define sig_GAP_Enter()  {int t = GAP_Enter(); if (!t) sig_error();}
-    """
-    ctypedef void (*GAP_CallbackFunc)()
-    void GAP_Initialize(int argc, char ** argv,
-            GAP_CallbackFunc markBagsCallback, GAP_CallbackFunc errorCallback,
-            int handleSignals)
-    Obj GAP_EvalString(const char *) except *
-    Obj GAP_EvalStringNoExcept "GAP_EvalString"(const char *)
-    void GAP_AssignGlobalVariable(const char *, Obj)
-    int GAP_CanAssignGlobalVariable(const char *)
-    Obj GAP_ValueGlobalVariable(const char *)
-    cdef void GAP_EnterStack()
-    cdef void GAP_LeaveStack()
-    cdef int GAP_Enter() except 0
-    cdef void sig_GAP_Enter()
-    cdef void GAP_Leave()
-    cdef int GAP_Error_Setjmp() except 0
-
-    # Calls
-    Obj GAP_CallFuncArray(Obj, UInt, Obj *)
-    Obj GAP_CallFuncList(Obj, Obj)
-
-    # Ints
-    cdef int GAP_IsInt(Obj)
-    cdef int GAP_IsSmallInt(Obj)
-    cdef Obj GAP_MakeObjInt(UInt *, Int)
-    cdef Int GAP_SizeInt(Obj)
-    cdef UInt *GAP_AddrInt(Obj)
-
-    # Floats
-    cdef Obj GAP_NewMacFloat(double)
-
-    # Strings
-    cdef char *GAP_CSTR_STRING(Obj)
-    cdef int GAP_IsString(Obj)
-    cdef UInt GAP_LenString(Obj)
-    cdef Obj GAP_MakeString(const char *)
-
-    # Lists
-    void GAP_AssList(Obj, UInt, Obj val)
-    Obj GAP_ElmList(Obj, UInt)
-    UInt GAP_LenList(Obj)
-    int GAP_IsList(Obj)
-    Obj GAP_NewPlist(Int)
-
-    # Records
-    void GAP_AssRecord(Obj, Obj, Obj)
-    int GAP_IsRecord(Obj)
-    Obj GAP_ElmRecord(Obj, Obj)
-    Obj GAP_NewPrecord(Int)
-
 
 cdef extern from "gap/macfloat.h" nogil:
     double VAL_MACFLOAT(Obj obj)
