@@ -469,8 +469,8 @@ cdef class GapObj:
     >>> gap(0)
     0
 
-    If GAP finds an error while evaluating, a :class:`GAPError`
-    exception is raised:
+    If GAP finds an error while evaluating, a :class:`.GAPError` exception is
+    raised:
 
     >>> gap.eval('1/0')
     Traceback (most recent call last):
@@ -2457,11 +2457,10 @@ cdef class GapList(GapObj):
     r"""
     Derived class of GapObj for GAP Lists.
 
-    .. NOTE::
+    .. note::
 
-        Lists are indexed by `0..len(l)-1`, as expected from
-        Python. This differs from the GAP convention where lists start
-        at `1`.
+        Lists are indexed by ``0..len(l)-1``, as expected from Python. This
+        differs from the GAP convention where lists start at ``1``.
 
     Examples
     --------

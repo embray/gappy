@@ -45,31 +45,31 @@ The value is reset even if exceptions occur::
 
 
 class GlobalVariableContext:
+    """
+    Context manager for GAP global variables.
+
+    It is recommended that you use the :meth:`~gappy.core.Gap.global_context`
+    method and not construct objects of this class manually.
+
+    Parameters
+    ----------
+    variable : str
+        The GAP variable name.
+    value
+        Anything that defines or can be converted to a GAP object.
+
+    Examples
+    --------
+
+    >>> gap.set_global('FooBar', 1)
+    >>> with gap.global_context('FooBar', 2):
+    ...     print(gap.get_global('FooBar'))
+    2
+    >>> gap.get_global('FooBar')
+    1
+    """
+
     def __init__(self, gap, variable, value):
-        """
-        Context manager for GAP global variables.
-
-        It is recommended that you use the
-        :meth:`~gappy.core.Gap.global_context` method and not construct objects
-        of this class manually.
-
-        Parameters
-        ----------
-        variable : str
-            The GAP variable name.
-        value
-            Anything that defines or can be converted to a GAP object.
-
-        Examples
-        --------
-
-        >>> gap.set_global('FooBar', 1)
-        >>> with gap.global_context('FooBar', 2):
-        ...     print(gap.get_global('FooBar'))
-        2
-        >>> gap.get_global('FooBar')
-        1
-        """
         self._gap = gap
         self._variable = variable
         self._new_value = value

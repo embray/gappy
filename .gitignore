@@ -24,3 +24,6 @@ cysignals_crash_logs/
 
 ## pytest files
 pytestdebug.log
+
+## Sphinx files
+docs/_build

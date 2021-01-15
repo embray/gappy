@@ -708,7 +708,7 @@ cdef class Gap:
         Returns
         -------
 
-        `GapObj`
+        `.GapObj`
             The result of the GAP statement.
 
         Examples
@@ -842,9 +842,9 @@ cdef class Gap:
         Returns
         -------
 
-        `GapObj` or `None`
-            `GapObj` wrapping the GAP output.  `None` is returned if there is
-            no such variable in GAP.
+        `.GapObj` or `None`
+            `.GapObj` wrapping the GAP output.  `None` is returned if there is
+             no such variable in GAP.
 
         Examples
         --------
@@ -888,7 +888,7 @@ cdef class Gap:
         Returns
         -------
 
-        `GlobalVariableContext`
+        `.GlobalVariableContext`
             A context manager that sets/reverts the given global variable.
 
         Examples
