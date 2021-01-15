@@ -1,4 +1,5 @@
 .. include:: ../README.rst
+    :start-line: 4
 
 
 Full documentation

@@ -1,3 +1,6 @@
+.. image:: docs/images/gappy-logo.svg.png
+    :align: center
+
 ##################################
 gappy -- a Python interface to GAP
 ##################################
