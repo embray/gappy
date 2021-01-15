@@ -1,5 +1,4 @@
-.. image:: docs/images/gappy-logo.svg.png
-    :align: center
+|logo|
 
 ##################################
 gappy -- a Python interface to GAP
@@ -25,18 +24,20 @@ GAP.
     :local:
     :depth: 3
 
-.. currentmodule:: gappy
-
 
 Quickstart
 ==========
 
-To start using GAP functions from Python, just run::
+To start using GAP functions from Python, just run:
+
+.. code-block:: python
 
     >>> from gappy import gap
 
 Then any global variable in GAP, including functions, can be accessed as
-attributes on `gap` like::
+attributes on `gap` like:
+
+.. code-block:: python
 
     >>> gap.Cite()
     Please use one of the following samples
@@ -48,35 +49,45 @@ attributes on `gap` like::
     ...
 
 All global variables that would be available in a GAP session can be
-accessed in this way::
+accessed in this way:
+
+.. code-block:: python
 
     >>> GAPInfo.Version
     "4.dev"
 
 Most basic Python types have direct equivalents in GAP, and can be passed
 directly to GAP functions without explicit conversion to their equivalent
-GAP types::
+GAP types:
+
+.. code-block:: python
 
     >>> S4 = gap.SymmetricGroup(4)
     >>> S4
     Sym( [ 1 .. 4 ] )
 
-You can also call "methods" on `.GapObj`\s.  This is just syntactic sugar
+You can also call "methods" on ``GapObj``\s.  This is just syntactic sugar
 for calling a GAP function with that object as its first argument, in cases
-where that function supports the object bound to the method.  For example::
+where that function supports the object bound to the method.  For example:
+
+.. code-block:: python
 
     >>> S4.GeneratorsOfGroup()
     [ (1,2,3,4), (1,2) ]
 
 Values returned from GAP functions are GAP objects wrapped in a Python class
-for containing them called `.GapObj`::
+for containing them called ``GapObj``:
+
+.. code-block:: python
 
     >>> type(S4)
     <class 'gappy.gapobj.GapObj'>
 
-There are also specialized subclasses of `.GapObj` for many types of objects
+There are also specialized subclasses of ``GapObj`` for many types of objects
 in GAP.  To explicitly convert a Python object directly to its GAP
-equivalent, you can *call* `gap` like::
+equivalent, you can *call* ``gap`` like:
+
+.. code-block:: python
 
     >>> one = gap(1)
     >>> type(one)
@@ -84,7 +95,9 @@ equivalent, you can *call* `gap` like::
 
 GAP objects are displayed (with `repr`) or stringified (with `str`) the same
 way they would be in GAP, when displaying the object in the REPL or when
-calling GAP's ``Print()`` function on the object, respectively::
+calling GAP's ``Print()`` function on the object, respectively:
+
+.. code-block:: python
 
     >>> one
     1
@@ -97,7 +110,9 @@ calling GAP's ``Print()`` function on the object, respectively::
 Not all GAP objects have an equivalent in basic Python types, so there is
 no implicit conversion from GAP back to Python.  However, all Python types
 that can be converted to GAP objects can be converted back to their
-equivalent Python types in a symmetrical manner::
+equivalent Python types in a symmetrical manner:
+
+.. code-block:: python
 
     >>> int(one)
     1
@@ -110,18 +125,19 @@ equivalent Python types in a symmetrical manner::
 
 Likewise for `float`\s, `list`\s, `dict`\s, among others.
 
-Finally, you can execute arbitrary GAP code directly with `gap.eval
-<.Gap.eval>`.  This is often the easiest way to construct more complicated
-GAP objects, especially if you are more familiar with GAP syntax.  The
-return value of `gap.eval <.Gap.eval>` is the result of evaluating the same
-statement in GAP (the semicolon is optional when evaluating a single
-statement)::
+Finally, you can execute arbitrary GAP code directly with ``gap.eval``.
+This is often the easiest way to construct more complicated GAP objects,
+especially if you are more familiar with GAP syntax.  The return value of
+``gap.eval`` is the result of evaluating the same statement in GAP (the
+semicolon is optional when evaluating a single statement):
 
     >>> rec = gap.eval('rec(a:=123, b:=456, Sym3:=SymmetricGroup(3))')
     >>> rec['Sym3']
     Sym( [ 1 .. 3 ] )
 
-This is also the *only* way to declare new GAP functions from gappy::
+This is also the *only* way to declare new GAP functions from gappy:
+
+.. code-block:: python
 
     >>> sign = gap.eval("""sign := function(n)
     ...     if n < 0 then
@@ -139,7 +155,7 @@ This is also the *only* way to declare new GAP functions from gappy::
     >>> sign(-99)
 
 See the full API documentation for many additional examples of how to use
-the `gap` object as well as the built-in `.GapObj` types.
+the ``gap`` object as well as the built-in ``GapObj`` types.
 
 
 Installation
@@ -153,18 +169,24 @@ Prerequisites
 -------------
 
 * Python 3.7 or up with development headers installed.  On Debian-based
-  systems this means::
+  systems this means:
 
-    $ sudo apt-get install python3.7-dev
+  .. code-block:: shell
+
+      $ sudo apt-get install python3.7-dev
 
 * GAP 4.10.2 or greater
 
-Currently it is necessary to install from source::
+Currently it is necessary to install from source:
+
+.. code-block:: shell
 
     $ git clone https://github.com/embray/gappy.git
     $ cd gappy/
 
-It is possible to install gappy in the usual way using pip::
+It is possible to install gappy in the usual way using pip:
+
+.. code-block:: shell
 
     $ pip install .
 
@@ -173,14 +195,16 @@ required.  In particular, if you installed GAP from source using the
 typical instructions on the `GAP website
 <https://www.gap-system.org/Download/index.html>`_ you will need to point to
 point to the location of your GAP installation by setting the ``GAP_ROOT``
-environment variable like::
+environment variable like:
+
+.. code-block:: shell
 
     $ GAP_ROOT=<path/to/gap/root> pip install .
 
 If you needed to provide ``GAP_ROOT`` for the installation, it is also
 generally necessary to set this environment variable *before* using gappy,
 so that it can find the path to your GAP installation.  See the
-documentation for the `.Gap` class for more information.
+documentation for the ``Gap`` class for more information.
 
 If using GAP from a distribution system such as APT on Debian/Ubuntu or from
 Conda, however, the GAP library (libgap) is typically installed in a
@@ -191,7 +215,9 @@ Conda installation
 ------------------
 
 To give an example of the above point, you can install gappy in a Conda
-environment as follows::
+environment as follows:
+
+.. code-block:: shell
 
     $ conda create -n gap
     $ conda activate gap
@@ -209,3 +235,7 @@ environment as follows::
 
     The conda package for GAP 4.11 had dependency conflicts with Python 3.7
     so you must use Python 3.8 or above, or GAP 4.10.2 with Python 3.7.
+
+.. |logo| image:: https://raw.githubusercontent.com/embray/gappy/master/docs/images/gappy-logo.svg.png
+    :alt: gappy logo
+    :align: middle
