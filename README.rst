@@ -131,6 +131,8 @@ especially if you are more familiar with GAP syntax.  The return value of
 ``gap.eval`` is the result of evaluating the same statement in GAP (the
 semicolon is optional when evaluating a single statement):
 
+.. code-block:: python
+
     >>> rec = gap.eval('rec(a:=123, b:=456, Sym3:=SymmetricGroup(3))')
     >>> rec['Sym3']
     Sym( [ 1 .. 3 ] )
