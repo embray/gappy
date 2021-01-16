@@ -153,6 +153,7 @@ This is also the *only* way to declare new GAP functions from gappy:
     >>> sign(0)
     0
     >>> sign(-99)
+    -1
 
 See the full API documentation for many additional examples of how to use
 the ``gap`` object as well as the built-in ``GapObj`` types.
