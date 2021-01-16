@@ -18,9 +18,9 @@
    version="1.0"
    sodipodi:docname="gappy-logo.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   inkscape:export-filename="/home/embray/Desktop/Python-logo-notext.svg.png"
-   inkscape:export-xdpi="96"
-   inkscape:export-ydpi="96"
+   inkscape:export-filename="/home/embray/src/gap-system/gappy/docs/images/gappy-logo.svg.png"
+   inkscape:export-xdpi="16.93796"
+   inkscape:export-ydpi="16.93796"
    style="enable-background:new">
   <defs
      id="defs2171">
@@ -245,7 +245,7 @@
      inkscape:cx="894.8442"
      inkscape:cy="700.8858"
      inkscape:document-units="px"
-     inkscape:current-layer="layer5"
+     inkscape:current-layer="g2076"
      width="131.10236px"
      height="184.25197px"
      inkscape:window-width="1366"
@@ -338,7 +338,8 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="GAP"
-     transform="translate(377.02539,383.74435)">
+     transform="translate(377.02539,383.74435)"
+     style="display:none">
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:666.66668701px;line-height:0.64999998;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#f2e508;fill-opacity:1;stroke:none;filter:url(#filter1379)"
@@ -356,5 +357,38 @@
          y="1004.4423"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0.64999998;font-family:'Abadi MT Std';-inkscape-font-specification:'Abadi MT Std';text-align:center;text-anchor:middle;fill:#f2e508;fill-opacity:1"
          id="tspan2041">PY</tspan></text>
+  </g>
+  <g
+     transform="translate(377.02539,383.74435)"
+     inkscape:label="GAP as path"
+     id="g2076"
+     inkscape:groupmode="layer">
+    <g
+       aria-label="GAP
+PY"
+       transform="matrix(1.0794,0,0,1.0794,-9.884068,-8.9685563)"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:666.66668701px;line-height:0.64999998;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#f2e508;fill-opacity:1;stroke:none;filter:url(#filter1379)"
+       id="text2074">
+      <path
+         d="m 238.63453,57.955329 c -12.66667,-8 -44.66667,-26.666667 -96.00001,-26.666667 -120.666668,0 -172.66667,116.666668 -172.66667,234.666678 0,152.66667 64.000002,234 138,234 38.66667,0 58.00001,-24.66666 71.33334,-41.33333 l 24.66667,34 h 51.33333 V 247.95534 H 121.96785 v 82 h 34.66667 v 28.66667 c 0,30.66666 -6,50.66666 -26,50.66666 -40.666666,0 -54.666667,-76.66667 -54.666667,-138 0,-48.66667 9.333334,-146.66667 88.000007,-146.66667 32,0 49.33333,14 74.66667,34 z"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0.64999998;font-family:'Abadi MT Std';-inkscape-font-specification:'Abadi MT Std';text-align:center;text-anchor:middle;fill:#f2e508;fill-opacity:1"
+         id="path2078" />
+      <path
+         d="M 400.63453,38.621995 281.96786,492.62201 h 108.66667 l 16.66667,-90 h 86.66667 l 16,90 H 625.3012 L 505.96787,38.621995 Z M 479.3012,321.28867 h -57.33334 l 28,-158.66667 h 1.33334 z"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0.64999998;font-family:'Abadi MT Std';-inkscape-font-specification:'Abadi MT Std';text-align:center;text-anchor:middle;fill:#f2e508;fill-opacity:1"
+         id="path2080" />
+      <path
+         d="M 656.95747,38.621995 V 492.62201 H 762.95748 V 312.622 h 36 c 86.66667,0 151.33334,-47.33333 151.33334,-146 0,-76.66667 -44,-128.000005 -132.00001,-128.000005 z m 139.33334,88.666665 c 30.66667,0 48,18.00001 48,45.33334 0,34.66667 -25.33333,51.33333 -58,51.33333 h -23.33333 v -96.66667 z"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0.64999998;font-family:'Abadi MT Std';-inkscape-font-specification:'Abadi MT Std';text-align:center;text-anchor:middle;fill:#f2e508;fill-opacity:1"
+         id="path2082" />
+      <path
+         d="m 149.79598,550.44223 v 453.99997 h 106 V 824.44224 h 36.00001 c 86.66666,0 151.33333,-47.33333 151.33333,-146 0,-76.66667 -44,-128.00001 -132,-128.00001 z m 139.33334,88.66667 c 30.66667,0 48,18 48,45.33334 0,34.66667 -25.33333,51.33333 -58,51.33333 H 255.79598 V 639.1089 Z"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0.64999998;font-family:'Abadi MT Std';-inkscape-font-specification:'Abadi MT Std';text-align:center;text-anchor:middle;fill:#f2e508;fill-opacity:1"
+         id="path2084" />
+      <path
+         d="m 461.79599,550.44223 104,246.00001 V 1004.4422 H 671.796 V 796.44224 L 779.12933,550.44223 H 657.796 l -37.33334,144.00001 h -1.33333 l -38,-144.00001 z"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0.64999998;font-family:'Abadi MT Std';-inkscape-font-specification:'Abadi MT Std';text-align:center;text-anchor:middle;fill:#f2e508;fill-opacity:1"
+         id="path2086" />
+    </g>
   </g>
 </svg>
