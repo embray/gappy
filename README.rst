@@ -1,8 +1,8 @@
 |logo|
 
-##################################
-gappy -- a Python interface to GAP
-##################################
+#################################
+gappy — a Python interface to GAP
+#################################
 
 gappy provides a Python interface to the `GAP
 <https://www.gap-system.org/>`_ computer algebra system by linking to its
