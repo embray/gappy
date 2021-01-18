@@ -198,6 +198,7 @@ cdef void gasman_callback() with gil:
 
 # To ensure that we call initialize_libgap only once.
 cdef bint _gap_is_initialized = False
+cdef Gap _gap_instance = None
 
 
 cdef char* _reset_error_output_cmd = r"""\
@@ -631,12 +632,21 @@ cdef class Gap:
         gmp_randinit_default(self._gmp_state)
 
     cdef _initialize(self):
-        if not _gap_is_initialized:
+        global _gap_instance
+
+        if _gap_is_initialized:
+            if _gap_instance is not self:
+                raise RuntimeError(
+                    'a different Gap instance has already been initialized; '
+                    'only one Gap instance can be used at a time')
+        else:
             self._init_kwargs.update(initialize(
                 gap_root=self._init_kwargs['gap_root'],
                 autoload=self._init_kwargs['autoload'],
                 libgap_soname=self._init_kwargs['libgap_soname']
             ))
+
+            _gap_instance = self
 
     def __init__(self, gap_root=None, autoinit=False, autoload=False,
                  libgap_soname=None):
