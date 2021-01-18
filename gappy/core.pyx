@@ -453,7 +453,7 @@ cdef Obj gap_eval(str gap_string) except? NULL:
     >>> gap.eval('1+1')  # test that we successfully recover
     2
     """
-    initialize()
+
     cdef Obj result
     cdef int i, j, nresults
     cdef bytes cmd
@@ -1079,7 +1079,7 @@ cdef class Gap:
 
         val = self.get_global(name)
         if val is None:
-            raise AttributeError(f'No GAP global variable bound to {name}.')
+            raise AttributeError(f'no GAP global variable bound to {name!r}')
         return val
 
     def show(self):

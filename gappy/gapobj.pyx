@@ -751,7 +751,7 @@ cdef class GapObj:
         >>> lst.Adddddd(1)
         Traceback (most recent call last):
         ...
-        AttributeError: 'Adddddd' is not defined in GAP
+        AttributeError: no GAP global variable bound to 'Adddddd'
 
         >>> gap.eval('some_name := 1')
         1
@@ -760,14 +760,12 @@ cdef class GapObj:
         ...
         AttributeError: 'some_name' does not define a GAP function
         """
-        if name in ('__dict__', '_getAttributeNames', '__custom_name', 'keys'):
-            raise AttributeError('Python special name, not a GAP function.')
-        try:
-            proxy = make_GapMethodProxy(self.parent(), gap_eval(name), self)
-        except GAPError:
-            raise AttributeError(f"'{name}' is not defined in GAP")
-        if not proxy.is_function():
-            raise AttributeError(f"'{name}' does not define a GAP function")
+        gap = self.parent()
+        func = getattr(gap, name)
+        if not isinstance(func, GapFunction):
+            raise AttributeError(
+                f'{name!r} does not define a GAP function')
+        proxy = make_GapMethodProxy(gap, (<GapObj>func).value, self)
         return proxy
 
     def __str__(self):

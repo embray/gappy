@@ -29,25 +29,13 @@ cpdef get_owned_objects()
 cdef void reference_obj(Obj obj)
 cdef void dereference_obj(Obj obj)
 
-# callback from the GAP memory manager so we can mark all_gap_elements.values()
-cdef void gasman_callback() with gil
-
 
 ############################################################################
 ### Initialization of GAP ##################################################
 ############################################################################
 
-cdef initialize()
 
 cdef class Gap:
     cdef dict _init_kwargs
     cdef gmp_randstate_t _gmp_state
     cdef _initialize(self)
-
-
-############################################################################
-### Evaluate string in GAP #################################################
-############################################################################
-
-# Evaluate a string
-cdef Obj gap_eval(str gap_string) except? NULL
