@@ -171,6 +171,9 @@ Installation
 Prerequisites
 -------------
 
+* Linux-only currently.  Will likely work on MacOS and Cygwin with minimal
+  changes, but it has not been tested yet on these platforms.
+
 * Python 3.7 or up with development headers installed.  On Debian-based
   systems this means:
 
