@@ -230,6 +230,14 @@ environment as follows:
     $ conda install -c conda-forge gap-defaults==4.11 python==3.8
     $ pip install .
 
+Alternatively, you can create the conda environment using the supplied
+`environment.yml
+<https://github.com/embray/gappy/blob/master/environment.yml>`_ file:
+
+.. code-block:: shell
+
+    $ conda env create
+
 .. note::
 
     With Conda and other distributions that install libgap to a standard

@@ -1,0 +1,11 @@
+# Conda environment file
+# Use `conda env create` in this directory to create a conda environment
+# suitable for installing and running gappy; the default name of the
+# environment will be "gappy" unless `-n <env-name>` is also passed to `conda
+# env create`
+name: gappy
+channels:
+    - conda-forge
+dependencies:
+    - gap-defaults=4.11
+    - python=3.8
