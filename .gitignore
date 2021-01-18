@@ -12,6 +12,7 @@ gappy/*.so
 *.dist-info/
 *.egg-info/
 .eggs/
+dist/
 
 ## setuptools_scm files
 gappy/_version.py
