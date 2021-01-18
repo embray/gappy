@@ -4,3 +4,9 @@
 version: 2
 conda:
     environment: environment.yml
+python:
+    install:
+        - method: pip
+          path: .
+          extra_requirements:
+              - docs
