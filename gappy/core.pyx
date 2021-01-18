@@ -658,7 +658,7 @@ cdef class Gap:
                 autoload=self._init_kwargs['autoload'],
                 libgap_soname=self._init_kwargs['libgap_soname']
             ))
-
+            self.post_initialize()
             _gap_instance = self
 
     def __init__(self, gap_root=None, gaprc=None, workspace=None,
@@ -783,6 +783,45 @@ cdef class Gap:
         """
 
         return self._init_kwargs.get('gap_root')
+
+    @property
+    def gaprc(self):
+        """
+        The path to the GAP runtime configuration file being used for this
+        interpreter instance.
+
+        Examples
+        --------
+
+        >>> gap.gaprc  # doctest: +IGNORE_OUTPUT
+        '/path/to/gaprc'
+        """
+
+        return self._init_kwargs.get('gaprc')
+
+    @property
+    def workspace(self):
+        """
+        The path to the GAP workspace loaded by this interpreter instance at
+        startup.
+
+        Examples
+        --------
+
+        >>> gap.workspace  # doctest: +IGNORE_OUTPUT
+        '/path/to/gaprc'
+        """
+
+        return self._init_kwargs.get('workspace')
+
+    def post_initialize(self):
+        """
+        Method called immediately after the GAP interpreter is first
+        initialized.
+
+        The default implementation is currently a no-op but subclasses may
+        override it.  The return value of this method is ignored.
+        """
 
     def eval(self, gap_command):
         """
