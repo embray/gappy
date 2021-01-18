@@ -218,7 +218,8 @@ MakeImmutable(\$GAPPY_ERROUT);
 
 
 # TODO: Change autoload=True by default
-cdef initialize(gap_root=None, autoload=False, libgap_soname=None):
+cdef initialize(gap_root=None, gaprc=None, workspace=None, autoload=False,
+                libgap_soname=None):
     """
     Initialize the GAP library, if it hasn't already been initialized.
 
@@ -230,15 +231,15 @@ cdef initialize(gap_root=None, autoload=False, libgap_soname=None):
 
     global _gap_is_initialized
     if _gap_is_initialized: return
-    # Hack to ensure that all symbols provided by libgap are loaded into the
-    # global symbol table
-    # Note: we could use RTLD_NOLOAD and avoid the subsequent dlclose() but
-    # this isn't portable
 
     if libgap_soname is None:
         libgap_soname = LIBGAP_SONAME
 
     cdef void* handle
+    # Hack to ensure that all symbols provided by libgap are loaded into the
+    # global symbol table
+    # Note: we could use RTLD_NOLOAD and avoid the subsequent dlclose() but
+    # this isn't portable
     handle = dlopen(libgap_soname.encode('ascii'), RTLD_NOW | RTLD_GLOBAL)
     if handle is NULL:
         raise RuntimeError(
@@ -290,7 +291,7 @@ cdef initialize(gap_root=None, autoload=False, libgap_soname=None):
     # Define argv variable, which we will pass in to
     # initialize GAP. Note that we must pass define the memory pool
     # size!
-    cdef char* argv[16]
+    cdef char* argv[19]
     cdef int argc = 14
 
     argv[0] = ''
@@ -319,26 +320,33 @@ cdef initialize(gap_root=None, autoload=False, libgap_soname=None):
         argv[argc] = '-A'
         argc += 1
 
+    if workspace is not None:
+        # Try opening the workspace file, raising the appropriate OSError
+        # if not found/readable
+        workspace = os.path.normpath(workspace)
+
+        with open(workspace, 'rb'):
+            pass
+
+        workspace_ = workspace.encode(_FS_ENCODING, 'surrogateescape')
+        argv[argc] = "-L"
+        argv[argc + 1] = workspace_
+        argc += 2
+
+    if gaprc is not None:
+        # Try opening the gaprc file, raising the appropriate OSError
+        # if not found/readable
+        gaprc = os.path.normpath(gaprc)
+
+        with open(gaprc, 'rb'):
+            pass
+
+        gaprc_ = gaprc.encode(_FS_ENCODING, 'surrogateescape')
+        argv[argc] = gaprc_
+        argc += 1
+
     # argv[argc] must be NULL
     argv[argc] = NULL
-
-    #from .saved_workspace import workspace
-    #workspace, workspace_is_up_to_date = workspace()
-    #ws = str_to_bytes(workspace, FS_ENCODING, "surrogateescape")
-    #if workspace_is_up_to_date:
-    #    argv[argc] = "-L"
-    #    argv[argc + 1] = ws
-    #    argc += 2
-
-    # Get the path to the sage.gaprc file and check that it exists
-    #sage_gaprc = os.path.join(os.path.dirname(__file__), 'sage.gaprc')
-    #if not os.path.exists(sage_gaprc):
-    #    warnings.warn(f"Sage's GAP initialization file {sage_gaprc} is "
-    #                   "is missing; some functionality may be limited")
-    #else:
-    #    sage_gaprc = str_to_bytes(sage_gaprc, FS_ENCODING, "surrogateescape")
-    #    argv[argc] = sage_gaprc
-    #    argc += 1
 
     sig_on()
     # Initialize GAP but disable their SIGINT handler
@@ -360,17 +368,11 @@ cdef initialize(gap_root=None, autoload=False, libgap_soname=None):
     # Return a dict of the final initialization args (after handling defaults)
     return {
         'gap_root': gap_root,
+        'gaprc': gaprc,
+        'workspace': workspace,
         'autoload': autoload,
         'libgap_soname': libgap_soname
     }
-
-    # Save a new workspace if necessary
-    #if not workspace_is_up_to_date:
-    #    prepare_workspace_dir()
-    #    from sage.misc.temporary_file import atomic_write
-    #    with atomic_write(workspace) as f:
-    #        f.close()
-    #        gap_eval('SaveWorkspace("{0}")'.format(f.name))
 
 
 ############################################################################
@@ -610,7 +612,15 @@ cdef class Gap:
     gap_root : `str` or `pathlib.Path`
         Path to the GAP installation (GAP_ROOT) you want to use for the GAP
         interpreter.  This should be the path containing the ``lib/`` and
-        ``pkg/`` directories for the standard GAP libraries.
+        ``pkg/`` directories for the standard GAP libraries.  Equivalent to
+        the ``-l`` command-line argument to ``gap``.
+    gaprc : `str` or `pathlib.Path`
+        A GAP "runtime config" file containing GAP commands to run immediately
+        upon GAP interpreter startup.  Equivalent to passing a GAP file to
+        ``gap`` on the command-line.
+    workspace : `str` or `pathlib.Path`
+        An existing GAP workspace to restore upon interpreter startup.
+        Equivalent to the ``-L`` command-line argument to ``gap``.
     autoinit : bool
         Immediately initialize the GAP interpreter when initializing this
         `Gap` instance.  Otherwise the interpreter is initialized "lazily"
@@ -618,7 +628,8 @@ cdef class Gap:
         an `~Gap.eval` call or global variable lookup) (default: `False`).
     autoload : bool
         Automatically load the default recommended GAP packages when starting
-        the GAP interpreter (default: `False`).
+        the GAP interpreter.  If `False` this is equivalent to passing the
+        ``-A`` command-line argument to ``gap`` (default: `False`).
 
     Examples
     --------
@@ -642,14 +653,16 @@ cdef class Gap:
         else:
             self._init_kwargs.update(initialize(
                 gap_root=self._init_kwargs['gap_root'],
+                gaprc=self._init_kwargs['gaprc'],
+                workspace=self._init_kwargs['workspace'],
                 autoload=self._init_kwargs['autoload'],
                 libgap_soname=self._init_kwargs['libgap_soname']
             ))
 
             _gap_instance = self
 
-    def __init__(self, gap_root=None, autoinit=False, autoload=False,
-                 libgap_soname=None):
+    def __init__(self, gap_root=None, gaprc=None, workspace=None,
+                 autoinit=False, autoload=False, libgap_soname=None):
         if _gap_is_initialized:
             raise RuntimeError(
                 "the GAP interpreter has already been initialized; only one "
@@ -657,6 +670,8 @@ cdef class Gap:
 
         self._init_kwargs.update({
             'gap_root': gap_root,
+            'gaprc': gaprc,
+            'workspace': workspace,
             'autoload': autoload,
             'libgap_soname': libgap_soname
         })
