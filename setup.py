@@ -53,11 +53,12 @@ class build_ext(_build_ext):
                 self.gap_lib = os.path.join(self.gap_root, '.libs')
 
         # Automatic support for building in a conda environment with the
-        # conda-provided Python
-        conda_prefix = os.environ.get('CONDA_PREFIX')
-        if conda_prefix and sys.executable.startswith(conda_prefix):
-            self.include_dirs.insert(0, os.path.join(conda_prefix, 'include'))
-            self.library_dirs.insert(0, os.path.join(conda_prefix, 'lib'))
+        # conda-provided Python; this is more reliable than using CONDA_PREFIX
+        # which may not be set if a conda Python is run without activating
+        # the environment
+        if os.path.exists(os.path.join(sys.prefix, 'conda-meta')):
+            self.include_dirs.insert(0, os.path.join(sys.prefix, 'include'))
+            self.library_dirs.insert(0, os.path.join(sys.prefix, 'lib'))
 
     def run(self):
         if self._using_gap_root:
