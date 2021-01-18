@@ -4,6 +4,8 @@
 gappy — a Python interface to GAP
 #################################
 
+|docs-badge|
+
 gappy provides a Python interface to the `GAP
 <https://www.gap-system.org/>`_ computer algebra system by linking to its
 library interface.
@@ -253,3 +255,7 @@ Alternatively, you can create the conda environment using the supplied
 .. |logo| image:: https://raw.githubusercontent.com/embray/gappy/master/docs/images/gappy-logo.svg.png
     :alt: gappy logo
     :align: middle
+    
+.. |docs-badge| image:: https://readthedocs.org/projects/gappy/badge/?version=latest
+    :target: https://gappy.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
