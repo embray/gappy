@@ -217,7 +217,7 @@ MakeImmutable(\$GAPPY_ERROUT);
 
 
 # TODO: Change autoload=True by default
-cdef initialize(gap_root=None, libgap_soname=None, autoload=False):
+cdef initialize(gap_root=None, autoload=False, libgap_soname=None):
     """
     Initialize the GAP library, if it hasn't already been initialized.
 
@@ -355,6 +355,13 @@ cdef initialize(gap_root=None, libgap_soname=None, autoload=False):
 
     # Finished!
     _gap_is_initialized = True
+
+    # Return a dict of the final initialization args (after handling defaults)
+    return {
+        'gap_root': gap_root,
+        'autoload': autoload,
+        'libgap_soname': libgap_soname
+    }
 
     # Save a new workspace if necessary
     #if not workspace_is_up_to_date:
@@ -585,14 +592,32 @@ cdef class Gap:
     r"""
     The GAP interpreter object.
 
-    .. NOTE::
+    .. note::
 
-        This object must be instantiated exactly once.  Always use the provided
-        ``gap`` instance, and never instantiate :class:`Gap` manually.
+        When initializing this class, it does not immediately initialize the
+        underlying GAP interpreter unless passed ``autoinit=True``.  Otherwise
+        the GAP interpreter is not initialized until the first `Gap.eval` call
+        or the first GAP global lookup.
 
-        # TODO: Actually this will change when Gap becomes a singleton class; it
-        will be safe to initialize Gap() with alternate arguments from the
-        defaults before its first use; after that it cannot be re-initialized.
+        The default interpreter instance `gap` is initialized with some default
+        parameters, but before its first use you may initialize your own `Gap`
+        instance with different parameters.
+
+    Parameters
+    ----------
+
+    gap_root : `str` or `pathlib.Path`
+        Path to the GAP installation (GAP_ROOT) you want to use for the GAP
+        interpreter.  This should be the path containing the ``lib/`` and
+        ``pkg/`` directories for the standard GAP libraries.
+    autoinit : bool
+        Immediately initialize the GAP interpreter when initializing this
+        `Gap` instance.  Otherwise the interpreter is initialized "lazily"
+        when the first interaction with the interpreter is needed (either
+        an `~Gap.eval` call or global variable lookup) (default: `False`).
+    autoload : bool
+        Automatically load the default recommended GAP packages when starting
+        the GAP interpreter (default: `False`).
 
     Examples
     --------
@@ -602,7 +627,32 @@ cdef class Gap:
     """
 
     def __cinit__(self):
+        self._init_kwargs = {}
         gmp_randinit_default(self._gmp_state)
+
+    cdef _initialize(self):
+        if not _gap_is_initialized:
+            self._init_kwargs.update(initialize(
+                gap_root=self._init_kwargs['gap_root'],
+                autoload=self._init_kwargs['autoload'],
+                libgap_soname=self._init_kwargs['libgap_soname']
+            ))
+
+    def __init__(self, gap_root=None, autoinit=False, autoload=False,
+                 libgap_soname=None):
+        if _gap_is_initialized:
+            raise RuntimeError(
+                "the GAP interpreter has already been initialized; only one "
+                "GAP interpreter may be initialized in the current process")
+
+        self._init_kwargs.update({
+            'gap_root': gap_root,
+            'autoload': autoload,
+            'libgap_soname': libgap_soname
+        })
+
+        if autoinit:
+            self._initialize()
 
     def __call__(self, x):
         r"""
@@ -665,7 +715,7 @@ cdef class Gap:
         Sym( [ 1 .. 3 ] )
 
         """
-        initialize()
+        self._initialize()
         if isinstance(x, GapObj):
             return x
         elif isinstance(x, (list, tuple)):
@@ -693,6 +743,21 @@ cdef class Gap:
                 pass
             x = str(x._gap_init_())
             return make_any_gap_obj(self, gap_eval(x))
+
+    @property
+    def gap_root(self):
+        """
+        The path to the GAP installation being used for this interpreter
+        instance.
+
+        Examples
+        --------
+
+        >>> gap.gap_root  # doctest: +IGNORE_OUTPUT
+        '/path/to/gap_installation'
+        """
+
+        return self._init_kwargs.get('gap_root')
 
     def eval(self, gap_command):
         """
@@ -724,7 +789,7 @@ cdef class Gap:
         if not isinstance(gap_command, str):
             gap_command = str(gap_command._gap_init_())
 
-        initialize()
+        self._initialize()
         elem = make_any_gap_obj(self, gap_eval(gap_command))
 
         # If the element is NULL just return None instead
@@ -787,7 +852,7 @@ cdef class Gap:
 
         cdef bytes name
 
-        initialize()
+        self._initialize()
         name = variable.encode('utf-8')
 
         if not GAP_CanAssignGlobalVariable(name):
@@ -820,7 +885,7 @@ cdef class Gap:
 
         cdef bytes name
 
-        initialize()
+        self._initialize()
         name = variable.encode('utf-8')
 
         if not GAP_CanAssignGlobalVariable(name):
@@ -859,7 +924,7 @@ cdef class Gap:
         cdef Obj obj
         cdef bytes name
 
-        initialize()
+        self._initialize()
         name = variable.encode('utf-8')
 
         try:
@@ -901,7 +966,7 @@ cdef class Gap:
         >>> gap.get_global('FooBar')
         1
         """
-        initialize()
+        self._initialize()
         return GlobalVariableContext(self, variable, value)
 
     def set_seed(self, seed=None):
@@ -923,6 +988,8 @@ cdef class Gap:
         cdef mpz_t z_seed
         cdef Obj gap_seed
 
+        self._initialize()
+
         if seed is None:
             mpz_init(z_seed)
             mpz_rrandomb(z_seed, self._gmp_state, 128)
@@ -935,9 +1002,6 @@ cdef class Gap:
         Reset(self.GlobalRandomSource, seed)
         return seed
 
-    # TODO: Update this to display something more useful, such as the
-    # arguments Gap was initialized with (e.g. gap_root path).
-    # For that matter, gap_root should also be exposed as a property.
     def __repr__(self):
         r"""
         Return a string representation of ``self``.
@@ -951,9 +1015,9 @@ cdef class Gap:
         --------
 
         >>> gap
-        C library interface to GAP
+        <Gap(gap_root='...')>
         """
-        return 'C library interface to GAP'
+        return f'<Gap(gap_root={self.gap_root!r})>'
 
     def __dir__(self):
         """
@@ -1084,7 +1148,7 @@ cdef class Gap:
         >>> del a
         >>> gap.collect()
         """
-        initialize()
+        self._initialize()
         rc = GAP_CollectBags(1)
         if rc != 1:
             raise RuntimeError('Garbage collection failed.')

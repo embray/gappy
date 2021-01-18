@@ -40,7 +40,9 @@ cdef void gasman_callback() with gil
 cdef initialize()
 
 cdef class Gap:
+    cdef dict _init_kwargs
     cdef gmp_randstate_t _gmp_state
+    cdef _initialize(self)
 
 
 ############################################################################
