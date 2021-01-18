@@ -2,6 +2,7 @@
 import glob
 import os
 import tempfile
+import sys
 from distutils.command.build_ext import build_ext as _build_ext
 from distutils.errors import DistutilsOptionError
 
@@ -51,6 +52,12 @@ class build_ext(_build_ext):
             if self.gap_lib is None:
                 self.gap_lib = os.path.join(self.gap_root, '.libs')
 
+        # Automatic support for building in a conda environment with the
+        # conda-provided Python
+        conda_prefix = os.environ.get('CONDA_PREFIX')
+        if conda_prefix and sys.executable.startswith(conda_prefix):
+            self.include_dirs.insert(0, os.path.join(conda_prefix, 'include'))
+            self.library_dirs.insert(0, os.path.join(conda_prefix, 'lib'))
 
     def run(self):
         if self._using_gap_root:
