@@ -20,8 +20,8 @@ from cysignals.signals cimport sig_on, sig_off
 
 import locale
 import os
-import warnings
 import sys
+import warnings
 from numbers import Rational
 
 from .context_managers import GlobalVariableContext
@@ -640,6 +640,7 @@ cdef class Gap:
 
     def __cinit__(self):
         self._init_kwargs = {}
+        self._converter_registry = {}
         gmp_randinit_default(self._gmp_state)
 
     cdef _initialize(self):
@@ -683,11 +684,6 @@ cdef class Gap:
         r"""
         Construct GapObj instances from a given object that either has a
         registered converter or a ``_gap_`` or ``_gap_init_`` method.
-
-        .. todo::
-
-            Actually implement the converter registry interface.  For now some
-            of the hand-coded conversions from Sage are implemented.
 
         Parameters
         ----------
@@ -743,31 +739,127 @@ cdef class Gap:
         self._initialize()
         if isinstance(x, GapObj):
             return x
-        elif isinstance(x, (list, tuple)):
-            return make_GapList(self, make_gap_list(self, x))
-        elif isinstance(x, dict):
-            return make_GapRecord(self, make_gap_record(self, x))
+        elif isinstance(x, str):
+            return make_GapString(self, make_gap_string(x))
+        # TODO: Add support for bytes
         elif isinstance(x, bool):
             # attention: must come before int
             return make_GapBoolean(self, GAP_True if x else GAP_False)
         elif isinstance(x, int):
             return make_GapInteger(self, make_gap_integer(x))
-        elif isinstance(x, float):
-            return make_GapFloat(self, make_gap_float(x))
         elif isinstance(x, Rational):
             return self(x.numerator) / self(x.denominator)
-        elif isinstance(x, str):
-            return make_GapString(self, make_gap_string(x))
+        elif isinstance(x, (list, tuple)):
+            return make_GapList(self, make_gap_list(self, x))
+        elif isinstance(x, dict):
+            return make_GapRecord(self, make_gap_record(self, x))
+        elif isinstance(x, float):
+            return make_GapFloat(self, make_gap_float(x))
         elif x is None:
             return make_GapObj(self, NULL)
-        # TODO: Add support for bytes
         else:
-            try:
-                return x._gap_(self)
-            except AttributeError:
-                pass
-            x = str(x._gap_init_())
-            return make_any_gap_obj(self, gap_eval(x))
+            converter_name = None
+            converter = self._converter_registry.get(type(x))
+            if converter is None:
+                for type_ in self._converter_registry:
+                    if isinstance(x, type_):
+                        converter = self._converter_registry[type_]
+                        break
+
+            if converter is None:
+                if hasattr(x, '_gap_'):
+                    ret = x._gap_(self)
+                elif hasattr(x, '_gap_init_'):
+                    ret = self._from_gap_init(x)
+                else:
+                    raise ValueError(
+                        f'could not convert {type(x).__name__} to a GAP object')
+            else:
+                ret = converter(x, self)
+
+            if not isinstance(ret, GapObj):
+                raise ValueError(
+                    f'converter for {type(x).__name__} must return an '
+                    f'instance of GapObj, got {type(ret).__name__}')
+            return ret
+
+    cpdef _from_gap_init(self, x):
+        """
+        Helper for creating `.GapObj`\s from objects with a ``_gap_init_``
+        method.
+        """
+
+        return make_any_gap_obj(self, gap_eval(str(x._gap_init_())))
+
+    def register_converter(self, cls, converter):
+        """
+        Register a converter from a Python type to any type of `.GapObj`.
+
+        This allows providing converters for objects that do not have a
+        ``_gap_`` or ``_gap_init_`` method.  While it is preferable to use
+        the special methods, this allows adapting classes that do not have
+        these methods, without having to subclass or wrap them.
+
+        The type must not be one of the types that already have built-in
+        converters; namely: `str`, `list`, `tuple`, `dict`, `bool`, `int`,
+        `float`, `number.Rational`, or `GapObj` itself.
+
+        When converting a Python object to a GAP object, first the built-in
+        converters are tried.  Then the registry of converters is checked for
+        an *exact* type match.  If no exact match is found, an `isinstance`
+        check is performed for each type in the registry.
+
+        The converter is any callable which is passed the the object to convert
+        and the`Gap` interpreter instance as its first two arguments, and must
+        return a `GapObj` instance.
+
+        Examples
+        --------
+
+        Say we have a class ``PermGroup`` which represents a permutation group
+        as a list of permutation generators, themselves representing
+        permutations as tuples (which happen to have the same syntax as GAP
+        permutations, a fact we can exploit).  This example does not give the
+        full implementation of such a class, just the general data structure
+        to demonstrate implementing the converter function:
+
+        >>> class PermGroup:
+        ...     def __init__(self, *gens):
+        ...         self.gens = list(gens)
+        ...
+        >>> def PermGroup_to_gap(group, gap):
+        ...     return gap.eval(f'Group({group.gens})')
+        ...
+        >>> gap.register_converter(PermGroup, PermGroup_to_gap)
+        >>> group = PermGroup((1, 2), (1, 2, 3, 4, 5, 6, 7, 8))
+        >>> gap(group)
+        Group([ (1,2), (1,2,3,4,5,6,7,8) ])
+        """
+
+        builtin_types = (str, list, tuple, dict, bool, int, float, Rational,
+                         GapObj)
+
+        if isinstance(cls, builtin_types):
+            builtin_names = ', '.join(t.__name__ for t in builtin_types)
+            raise ValueError(
+                f'type must not be a subclass of one of the types with '
+                f'built-in converters: {builtin_names}')
+
+        if not isinstance(cls, type):
+            raise ValueError('cls must be a Python class')
+
+        if not callable(converter):
+            # TODO: Maybe check the signature as well?
+            raise ValueError(
+                f'{type.__name__} converter {converter} must be callable')
+
+        if cls in self._converter_registry:
+            warnings.warn(
+                f'{cls} already has a registered converter '
+                f'{self._converter_registry[cls]}; it will be replaced by '
+                f'{converter}')
+
+        self._converter_registry[cls] = converter
 
     @property
     def gap_root(self):
