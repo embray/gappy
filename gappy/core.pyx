@@ -643,7 +643,12 @@ cdef class Gap:
         self._converter_registry = {}
         gmp_randinit_default(self._gmp_state)
 
-    cdef _initialize(self):
+    cpdef initialize(self):
+        """
+        Manually initialize the underlying GAP interpreter if it is has not
+        already been automatically initialized.
+        """
+
         global _gap_instance
 
         if _gap_is_initialized:
@@ -659,7 +664,6 @@ cdef class Gap:
                 autoload=self._init_kwargs['autoload'],
                 libgap_soname=self._init_kwargs['libgap_soname']
             ))
-            self.post_initialize()
             _gap_instance = self
 
     def __init__(self, gap_root=None, gaprc=None, workspace=None,
@@ -678,7 +682,7 @@ cdef class Gap:
         })
 
         if autoinit:
-            self._initialize()
+            self.initialize()
 
     def __call__(self, x):
         r"""
@@ -736,7 +740,7 @@ cdef class Gap:
         Sym( [ 1 .. 3 ] )
 
         """
-        self._initialize()
+        self.initialize()
         if isinstance(x, GapObj):
             return x
         elif isinstance(x, str):
@@ -906,15 +910,6 @@ cdef class Gap:
 
         return self._init_kwargs.get('workspace')
 
-    def post_initialize(self):
-        """
-        Method called immediately after the GAP interpreter is first
-        initialized.
-
-        The default implementation is currently a no-op but subclasses may
-        override it.  The return value of this method is ignored.
-        """
-
     def eval(self, gap_command):
         """
         Evaluate a gap command and wrap the result.
@@ -945,7 +940,7 @@ cdef class Gap:
         if not isinstance(gap_command, str):
             gap_command = str(gap_command._gap_init_())
 
-        self._initialize()
+        self.initialize()
         elem = make_any_gap_obj(self, gap_eval(gap_command))
 
         # If the element is NULL just return None instead
@@ -1008,7 +1003,7 @@ cdef class Gap:
 
         cdef bytes name
 
-        self._initialize()
+        self.initialize()
         name = variable.encode('utf-8')
 
         if not GAP_CanAssignGlobalVariable(name):
@@ -1041,7 +1036,7 @@ cdef class Gap:
 
         cdef bytes name
 
-        self._initialize()
+        self.initialize()
         name = variable.encode('utf-8')
 
         if not GAP_CanAssignGlobalVariable(name):
@@ -1080,7 +1075,7 @@ cdef class Gap:
         cdef Obj obj
         cdef bytes name
 
-        self._initialize()
+        self.initialize()
         name = variable.encode('utf-8')
 
         try:
@@ -1122,7 +1117,7 @@ cdef class Gap:
         >>> gap.get_global('FooBar')
         1
         """
-        self._initialize()
+        self.initialize()
         return GlobalVariableContext(self, variable, value)
 
     def set_seed(self, seed=None):
@@ -1144,7 +1139,7 @@ cdef class Gap:
         cdef mpz_t z_seed
         cdef Obj gap_seed
 
-        self._initialize()
+        self.initialize()
 
         if seed is None:
             mpz_init(z_seed)
@@ -1304,7 +1299,7 @@ cdef class Gap:
         >>> del a
         >>> gap.collect()
         """
-        self._initialize()
+        self.initialize()
         rc = GAP_CollectBags(1)
         if rc != 1:
             raise RuntimeError('Garbage collection failed.')

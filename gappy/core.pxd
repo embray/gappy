@@ -39,5 +39,5 @@ cdef class Gap:
     cdef dict _init_kwargs
     cdef readonly dict _converter_registry
     cdef gmp_randstate_t _gmp_state
-    cdef _initialize(self)
+    cpdef initialize(self)
     cpdef _from_gap_init(self, x)
