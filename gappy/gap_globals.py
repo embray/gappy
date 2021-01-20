@@ -14,6 +14,9 @@
 from .gap_functions import common_gap_functions
 
 
+__all__ = ['common_gap_globals']
+
+
 # selected gap globals to use in tab completion
 common_gap_globals = set([
   'Assert',

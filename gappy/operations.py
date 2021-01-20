@@ -13,7 +13,10 @@ import re
 import string
 
 
-NAME_RE = re.compile(r'(Setter|Getter|Tester)\((.*)\)')
+__all__ = ['OperationInspector']
+
+
+_NAME_RE = re.compile(r'(Setter|Getter|Tester)\((.*)\)')
 
 
 class OperationInspector:
@@ -130,7 +133,7 @@ class OperationInspector:
             name = str(NameFunction(f))
             if name[0] not in string.ascii_letters:
                 continue
-            match = NAME_RE.match(name)
+            match = _NAME_RE.match(name)
             if match:
                 result.add(match.groups()[1])
             else:

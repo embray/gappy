@@ -44,6 +44,9 @@ The value is reset even if exceptions occur::
 ###############################################################################
 
 
+__all__ = ['GlobalVariableContext']
+
+
 class GlobalVariableContext:
     """
     Context manager for GAP global variables.

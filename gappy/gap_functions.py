@@ -11,6 +11,8 @@
 ###############################################################################
 
 
+__all__ = ['common_gap_functions']
+
 
 # selected gap functions to use in tab completion
 common_gap_functions = set([
