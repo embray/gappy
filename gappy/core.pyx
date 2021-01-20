@@ -720,10 +720,10 @@ cdef class Gap:
         NULL
 
         A class with a ``_gap_`` method to convert itself to an equivalent
-        `~gappy.gapobj.GapObj`:
+        `~gappy.gapobj.GapObj`; it is also passed the active `Gap` instance:
 
         >>> class MyGroup:
-        ...     def _gap_(self):
+        ...     def _gap_(self, gap):
         ...         return gap.SymmetricGroup(3)
         ...
         >>> gap(MyGroup())
@@ -763,7 +763,7 @@ cdef class Gap:
         # TODO: Add support for bytes
         else:
             try:
-                return x._gap_()
+                return x._gap_(self)
             except AttributeError:
                 pass
             x = str(x._gap_init_())
