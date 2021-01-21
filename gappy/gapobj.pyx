@@ -361,7 +361,7 @@ cdef GapObj make_any_gap_obj(parent, Obj obj):
         elif num_eq_tnam(num, 'T_PERM2') or num_eq_tnam(num, 'T_PERM4'):
             return make_GapPermutation(parent, obj)
         elif num_eq_tnam(num, 'T_CHAR'):
-            ch = str(make_GapObj(parent, obj).IntChar())
+            ch = make_GapObj(parent, obj).IntChar()
             return make_GapString(parent, make_gap_string(chr(ch)))
 
         result = make_GapObj(parent, obj)
