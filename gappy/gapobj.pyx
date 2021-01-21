@@ -304,6 +304,8 @@ cdef GapObj make_any_gap_obj(parent, Obj obj):
     [ "aa", "ab", "ac", "bb", "bc", "cc" ]
     >>> t[1]
     "ab"
+    >>> type(t[1])
+    <class 'gappy.gapobj.GapString'>
     >>> str(t[1])
     'ab'
     >>> list(t)
@@ -318,7 +320,7 @@ cdef GapObj make_any_gap_obj(parent, Obj obj):
     >>> irr[1]
     0
     """
-    cdef Obj TNUM_OBJ, num
+    cdef Obj TNUM_OBJ, IS_STRING_CONV, num
     cdef Obj args[1]
 
     try:
@@ -330,6 +332,12 @@ cdef GapObj make_any_gap_obj(parent, Obj obj):
         elif GAP_IsString(obj):
             return make_GapString(parent, obj)
         elif GAP_IsList(obj):
+            # According to GAP a list of characters is also a string
+            if GAP_LenList(obj) != 0:
+                IS_STRING_CONV = GAP_ValueGlobalVariable('IS_STRING_CONV')
+                args[0] = obj
+                if GAP_CallFuncArray(IS_STRING_CONV, 1, args) == GAP_True:
+                    return make_GapString(parent, obj)
             return make_GapList(parent, obj)
         elif GAP_IsRecord(obj):
             return make_GapRecord(parent, obj)
