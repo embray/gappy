@@ -51,17 +51,17 @@ cdef Obj make_gap_list(parent, lst) except NULL:
         A GAP C ``Obj`` representing a GAP list.
     """
     cdef Obj l
-    cdef GapObj elem
+    cdef GapObj obj
     try:
         GAP_Enter()
         l = GAP_NewPlist(len(lst))
         for idx, x in enumerate(lst):
             if not isinstance(x, GapObj):
-                elem = <GapObj>parent(x)
+                obj = <GapObj>parent(x)
             else:
-                elem = <GapObj>x
+                obj = <GapObj>x
 
-            GAP_AssList(l, idx + 1, elem.value)
+            GAP_AssList(l, idx + 1, obj.value)
         return l
     finally:
         GAP_Leave()
@@ -150,15 +150,18 @@ cdef Obj make_gap_record(parent, dct) except NULL:
     """
 
     cdef Obj rec, name
-    cdef GapObj val
+    cdef GapObj obj
 
     try:
         GAP_Enter()
         rec = GAP_NewPrecord(len(dct))
         for key, val in dct.items():
             name = make_gap_string(str(key))
-            val = parent(val)
-            GAP_AssRecord(rec, name, val.value)
+            if not isinstance(val, GapObj):
+                obj = <GapObj>parent(val)
+            else:
+                obj = <GapObj>val
+            GAP_AssRecord(rec, name, obj.value)
         return rec
     finally:
         GAP_Leave()
@@ -2728,6 +2731,12 @@ cdef class GapRecord(GapObj):
     {'b': 456, 'a': 123}
     >>> type(_)
     <... 'dict'>
+
+    We can also convert a Python `dict` to a `GapRecord`:
+
+    >>> rec = gap({'a': 123, 'b': 456})
+    >>> rec
+    rec( a := 123, b := 456 )
 
     Key checking is performed:
 
