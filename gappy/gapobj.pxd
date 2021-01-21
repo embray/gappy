@@ -12,7 +12,6 @@
 from .gap_includes cimport Obj, UInt
 
 cdef Obj make_gap_list(parent, lst) except NULL
-cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL
 cdef Obj make_gap_record(parent, dct) except NULL
 cdef Obj make_gap_integer(x) except NULL
 cdef Obj make_gap_float(x) except NULL

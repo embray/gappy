@@ -67,51 +67,6 @@ cdef Obj make_gap_list(parent, lst) except NULL:
         GAP_Leave()
 
 
-cdef Obj make_gap_matrix(parent, lst, gap_ring) except NULL:
-    """
-    Convert Python lists into GAP matrices.
-
-    .. todo::
-
-        Perhaps support Numpy arrays as well.
-
-    Parameters
-    ----------
-
-    a : list
-        A `list` of `GapObj` and/or Python objects that can be converted
-        to `GapObj`.
-    gap_ring : GapRing
-        The base ring.
-
-    If ``gap_ring`` is ``None``, nothing is made to make sure that all
-    coefficients live in the same GAP ring.  The resulting GAP list may not be
-    recognized as a matrix by GAP.
-
-    Returns
-    -------
-
-    ``Obj``
-        A GAP C ``Obj`` representing a GAP list.
-    """
-    cdef GapObj l = parent.eval('[]')
-    cdef GapObj elem
-    cdef GapObj one
-    if gap_ring is not None:
-        one = <GapObj>gap_ring.One()
-    else:
-        one = <GapObj>parent(1)
-    for x in lst:
-        if not isinstance(x, GapObj):
-            elem = <GapObj>parent(x)
-            elem = elem * one
-        else:
-            elem = <GapObj>x
-
-        GAP_AssList(l.value, GAP_LenList(l.value) + 1, elem.value)
-    return l.value
-
-
 cdef void capture_stdout(Obj func, Obj obj, Obj out):
     """
     Call a single-argument GAP function ``func`` with the argument ``obj``
