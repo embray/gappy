@@ -58,7 +58,6 @@ cdef class GapObj:
     cpdef _mul_(self, other)
     cpdef _mod_(self, other)
     cpdef _pow_(self, other)
-    cpdef _pow_int(self, other)
     cpdef _richcmp_(self, other, int op)
 
     cpdef GapObj deepcopy(self, bint mut)

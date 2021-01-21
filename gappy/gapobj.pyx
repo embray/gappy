@@ -1264,16 +1264,6 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_obj(self._parent, result)
 
-    cpdef _pow_int(self, other):
-        """
-        Tests
-        -----
-
-            >>> gap(5)._pow_int(int(2))
-            25
-        """
-        return self._pow_(self._parent(other))
-
     def is_function(self):
         """
         Return whether the wrapped GAP object is a function.
