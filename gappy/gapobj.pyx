@@ -2040,17 +2040,16 @@ cdef class GapFunction(GapObj):
 
     def __cinit__(self):
         self._doc = None
+        self._name = None
 
     @property
     def __name__(self):
         """Return the function's name or "unknown" for unbound functions."""
 
-        return str(self._name())
+        if self._name is None:
+            self._name = str(self.parent().NameFunction(self))
 
-    cpdef GapObj _name(self):
-        """Return the function's name as a `GapString`."""
-
-        return self.parent().NameFunction(self)
+        return self._name
 
     @property
     def __doc__(self):
@@ -2243,7 +2242,7 @@ cdef class GapFunction(GapObj):
                 gap.SetGAPDocTextTheme('none')
 
             matches = gap.HELP_GET_MATCHES(gap.HELP_KNOWN_BOOKS[0],
-                                           gap.SIMPLE_STRING(self._name()),
+                                           gap.SIMPLE_STRING(self.__name__),
                                            True)
 
             # HELP_GET_MATCHES returns 'exact' matches and 'topic' matches; in
@@ -2295,6 +2294,64 @@ cdef class GapFunction(GapObj):
                 gap.set_global('GAPDocTextTheme', old_text_theme, force=True)
             if old_screen_size is not None:
                 gap.SizeScreen(old_screen_size)
+
+
+cdef GapLazyFunction make_GapLazyFunction(parent, str name, str doc, str source):
+    r"""
+    Make a `GapLazyFunction`; used for the `~gappy.Gap.gap_function` decorator.
+    """
+
+    cdef GapLazyFunction r = GapLazyFunction.__new__(GapLazyFunction)
+    r._initialize(parent, NULL)
+    r._name = name
+    r._doc = doc
+    r._source = source
+    return r
+
+
+cdef class GapLazyFunction(GapFunction):
+    """
+    Special subclass of `GapFunction` used in the implementation of
+    `~gappy.Gap.gap_function`.
+
+    Instances of this do not initially wrap a GAP function, instead the
+    wrap the source code for a GAP function, until it is called.  Then the
+    wrapped source is evaluated and the resulting GAP function object is
+    stored.  This class can be instantiated before the GAP interpreter is
+    initialized, but calling it will automatically initialize the GAP
+    interpreter if it has not already been.
+
+    Otherwise it appears to the user the same as a `GapFunction`.
+    """
+
+    def __cinit__(self):
+        self._source = None
+
+    def __str__(self):
+        if self.value == NULL:
+            return str(self._source)
+
+        return GapFunction.__str__(self)
+
+    def __call__(self, *args):
+        if self.value == NULL:
+            func = self.parent().eval(self._source or '')
+            if func is None or not func.is_function():
+                raise RuntimeError(
+                    f'wrapped code does not define a GAP function: '
+                    f'{self._source}')
+
+            self.value = (<GapFunction>func).value
+            # Create our own reference to the wrapped function object, since
+            # the temporary one will be deleted
+            reference_obj(self.value)
+
+            # Delete the source code since we no longer need to keep it
+            # in memory
+            self._source = None
+
+        # Otherwise go ahead and call ourselves like a normal function
+        return GapFunction.__call__(self, *args)
 
 
 ############################################################################

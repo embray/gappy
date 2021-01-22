@@ -20,6 +20,7 @@ from cysignals.signals cimport sig_on, sig_off
 
 import locale
 import os
+import re
 import sys
 import warnings
 from numbers import Integral, Rational, Real
@@ -992,6 +993,59 @@ cdef class Gap:
             return None
 
         return elem
+
+    def gap_function(self, func):
+        """
+        Create GAP functions from decorated Python functions.
+
+        The code for the GAP function is actually written in the Python
+        function's docstring like so::
+
+            >>> @gap.gap_function
+            ... def one():
+            ...     '''
+            ...     Returns the multiplicative identity of the ring of integers.
+            ...
+            ...     function()
+            ...         return 1;
+            ...     end;
+            ...     '''
+            ...
+            >>> one
+            <GAP function "one">
+            >>> one()
+            1
+
+        Any text in the docstring before the first line beginning the text
+        ``function()`` is used as the function's docstring.  Any following
+        text is considered part of the function definition::
+
+            >>> one.help()
+            'Returns the multiplicative identity of the ring of integers.'
+
+        Note that using this decorator does *not* cause the GAP interpreter
+        to be initialized, so it can be used in module or class-level code.
+        The GAP interpreter will only be initialized (if needed) the first time
+        the function is called.
+
+        Any Python code in the function's body will be disregarded, so this is
+        in effect syntactic sugar for::
+
+            >>> one = gap.eval('function() return 1; end;')
+
+        with the difference being that it can be used to pre-define GAP
+        functions without invoking the GAP interpreter directly.
+        """
+
+        match = re.search(r'^\s*function\(\)', func.__doc__ or '', re.M)
+        if match is None:
+            raise ValueError(
+                f'the docstring for {func} does not contain a GAP function '
+                f'definition; it should contain one line beginning with '
+                f'function() and the rest should be valid GAP code')
+        doc = func.__doc__[:match.start()].strip()
+        source = func.__doc__[match.start():].strip()
+        return make_GapLazyFunction(self, func.__name__, doc, source)
 
     def load_package(self, pkg):
         """

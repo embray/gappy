@@ -139,7 +139,7 @@ semicolon is optional when evaluating a single statement):
     >>> rec['Sym3']
     Sym( [ 1 .. 3 ] )
 
-This is also the *only* way to declare new GAP functions from gappy:
+This is also an easy way to declare new GAP functions from gappy:
 
 .. code-block:: python
 

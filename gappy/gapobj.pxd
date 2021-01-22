@@ -27,6 +27,7 @@ cdef GapRational make_GapRational(parent, Obj obj)
 cdef GapString make_GapString(parent, Obj obj)
 cdef GapBoolean make_GapBoolean(parent, Obj obj)
 cdef GapFunction make_GapFunction(parent, Obj obj)
+cdef GapLazyFunction make_GapLazyFunction(parent, str name, str doc, str source)
 cdef GapPermutation make_GapPermutation(parent, Obj obj)
 
 cdef void capture_stdout(Obj, Obj, Obj)
@@ -90,8 +91,11 @@ cdef class GapBoolean(GapObj):
     pass
 
 cdef class GapFunction(GapObj):
-    cpdef GapObj _name(self)
+    cdef str _name
     cdef object _doc
+
+cdef class GapLazyFunction(GapFunction):
+    cdef str _source
 
 cdef class GapMethodProxy(GapFunction):
     cdef GapObj first_argument
