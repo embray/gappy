@@ -2421,6 +2421,8 @@ cdef GapMethodProxy make_GapMethodProxy(GapFunction func, self):
     """
     cdef GapMethodProxy r = GapMethodProxy.__new__(GapMethodProxy)
     r._initialize(func.parent(), func.value)
+    r.name = func.name
+    r.doc = func.doc
     r.func = func
     r.self = self
     return r
@@ -2446,12 +2448,6 @@ cdef class GapMethodProxy:
     >>> lst
     [ 1 ]
     """
-
-    def __str__(self):
-        return self.func.__str__()
-
-    def __repr__(self):
-        return self.func.__repr__()
 
     def __call__(self, *args):
         """
