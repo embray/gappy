@@ -2738,6 +2738,24 @@ cdef class GapRecord(GapObj):
     >>> rec['a']
     123
 
+    `GapRecord`\s also support dot notation for item lookups in order to
+    mimic GAP syntax:
+
+    >>> rec.a
+    123
+
+    Except in the rare case where this would be shadowed by a Python builtin
+    attribute or method of `GapRecord`, in which case the item getter ``[]``
+    syntax should be used:
+
+    >>> rec2 = gap({'names': ['a', 'b'], 'a': 1, 'b': 2})
+    >>> rec2.names
+    <built-in method names of gappy.gapobj.GapRecord object at 0x...>
+    >>> rec2['names']
+    [ "a", "b" ]
+    >>> rec2.a
+    1
+
     We can easily convert a GAP record object into a Python `dict`:
 
     >>> dict(rec)
@@ -2844,6 +2862,20 @@ cdef class GapRecord(GapObj):
 
         for name in self._names():
             yield (str(name), self._getitem(name))
+
+    def __getattr__(self, name):
+        r"""
+        In the special case where ``name`` is one of the names in the record,
+        return the associated value, unless this would shadow any existing
+        attributes inherited from the class.
+
+        Otherwise return the default ``__getattr__`` for `GapObj`\s.
+        """
+
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            return super().__getattr__(name)
 
     def __getitem__(self, name):
         r"""
