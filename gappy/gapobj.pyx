@@ -743,7 +743,7 @@ cdef class GapObj:
         if not isinstance(func, GapFunction):
             raise AttributeError(
                 f'{name!r} does not define a GAP function')
-        proxy = make_GapMethodProxy(gap, (<GapObj>func).value, self)
+        proxy = make_GapMethodProxy(<GapFunction>func, self)
         return proxy
 
     def __str__(self):
@@ -2076,6 +2076,22 @@ cdef class GapFunction(GapObj):
         """
         return f'<GAP function "{self.__name__}">'
 
+    def __get__(self, obj, cls):
+        """
+        Bind the current object to a `GapMethodProxy`.
+
+        This allows GAP functions in classes to be used like methods, with
+        the first argument bound to ``self``.
+        """
+
+        cdef GapMethodProxy method
+
+        if obj is None:
+            return self
+
+        method = make_GapMethodProxy(self, obj)
+        return method
+
     def __call__(self, *args):
         r"""
         Call syntax for functions.
@@ -2129,7 +2145,7 @@ cdef class GapFunction(GapObj):
          Alt( [ 1 .. 4 ] ),
          Group([ (1,4)(2,3), (...)(...) ])]
 
-        Not every ``GapObj`` is callable:
+        Not every `GapObj` is callable:
 
         >>> f = gap(3)
         >>> f()
@@ -2145,6 +2161,19 @@ cdef class GapFunction(GapObj):
         [ 5 ]
         >>> a.Add(10); a
         [ 5, 10 ]
+
+        It is also possible to use `GapFunction`\s as *methods* if they
+        are in the body of a user-defined class.  In this case an instance
+        of the class they belong to are passed as the first argument (the
+        ``self``) just like a normal Python method.  In this case the instances
+        of the class must also be convertable to GAP objects:
+
+        >>> class MyInt(int):
+        ...     is_prime = gap.IsPrime
+        ...
+        >>> three = MyInt(3)
+        >>> three.is_prime()
+        true
 
         Tests
         ^^^^^
@@ -2296,13 +2325,14 @@ cdef class GapFunction(GapObj):
                 gap.SizeScreen(old_screen_size)
 
 
-cdef GapLazyFunction make_GapLazyFunction(parent, str name, str doc, str source):
+cdef _GapLazyFunction make_GapLazyFunction(parent, str name, str doc,
+                                           str source):
     r"""
-    Make a `GapLazyFunction`; used for the `~gappy.core.Gap.gap_function`
+    Make a `_GapLazyFunction`; used for the `~gappy.core.Gap.gap_function`
     decorator.
     """
 
-    cdef GapLazyFunction r = GapLazyFunction.__new__(GapLazyFunction)
+    cdef _GapLazyFunction r = _GapLazyFunction.__new__(_GapLazyFunction)
     r._initialize(parent, NULL)
     r.name = name
     r.doc = doc
@@ -2310,7 +2340,7 @@ cdef GapLazyFunction make_GapLazyFunction(parent, str name, str doc, str source)
     return r
 
 
-cdef class GapLazyFunction(GapFunction):
+cdef class _GapLazyFunction(GapFunction):
     """
     Special subclass of `GapFunction` used in the implementation of
     `~gappy.core.Gap.gap_function`.
@@ -2334,12 +2364,6 @@ cdef class GapLazyFunction(GapFunction):
 
         return GapFunction.__str__(self)
 
-    def __get__(self, obj, cls):
-        if obj is None:
-            return self
-
-        return make_GapLazyMethod(self.parent(), self, obj)
-
     def __call__(self, *args):
         if self.value == NULL:
             func = self.parent().eval(self.source or '')
@@ -2361,42 +2385,13 @@ cdef class GapLazyFunction(GapFunction):
         return GapFunction.__call__(self, *args)
 
 
-cdef GapLazyMethod make_GapLazyMethod(parent, GapLazyFunction wrapped,
-                                      object self):
-    r"""
-    Make a `GapLazyMethod`; used for the `~gappy.core.Gap.gap_function`
-    decorator.
-    """
-
-    cdef GapLazyMethod r = GapLazyMethod.__new__(GapLazyMethod)
-    r._initialize(parent, wrapped.value)
-    r.name = wrapped.name
-    r.doc = wrapped.doc
-    r.source = wrapped.source
-    r.self = self
-    return r
-
-
-cdef class GapLazyMethod(GapLazyFunction):
-    r"""
-    Method wrapper for `GapLazyFunction`.
-
-    Used when `~gappy.core.Gap.gap_function` is used on a method definition
-    in a class.
-    """
-
-    def __call__(self, *args):
-        return GapLazyFunction.__call__(self, self.self, *args)
-
-
 ############################################################################
 ### GapMethodProxy #########################################################
 ############################################################################
 
-cdef GapMethodProxy make_GapMethodProxy(parent, Obj function,
-                                        GapObj base_object):
+cdef GapMethodProxy make_GapMethodProxy(GapFunction func, self):
     r"""
-    Turn a GAP C function object (of type ``Obj``) into a Python
+    Wrap a `GapFunction` function object and its first argument in
     `GapMethodProxy`.
 
     This class implement syntactic sugar so that you can write ``gapobj.f()``
@@ -2405,12 +2400,11 @@ cdef GapMethodProxy make_GapMethodProxy(parent, Obj function,
     Parameters
     ----------
 
-    parent : `~gappy.core.Gap`
-        The GAP interpreter wrapper currently in use.
-    obj : ``Obj``
-        A C GAP ``Obj`` of type ``T_FUNCTION`` to wrap.
-    base_object : `GapObj`
-        The GAP object this method is "bound" to.
+    func : `~gappy.gapobj.GapFunction`
+        The `GapFunction` to wrap.
+    self
+        The GAP object this method is "bound" to, or any Python object which
+        can be converted to a GAP object.
 
     Returns
     -------
@@ -2426,19 +2420,19 @@ cdef GapMethodProxy make_GapMethodProxy(parent, Obj function,
     <class 'gappy.gapobj.GapMethodProxy'>
     """
     cdef GapMethodProxy r = GapMethodProxy.__new__(GapMethodProxy)
-    r._initialize(parent, function)
-    r.self = base_object
+    r._initialize(func.parent(), func.value)
+    r.func = func
+    r.self = self
     return r
 
 
-cdef class GapMethodProxy(GapFunction):
+cdef class GapMethodProxy:
     r"""
     Helper class returned by ``GapObj.__getattr__``.
 
-    Derived class of GapObj for GAP functions. Like its parent,
-    you can call instances to implement function call syntax. The only
-    difference is that a fixed first argument is prepended to the
-    argument list.
+    Like its wrapped `GapFunction`, you can call instances to implement
+    function call syntax. The only difference is that a fixed first argument is
+    prepended to the argument list.
 
     Examples
     --------
@@ -2452,6 +2446,12 @@ cdef class GapMethodProxy(GapFunction):
     >>> lst
     [ 1 ]
     """
+
+    def __str__(self):
+        return self.func.__str__()
+
+    def __repr__(self):
+        return self.func.__repr__()
 
     def __call__(self, *args):
         """
@@ -2483,10 +2483,9 @@ cdef class GapMethodProxy(GapFunction):
         [ 1,, 3, 4, 5 ]
         """
         if len(args) > 0:
-            return GapFunction.__call__(self, * ([self.self] + list(args)))
+            return self.func.__call__(self.self, *args)
         else:
-            return GapFunction.__call__(self, self.self)
-
+            return self.func.__call__(self.self)
 
 
 ############################################################################
