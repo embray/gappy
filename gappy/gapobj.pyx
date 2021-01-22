@@ -1888,7 +1888,7 @@ cdef class GapBoolean(GapObj):
 
         >>> for x in gap_bool:
         ...     if not x:     # this calls __bool__
-        ...         print("{} {}".format( x, type(x)))
+        ...         print("{} {}".format(x, type(x)))
         false <class 'gappy.gapobj.GapBoolean'>
         fail <class 'gappy.gapobj.GapBoolean'>
         """
