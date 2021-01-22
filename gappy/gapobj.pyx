@@ -2084,13 +2084,10 @@ cdef class GapFunction(GapObj):
         the first argument bound to ``self``.
         """
 
-        cdef GapMethodProxy method
-
         if obj is None:
             return self
 
-        method = make_GapMethodProxy(self, obj)
-        return method
+        return make_GapMethodProxy(self, obj)
 
     def __call__(self, *args):
         r"""
