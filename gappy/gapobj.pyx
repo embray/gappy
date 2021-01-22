@@ -2230,7 +2230,11 @@ cdef class GapFunction(GapObj):
         width = 80  # TODO: Make this customizable?
 
         try:
-            GAP_Enter()
+            # Save the old text theme and set it to "none"; in particular to
+            # strip out terminal control codes
+            if gap.get_global('SetGAPDocTextTheme') is not None:
+                old_text_theme = gap.GAPDocTextTheme.deepcopy(1)
+                gap.SetGAPDocTextTheme('none')
 
             matches = gap.HELP_GET_MATCHES(gap.HELP_KNOWN_BOOKS[0],
                                            gap.SIMPLE_STRING(self._name()),
@@ -2245,12 +2249,6 @@ cdef class GapFunction(GapObj):
                 return ''
 
             handler = gap.HELP_BOOK_HANDLER[book['handler']]
-
-            # Save the old text theme and set it to "none"; in particular to
-            # strip out terminal control codes
-            if gap.get_global('SetGAPDocTextTheme') is not None:
-                old_text_theme = gap.GAPDocTextTheme
-                gap.SetGAPDocTextTheme('none')
 
             # Set the screen width to 80 (otherwise it will produce text with
             # lines up to 4096, the hard-coded maximum line length)
@@ -2285,11 +2283,12 @@ cdef class GapFunction(GapObj):
             return self._doc
         finally:
             if old_text_theme is not None:
-                gap.SetGAPDocTextTheme(old_text_theme)
+                # NOTE: Don't use SetGAPDocTextTheme to restore the old theme
+                # as this appears to break GAPDoc; see
+                # https://github.com/frankluebeck/GAPDoc/issues/45
+                gap.set_global('GAPDocTextTheme', old_text_theme, force=True)
             if old_screen_size is not None:
                 gap.SizeScreen(old_screen_size)
-
-            GAP_Leave()
 
 
 ############################################################################
