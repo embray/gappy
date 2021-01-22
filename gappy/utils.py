@@ -14,6 +14,20 @@ import sys
 import psutil
 
 
+_SPECIAL_ATTRS = set([
+    '_ipython_canary_method_should_not_exist_',
+    '_repr_mimebundle_'
+])
+"""
+Special attributes which should not be looked up in GAP.
+
+Mostly intended to prevent IPython's custom display hook from unintentially
+initializing the GAP interpreter.
+"""
+# _repr_mimebundle_ should not be needed here; this seems to be a bug in
+# Ipython
+
+
 def get_gap_memory_pool_size(unit='m'):
     """
     Get the gap memory pool size for new GAP processes.

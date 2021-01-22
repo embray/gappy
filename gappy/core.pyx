@@ -30,7 +30,7 @@ from .gap_globals import common_gap_globals as GAP_GLOBALS
 from .gap_includes cimport *
 from .gapobj cimport *
 from .gmp cimport *
-from .utils import get_gap_memory_pool_size
+from .utils import get_gap_memory_pool_size, _SPECIAL_ATTRS
 
 
 cdef extern from "<dlfcn.h>" nogil:
@@ -1273,6 +1273,9 @@ cdef class Gap:
         >>> gap.GlobalRandomSource
         <RandomSource in IsGlobalRandomSource>
         """
+        if name in _SPECIAL_ATTRS:
+            # Prevent unintended GAP initialization when displaying in IPython
+            raise AttributeError(name)
 
         val = self.get_global(name)
         if val is None:

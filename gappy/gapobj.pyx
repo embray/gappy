@@ -27,6 +27,7 @@ from .gmp cimport *
 from .core cimport *
 from .exceptions import GAPError
 from .operations import OperationInspector
+from .utils import _SPECIAL_ATTRS
 
 
 ############################################################################
@@ -732,6 +733,11 @@ cdef class GapObj:
         ...
         AttributeError: 'some_name' does not define a GAP function
         """
+
+        if name in _SPECIAL_ATTRS:
+            # Prevent unintended GAP initialization when displaying in IPython
+            raise AttributeError(name)
+
         gap = self.parent()
         func = getattr(gap, name)
         if not isinstance(func, GapFunction):
