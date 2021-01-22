@@ -910,7 +910,7 @@ cdef class Gap:
 
         return self._init_kwargs.get('workspace')
 
-    def eval(self, gap_command):
+    cpdef eval(self, gap_command):
         """
         Evaluate a gap command and wrap the result.
 
@@ -1045,7 +1045,7 @@ cdef class Gap:
 
         GAP_AssignGlobalVariable(name, NULL)
 
-    def get_global(self, variable):
+    cpdef get_global(self, variable):
         """
         Get a GAP global variable
 
