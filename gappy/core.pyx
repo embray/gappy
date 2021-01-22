@@ -647,6 +647,9 @@ cdef class Gap:
         """
         Manually initialize the underlying GAP interpreter if it is has not
         already been automatically initialized.
+
+        Returns `True` if this initialized the GAP interpreter for the first
+        time, or `False` if the interpreter was already initialized.
         """
 
         global _gap_instance
@@ -656,15 +659,17 @@ cdef class Gap:
                 raise RuntimeError(
                     'a different Gap instance has already been initialized; '
                     'only one Gap instance can be used at a time')
-        else:
-            self._init_kwargs.update(initialize(
-                gap_root=self._init_kwargs['gap_root'],
-                gaprc=self._init_kwargs['gaprc'],
-                workspace=self._init_kwargs['workspace'],
-                autoload=self._init_kwargs['autoload'],
-                libgap_soname=self._init_kwargs['libgap_soname']
-            ))
-            _gap_instance = self
+            return False
+
+        self._init_kwargs.update(initialize(
+            gap_root=self._init_kwargs['gap_root'],
+            gaprc=self._init_kwargs['gaprc'],
+            workspace=self._init_kwargs['workspace'],
+            autoload=self._init_kwargs['autoload'],
+            libgap_soname=self._init_kwargs['libgap_soname']
+        ))
+        _gap_instance = self
+        return True
 
     def __init__(self, gap_root=None, gaprc=None, workspace=None,
                  autoinit=False, autoload=False, libgap_soname=None):
