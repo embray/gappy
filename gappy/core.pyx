@@ -631,6 +631,14 @@ cdef class Gap:
         the GAP interpreter.  If `False` this is equivalent to passing the
         ``-A`` command-line argument to ``gap`` (default: `False`).
 
+    Attributes
+    ----------
+    supported_builtins : tuple
+        The basic Python types for which gappy has built-in support for
+        conversion to equivalent GAP objects; currently: `str`, `bool`,
+        `int`, `numbers.Integral`, `numbers.Rational`, `float`, `numbers.Real`,
+        `list`, `tuple`, `dict`, `None`.
+
     Examples
     --------
 
@@ -639,6 +647,9 @@ cdef class Gap:
     """
 
     def __cinit__(self):
+        # NOTE: When updating this please also update the docstring above;
+        # unfortunately there is no straightforward way for Sphinx to extract
+        # its value automatically.
         self.supported_builtins = (
             str, bool, int, Integral, Rational, float, Real, list, tuple, dict,
             type(None)
@@ -835,8 +846,7 @@ cdef class Gap:
         these methods, without having to subclass or wrap them.
 
         The type must not be one of the types that already have built-in
-        converters; namely: `str`, `list`, `tuple`, `dict`, `bool`, `int`,
-        `float`, `number.Rational`, or `GapObj` itself.
+        converters; see `Gap.supported_builtins`.
 
         When converting a Python object to a GAP object, first the built-in
         converters are tried.  Then the registry of converters is checked for
@@ -844,8 +854,8 @@ cdef class Gap:
         check is performed for each type in the registry.
 
         The converter is any callable which is passed the the object to convert
-        and the`Gap` interpreter instance as its first two arguments, and must
-        return a `GapObj` instance.
+        and the `Gap` interpreter instance as its first two arguments, and must
+        return a `.GapObj` instance.
 
         .. note::
 
