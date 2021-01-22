@@ -463,7 +463,7 @@ cdef Obj gap_eval(str gap_string) except? NULL:
     # Careful: We need to keep a reference to the bytes object here
     # so that Cython doesn't deallocate it before GAP is done with
     # its contents.
-    cmd = (gap_string + ';\n').encode('utf-8')
+    cmd = (gap_string.strip() + ';\n').encode('utf-8')
     sig_on()
     try:
         GAP_Enter()
