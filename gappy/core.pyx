@@ -1015,7 +1015,7 @@ cdef class Gap:
             raise RuntimeError(f'Error loading GAP package {pkg}.')
         return ret
 
-    def set_global(self, variable, value):
+    def set_global(self, variable, value, force=False):
         """
         Set a GAP global variable
 
@@ -1027,6 +1027,9 @@ cdef class Gap:
         value
             Any `~gappy.gapobj.GapObj` or Python object that can be converted
             to a GAP object.  Passing `None` is equivalent to `Gap.unset_global`.
+        force : bool
+            If `True`, sets the value of the global even if it is read-only;
+            otherwise an `AttributeError` is raised.
 
         Examples
         --------
@@ -1049,13 +1052,22 @@ cdef class Gap:
 
         self.initialize()
         name = variable.encode('utf-8')
+        restore_readonly = False
 
         if not GAP_CanAssignGlobalVariable(name):
-            raise AttributeError(
-                f'Cannot set read-only GAP global variable {variable}')
+            if force:
+                self.MakeReadWriteGlobal(name)
+                restore_readonly = True
+            else:
+                raise AttributeError(
+                    f'Cannot set read-only GAP global variable {variable}')
 
-        obj = self(value)
-        GAP_AssignGlobalVariable(name, (<GapObj>obj).value)
+        try:
+            obj = self(value)
+            GAP_AssignGlobalVariable(name, (<GapObj>obj).value)
+        finally:
+            if restore_readonly:
+                self.MakeReadOnlyGlobal(name)
 
     def unset_global(self, variable):
         """
