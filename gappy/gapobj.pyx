@@ -249,8 +249,9 @@ cdef Obj make_gap_string(s) except NULL:
     Parameters
     ----------
 
-    s : str
-        A Python `str`.
+    s : str, bytes
+        A Python `str` or `bytes`; in the former case the string is encoded
+        with UTF-8.
 
     Returns
     -------
@@ -259,9 +260,14 @@ cdef Obj make_gap_string(s) except NULL:
         A GAP C ``Obj`` representing a GAP string.
     """
 
+    cdef bytes b
+
     try:
         GAP_Enter()
-        b = s.encode('utf-8')
+        if not isinstance(s, bytes):
+            b = s.encode('utf-8')
+        else:
+            b = s
         return GAP_MakeStringWithLen(b, len(b))
     finally:
         GAP_Leave()

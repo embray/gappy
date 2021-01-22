@@ -635,9 +635,9 @@ cdef class Gap:
     ----------
     supported_builtins : tuple
         The basic Python types for which gappy has built-in support for
-        conversion to equivalent GAP objects; currently: `str`, `bool`,
-        `int`, `numbers.Integral`, `numbers.Rational`, `float`, `numbers.Real`,
-        `list`, `tuple`, `dict`, `None`.
+        conversion to equivalent GAP objects; currently: `str`, `bytes`,
+        `bool`, `int`, `numbers.Integral`, `numbers.Rational`, `float`,
+        `numbers.Real`, `list`, `tuple`, `dict`, `None`.
 
     Examples
     --------
@@ -651,8 +651,8 @@ cdef class Gap:
         # unfortunately there is no straightforward way for Sphinx to extract
         # its value automatically.
         self.supported_builtins = (
-            str, bool, int, Integral, Rational, float, Real, list, tuple, dict,
-            type(None)
+            str, bytes, bool, int, Integral, Rational, float, Real, list,
+            tuple, dict, type(None)
         )
         self._init_kwargs = {}
         self._converter_registry = {}
@@ -713,10 +713,9 @@ cdef class Gap:
         ----------
 
         x
-            Any Python object that can be converted to a GAP object.  By
-            default the following types are converted: `~gappy.gapobj.GapObj`,
-            `list`, `tuple`, `dict`, `bool`, `int`, `float`, `number.Rational`,
-            `str`, and `None`.
+            Any Python object that can be converted to a GAP object.  For the
+            list of types that have built-in support for conversion to GAP
+            objects, see `.supported_builtins`.
 
         Returns
         -------
@@ -771,9 +770,8 @@ cdef class Gap:
         self.initialize()
         if isinstance(x, GapObj):
             return x
-        elif isinstance(x, str):
+        elif isinstance(x, (str, bytes)):
             return make_GapString(self, make_gap_string(x))
-        # TODO: Add support for bytes
         elif isinstance(x, bool):
             # attention: must come before int
             return make_GapBoolean(self, GAP_True if x else GAP_False)
