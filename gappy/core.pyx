@@ -22,7 +22,7 @@ import locale
 import os
 import sys
 import warnings
-from numbers import Rational
+from numbers import Integral, Rational, Real
 
 from .context_managers import GlobalVariableContext
 from .exceptions import GAPError
@@ -639,6 +639,10 @@ cdef class Gap:
     """
 
     def __cinit__(self):
+        self.supported_builtins = (
+            str, bool, int, Integral, Rational, float, Real, list, tuple, dict,
+            type(None)
+        )
         self._init_kwargs = {}
         self._converter_registry = {}
         gmp_randinit_default(self._gmp_state)
@@ -744,6 +748,14 @@ cdef class Gap:
         >>> gap(MyGroup2())
         Sym( [ 1 .. 3 ] )
 
+        .. note::
+
+            Both the ``_gap_`` method and any converter function registered
+            with `Gap.register_converter` may return either a
+            `~gappy.gapobj.GapObj` *or* one of the built-in types in
+            `Gap.supported_builtins` which is then in turn converted to the
+            appropriate GAP object.
+
         """
         self.initialize()
         if isinstance(x, GapObj):
@@ -754,16 +766,23 @@ cdef class Gap:
         elif isinstance(x, bool):
             # attention: must come before int
             return make_GapBoolean(self, GAP_True if x else GAP_False)
-        elif isinstance(x, int):
-            return make_GapInteger(self, make_gap_integer(x))
+        elif isinstance(x, (int, Integral)):
+            return make_GapInteger(self, make_gap_integer(int(x)))
         elif isinstance(x, Rational):
-            return self(x.numerator) / self(x.denominator)
+            num, denom = x.numerator, x.denominator
+            # Special hack for Sage which doesn't implement the Rational
+            # ABC correctly; see https://trac.sagemath.org/ticket/28234
+            if callable(num):
+                num = num()
+            if callable(denom):
+                denom = denom()
+            return self(num) / self(denom)
         elif isinstance(x, (list, tuple)):
             return make_GapList(self, make_gap_list(self, x))
         elif isinstance(x, dict):
             return make_GapRecord(self, make_gap_record(self, x))
-        elif isinstance(x, float):
-            return make_GapFloat(self, make_gap_float(x))
+        elif isinstance(x, (float, Real)):
+            return make_GapFloat(self, make_gap_float(float(x)))
         elif x is None:
             return make_GapObj(self, NULL)
         else:
@@ -782,14 +801,20 @@ cdef class Gap:
                     ret = self._from_gap_init(x)
                 else:
                     raise ValueError(
-                        f'could not convert {type(x).__name__} to a GAP object')
+                        f'could not convert {x} to a GAP object')
             else:
                 ret = converter(x, self)
 
             if not isinstance(ret, GapObj):
+                if isinstance(ret, self.supported_builtins):
+                    return self.__call__(ret)
+
+                builtins = ', '.join(
+                        t.__name__ for t in self.supported_builtins)
                 raise ValueError(
                     f'converter for {type(x).__name__} must return an '
-                    f'instance of GapObj, got {type(ret).__name__}')
+                    f'instance of GapObj or one of {builtins}; '
+                    f'got {type(ret).__name__}')
             return ret
 
     cpdef _from_gap_init(self, x):
@@ -822,6 +847,14 @@ cdef class Gap:
         and the`Gap` interpreter instance as its first two arguments, and must
         return a `GapObj` instance.
 
+        .. note::
+
+            Both the ``_gap_`` method and any converter function registered
+            with `Gap.register_converter` may return either a
+            `~gappy.gapobj.GapObj` *or* one of the built-in types in
+            `Gap.supported_builtins` which is then in turn converted to the
+            appropriate GAP object.
+
         Examples
         --------
 
@@ -845,11 +878,9 @@ cdef class Gap:
         Group([ (1,2), (1,2,3,4,5,6,7,8) ])
         """
 
-        builtin_types = (str, list, tuple, dict, bool, int, float, Rational,
-                         GapObj)
-
-        if isinstance(cls, builtin_types):
-            builtin_names = ', '.join(t.__name__ for t in builtin_types)
+        if isinstance(cls, self.supported_builtins):
+            builtin_names = ', '.join(t.__name__
+                                      for t in self.supported_builtins)
             raise ValueError(
                 f'type must not be a subclass of one of the types with '
                 f'built-in converters: {builtin_names}')

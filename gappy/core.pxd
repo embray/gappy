@@ -36,6 +36,7 @@ cdef void dereference_obj(Obj obj)
 
 
 cdef class Gap:
+    cdef readonly supported_builtins
     cdef dict _init_kwargs
     cdef readonly dict _converter_registry
     cdef gmp_randstate_t _gmp_state
