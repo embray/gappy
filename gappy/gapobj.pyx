@@ -2039,17 +2039,17 @@ cdef class GapFunction(GapObj):
     """
 
     def __cinit__(self):
-        self._doc = None
-        self._name = None
+        self.doc = None
+        self.name = None
 
     @property
     def __name__(self):
         """Return the function's name or "unknown" for unbound functions."""
 
-        if self._name is None:
-            self._name = str(self.parent().NameFunction(self))
+        if self.name is None:
+            self.name = str(self.parent().NameFunction(self))
 
-        return self._name
+        return self.name
 
     @property
     def __doc__(self):
@@ -2226,8 +2226,8 @@ cdef class GapFunction(GapObj):
 
         cdef bytes line_bytes
 
-        if self._doc is not None:
-            return self._doc
+        if self.doc is not None:
+            return self.doc
 
         old_text_theme = None
         old_screen_size = None
@@ -2284,8 +2284,8 @@ cdef class GapFunction(GapObj):
             # NOTE: There is some metadata in the book object about its
             # encoding type but for now just assuming UTF-8 (which is true
             # e.g. for the GAP Reference Manual)
-            self._doc = dedent(doc.decode('utf-8', 'surrogageescape')).strip()
-            return self._doc
+            self.doc = dedent(doc.decode('utf-8', 'surrogageescape')).strip()
+            return self.doc
         finally:
             if old_text_theme is not None:
                 # NOTE: Don't use SetGAPDocTextTheme to restore the old theme
@@ -2298,21 +2298,22 @@ cdef class GapFunction(GapObj):
 
 cdef GapLazyFunction make_GapLazyFunction(parent, str name, str doc, str source):
     r"""
-    Make a `GapLazyFunction`; used for the `~gappy.Gap.gap_function` decorator.
+    Make a `GapLazyFunction`; used for the `~gappy.core.Gap.gap_function`
+    decorator.
     """
 
     cdef GapLazyFunction r = GapLazyFunction.__new__(GapLazyFunction)
     r._initialize(parent, NULL)
-    r._name = name
-    r._doc = doc
-    r._source = source
+    r.name = name
+    r.doc = doc
+    r.source = source
     return r
 
 
 cdef class GapLazyFunction(GapFunction):
     """
     Special subclass of `GapFunction` used in the implementation of
-    `~gappy.Gap.gap_function`.
+    `~gappy.core.Gap.gap_function`.
 
     Instances of this do not initially wrap a GAP function, instead the
     wrap the source code for a GAP function, until it is called.  Then the
@@ -2325,21 +2326,27 @@ cdef class GapLazyFunction(GapFunction):
     """
 
     def __cinit__(self):
-        self._source = None
+        self.source = None
 
     def __str__(self):
         if self.value == NULL:
-            return str(self._source)
+            return str(self.source)
 
         return GapFunction.__str__(self)
 
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+
+        return make_GapLazyMethod(self.parent(), self, obj)
+
     def __call__(self, *args):
         if self.value == NULL:
-            func = self.parent().eval(self._source or '')
+            func = self.parent().eval(self.source or '')
             if func is None or not func.is_function():
                 raise RuntimeError(
                     f'wrapped code does not define a GAP function: '
-                    f'{self._source}')
+                    f'{self.source}')
 
             self.value = (<GapFunction>func).value
             # Create our own reference to the wrapped function object, since
@@ -2348,10 +2355,38 @@ cdef class GapLazyFunction(GapFunction):
 
             # Delete the source code since we no longer need to keep it
             # in memory
-            self._source = None
+            self.source = None
 
         # Otherwise go ahead and call ourselves like a normal function
         return GapFunction.__call__(self, *args)
+
+
+cdef GapLazyMethod make_GapLazyMethod(parent, GapLazyFunction wrapped,
+                                      object self):
+    r"""
+    Make a `GapLazyMethod`; used for the `~gappy.core.Gap.gap_function`
+    decorator.
+    """
+
+    cdef GapLazyMethod r = GapLazyMethod.__new__(GapLazyMethod)
+    r._initialize(parent, wrapped.value)
+    r.name = wrapped.name
+    r.doc = wrapped.doc
+    r.source = wrapped.source
+    r.self = self
+    return r
+
+
+cdef class GapLazyMethod(GapLazyFunction):
+    r"""
+    Method wrapper for `GapLazyFunction`.
+
+    Used when `~gappy.core.Gap.gap_function` is used on a method definition
+    in a class.
+    """
+
+    def __call__(self, *args):
+        return GapLazyFunction.__call__(self, self.self, *args)
 
 
 ############################################################################
@@ -2392,7 +2427,7 @@ cdef GapMethodProxy make_GapMethodProxy(parent, Obj function,
     """
     cdef GapMethodProxy r = GapMethodProxy.__new__(GapMethodProxy)
     r._initialize(parent, function)
-    r.first_argument = base_object
+    r.self = base_object
     return r
 
 
@@ -2448,9 +2483,9 @@ cdef class GapMethodProxy(GapFunction):
         [ 1,, 3, 4, 5 ]
         """
         if len(args) > 0:
-            return GapFunction.__call__(self, * ([self.first_argument] + list(args)))
+            return GapFunction.__call__(self, * ([self.self] + list(args)))
         else:
-            return GapFunction.__call__(self, self.first_argument)
+            return GapFunction.__call__(self, self.self)
 
 
 

@@ -91,14 +91,21 @@ cdef class GapBoolean(GapObj):
     pass
 
 cdef class GapFunction(GapObj):
-    cdef str _name
-    cdef object _doc
+    cdef str name
+    cdef object doc
 
 cdef class GapLazyFunction(GapFunction):
-    cdef str _source
+    cdef str source
+
+cdef GapLazyMethod make_GapLazyMethod(parent, GapLazyFunction wrapped,
+                                      object self)
+
+cdef class GapLazyMethod(GapLazyFunction):
+    cdef GapLazyFunction wrapped
+    cdef object self
 
 cdef class GapMethodProxy(GapFunction):
-    cdef GapObj first_argument
+    cdef GapObj self
 
 cdef class GapList(GapObj):
     pass

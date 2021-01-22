@@ -998,30 +998,33 @@ cdef class Gap:
         """
         Create GAP functions from decorated Python functions.
 
-        The code for the GAP function is actually written in the Python
-        function's docstring like so::
+        Examples
+        --------
 
-            >>> @gap.gap_function
-            ... def one():
-            ...     '''
-            ...     Returns the multiplicative identity of the ring of integers.
-            ...
-            ...     function()
-            ...         return 1;
-            ...     end;
-            ...     '''
-            ...
-            >>> one
-            <GAP function "one">
-            >>> one()
-            1
+        The code for the GAP function is actually written in the Python
+        function's docstring like so:
+
+        >>> @gap.gap_function
+        ... def one():
+        ...     '''
+        ...     Returns the multiplicative identity of the ring of integers.
+        ...
+        ...     function()
+        ...         return 1;
+        ...     end;
+        ...     '''
+        ...
+        >>> one
+        <GAP function "one">
+        >>> one()
+        1
 
         Any text in the docstring before the first line beginning the text
         ``function()`` is used as the function's docstring.  Any following
-        text is considered part of the function definition::
+        text is considered part of the function definition:
 
-            >>> one.help()
-            'Returns the multiplicative identity of the ring of integers.'
+        >>> one.help()
+        'Returns the multiplicative identity of the ring of integers.'
 
         Note that using this decorator does *not* cause the GAP interpreter
         to be initialized, so it can be used in module or class-level code.
@@ -1029,15 +1032,50 @@ cdef class Gap:
         the function is called.
 
         Any Python code in the function's body will be disregarded, so this is
-        in effect syntactic sugar for::
+        in effect syntactic sugar for:
 
-            >>> one = gap.eval('function() return 1; end;')
+        >>> one = gap.eval('function() return 1; end;')
 
         with the difference being that it can be used to pre-define GAP
         functions without invoking the GAP interpreter directly.
+
+        This decorator may also be used on methods in classes.  In this case
+        the ``self``--the instance of the class on which it is defined, is
+        always passed as the first argument to the GAP function, *if* it has
+        a conversion to a GAP type:
+
+        >>> class MyInt(int):
+        ...     @gap.gap_function
+        ...     def n_partitions(self):
+        ...         '''
+        ...         Compute the number of integer partitions.
+        ...
+        ...         function(n)
+        ...             local np;
+        ...             if n < 0 then
+        ...                 Error("must be a non-negative integer");
+        ...             fi;
+        ...             np:= function(n, m)
+        ...                local i, res;
+        ...                if n = 0 then
+        ...                   return 1;
+        ...                fi;
+        ...                res:= 0;
+        ...                for i in [1..Minimum(n,m)] do
+        ...                   res:= res + np(n-i, i);
+        ...                od;
+        ...                return res;
+        ...             end;
+        ...             return np(n,n);
+        ...         end;
+        ...         '''
+        ...
+        >>> ten = MyInt(10)
+        >>> ten.n_partitions()
+        42
         """
 
-        match = re.search(r'^\s*function\(\)', func.__doc__ or '', re.M)
+        match = re.search(r'^\s*function\(\w*\)', func.__doc__ or '', re.M)
         if match is None:
             raise ValueError(
                 f'the docstring for {func} does not contain a GAP function '
