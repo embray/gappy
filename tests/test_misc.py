@@ -17,3 +17,16 @@ def test_write_to_file(tmp_path):
         assert f.read() == message
 
     assert gap.StringFile(fname) == message
+
+
+def test_gap_function_re():
+    """Tests of the regular expression for GAP function declarations."""
+
+    m = gap._gap_function_re.match('function()')
+    assert m and m.group() == 'function()'
+    m = gap._gap_function_re.search('''
+        blah blah blah
+
+        function ( a, b )
+    ''')
+    assert m and m.group().strip() == 'function ( a, b )'

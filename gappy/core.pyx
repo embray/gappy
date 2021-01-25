@@ -994,6 +994,13 @@ cdef class Gap:
 
         return elem
 
+    _gap_function_re = re.compile(r'^\s*function\s*\(\s*\w*(\s*,\s*\w+)*\s*\)',
+                                  re.M)
+    """
+    Regular expression roughly matching the syntax for a GAP function
+    declaration ``function([a, ...])``.  Used for `Gap.gap_function`.
+    """
+
     def gap_function(self, func):
         """
         Create GAP functions from decorated Python functions.
@@ -1075,7 +1082,7 @@ cdef class Gap:
         42
         """
 
-        match = re.search(r'^\s*function\(\w*\)', func.__doc__ or '', re.M)
+        match = self._gap_function_re.search(func.__doc__ or '')
         if match is None:
             raise ValueError(
                 f'the docstring for {func} does not contain a GAP function '
