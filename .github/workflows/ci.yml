@@ -1,29 +1,30 @@
+# vim: tabstop=2 shiftwidth=2
 name: "Tests"
 on: ["push", "pull_request"]
 jobs:
-    tests:
-        name: "test on Python ${{ matrix.python-version }} with GAP ${{ matrix.gap-version }}"
-        runs-on: "ubuntu-latest"
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - python-version: "3.6"
-                      gap-version: "4.10.2"
-                    - python-version: "3.7"
-                      gap-version: "4.10.2"
-                    - python-version: "3.8"
-                      gap-version: "4.11.0"
-        steps:
-            - uses: "conda-incubator/setup-miniconda@v2"
-              with:
-                  auto-update-conda: true
-                  python-version: "${{ matrix.python-version }}"
-            - name: "conda info"
-              run: "conda info"
-            - name: "conda install"
-              run: "conda install -c conda-forge gap-defaults=${{ matrix.gap-version }}"
-            - name: "install"
-              run: "pip install -e .[tests]"
-            - name: "test"
-              run: "pytest -v --color=yes"
+  tests:
+    name: "test on Python ${{ matrix.python-version }} with GAP ${{ matrix.gap-version }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.6"
+            gap-version: "4.10.2"
+          - python-version: "3.7"
+            gap-version: "4.10.2"
+          - python-version: "3.8"
+            gap-version: "4.11.0"
+    steps:
+      - uses: "conda-incubator/setup-miniconda@v2"
+        with:
+          auto-update-conda: true
+          python-version: "${{ matrix.python-version }}"
+      - name: "conda info"
+        run: "conda info"
+      - name: "conda install"
+        run: "conda install -c conda-forge gap-defaults=${{ matrix.gap-version }}"
+      - name: "install"
+        run: "pip install -e .[tests]"
+      - name: "test"
+        run: "pytest -v --color=yes"
