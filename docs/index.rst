@@ -12,6 +12,13 @@ Full documentation
     api
 
 
+Changelog
+=========
+
+.. include:: ../CHANGES.rst
+    :start-line: 3
+
+
 Indices and tables
 ==================
 
