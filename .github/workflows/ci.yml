@@ -22,7 +22,7 @@ jobs:
             - name: "conda info"
               run: "conda info"
             - name: "conda install"
-              run: "conda install -c conda-forge gap-default=${{ matrix.gap-version }}"
+              run: "conda install -c conda-forge gap-defaults=${{ matrix.gap-version }}"
             - name: "install"
               run: "pip install -e .[tests]"
             - name: "test"
