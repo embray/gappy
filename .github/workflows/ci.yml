@@ -3,7 +3,7 @@ name: "Tests"
 on: ["push", "pull_request"]
 jobs:
   tests:
-    name: "test on Python ${{ matrix.python-version }} with GAP ${{ matrix.gap-version }}"
+    name: "Test on Python ${{ matrix.python-version }} with GAP ${{ matrix.gap-version }}"
     runs-on: "ubuntu-latest"
     defaults:
       run:
@@ -32,11 +32,11 @@ jobs:
           auto-update-conda: true
           python-version: "${{ matrix.python-version }}"
           use-only-tar-bz2: true
-      - name: "conda info"
+      - name: "Conda info"
         run: "conda info"
-      - name: "conda install"
+      - name: "Conda install dependencies"
         run: "conda install -q -c conda-forge gap-defaults=${{ matrix.gap-version }}"
-      - name: "install"
+      - name: "Install gappy"
         run: "pip install -e .[tests]"
-      - name: "test"
+      - name: "Run tests"
         run: "pytest -v --color=yes"
