@@ -10,5 +10,5 @@ def inject_globals(doctest_namespace):
     the global `~gappy.core.Gap` instance ``gap`` which is used in most tests.
     """
 
-    from gappy.core import gap
+    from gappy import gap
     doctest_namespace['gap'] = gap
