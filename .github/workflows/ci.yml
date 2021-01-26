@@ -31,6 +31,7 @@ jobs:
         with:
           auto-update-conda: true
           python-version: "${{ matrix.python-version }}"
+          use-only-tar-bz2: true
       - name: "conda info"
         run: "conda info"
       - name: "conda install"
