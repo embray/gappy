@@ -2218,6 +2218,14 @@ cdef class GapFunction(GapObj):
         try:
             sig_GAP_Enter()
             sig_on()
+
+            for arg in args:
+                # If one of the arguments with a lazy function, make sure
+                # it is actually resolved to a real function Obj (otherwise
+                # its .value is NULL)
+                if isinstance(arg, _GapLazyFunction):
+                    (<_GapLazyFunction>arg).resolve()
+
             arglist = make_gap_list(gap, args)
             result = GAP_CallFuncList(self.value, arglist)
             sig_off()
@@ -2361,8 +2369,15 @@ cdef class _GapLazyFunction(GapFunction):
 
         return GapFunction.__str__(self)
 
-    def __call__(self, *args):
+    cdef resolve(self):
+        """
+        Ensure that the function is initialized before calling it.
+
+        This is a no-op if the function is already initialized.
+        """
+
         if self.value == NULL:
+            self.parent().initialize()
             func = self.parent().eval(self.source or '')
             if func is None or not func.is_function():
                 raise RuntimeError(
@@ -2378,6 +2393,8 @@ cdef class _GapLazyFunction(GapFunction):
             # in memory
             self.source = None
 
+    def __call__(self, *args):
+        self.resolve()
         # Otherwise go ahead and call ourselves like a normal function
         return GapFunction.__call__(self, *args)
 
@@ -2425,7 +2442,7 @@ cdef GapMethodProxy make_GapMethodProxy(GapFunction func, self):
     return r
 
 
-cdef class GapMethodProxy:
+cdef class GapMethodProxy(GapFunction):
     r"""
     Helper class returned by ``GapObj.__getattr__``.
 

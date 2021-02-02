@@ -97,6 +97,7 @@ cdef class GapFunction(GapObj):
 
 cdef class _GapLazyFunction(GapFunction):
     cdef str source
+    cdef resolve(self)
 
 cdef class GapMethodProxy(GapFunction):
     cdef GapFunction func
