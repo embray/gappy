@@ -23,6 +23,7 @@ import os
 import re
 import sys
 import warnings
+from functools import lru_cache
 from numbers import Integral, Rational, Real
 
 from .context_managers import GlobalVariableContext
@@ -1088,9 +1089,19 @@ cdef class Gap:
                 f'the docstring for {func} does not contain a GAP function '
                 f'definition; it should contain one line beginning with '
                 f'function() and the rest should be valid GAP code')
+        name = func.__name__
         doc = func.__doc__[:match.start()].strip()
         source = func.__doc__[match.start():].strip()
-        return make_GapLazyFunction(self, func.__name__, doc, source)
+        return self._gap_function(name, doc, source)
+
+    @lru_cache(maxsize=128)
+    def _gap_function(self, name, doc, source):
+        """
+        Internal implementation of `Gap.gap_function` which caches the created
+        functions (up to 128) based on their name, docstring, and source.
+        """
+
+        return make_GapLazyFunction(self, name, doc, source)
 
     def load_package(self, pkg):
         """
