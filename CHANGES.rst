@@ -1,7 +1,7 @@
 Changelog
 =========
 
-v0.1.0a2 (unreleased)
+v0.1.0a2 (2021-02-03)
 ---------------------
 
 Bug fixes
