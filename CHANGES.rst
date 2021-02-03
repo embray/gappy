@@ -4,7 +4,10 @@ Changelog
 v0.1.0a2 (unreleased)
 ---------------------
 
-* Nothing changed yet.
+Bug fixes
+^^^^^^^^^
+
+* Made fixes for MacOS and Cygwin support.
 
 
 v0.1.0a1 (2021-02-03)

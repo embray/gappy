@@ -173,9 +173,9 @@ Installation
 Prerequisites
 -------------
 
-* Supported platforms: Linux, Cygwin.
+* Supported platforms: Linux, MacOS, Cygwin.
 
-  * Likely works with MacOS and most \*BSD flavors but has not been tested.
+  * Likely works with most other \*BSD flavors but has not been tested.
 
 * Python 3.6 or up with development headers installed.  On Debian-based
   systems this means:
