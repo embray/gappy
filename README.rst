@@ -186,17 +186,20 @@ Prerequisites
 
 * GAP 4.10.2 or greater
 
-Currently it is necessary to install from source:
+It is possible to install from PyPI (note the distribution name
+**gappy-system**, **do not** install the package "gappy" which is an
+unrelated obsolete package):
+
+.. code-block:: shell
+
+    $ pip install gappy-system
+
+or from source:
 
 .. code-block:: shell
 
     $ git clone https://github.com/embray/gappy.git
     $ cd gappy/
-
-It is possible to install gappy in the usual way using pip:
-
-.. code-block:: shell
-
     $ pip install .
 
 However, depending on how GAP is installed, some extra steps may be
