@@ -40,16 +40,33 @@ def test_lazy_function_as_argument():
     that the function is initialized.
     """
 
-    @gap.gap_function
-    def OnPoints(omega, g):
-        """
-        Just a wrapper for OnPoints to demonstrate the bug.
+    def make_gap_function():
+        gap._gap_function.cache_clear()
 
-        function(omega, g)
-            return OnPoints(omega, g);
-        end;
-        """
+        @gap.gap_function
+        def OnTuples(omega, g):
+            """
+            Just a wrapper for OnTuples to demonstrate the bug.
+
+            function(omega, g)
+                return OnTuples(omega, g);
+            end;
+            """
+
+        return OnTuples
 
     G = gap.Group(gap.eval('(1,2,3)'), gap.eval('(2,3,4)'))
-    O = gap.Orbit(G, 1, OnPoints)
-    assert O == [1, 2, 3, 4]
+    O = gap.Orbit(G, [1], make_gap_function())
+    assert O == [[1], [2], [3], [4]]
+
+    # Make sure it works even if the lazy function is wrapped in some other
+    # object that has a converter to GapObj registered (regression test from
+    # the Sage integration)
+    class MyGapFunction:
+        def __init__(self, obj):
+            self.obj = obj
+
+    gap.register_converter(MyGapFunction, lambda mgf, gap: mgf.obj)
+    wrapped_OnTuples = MyGapFunction(make_gap_function())
+    O = gap.Orbit(G, [1], wrapped_OnTuples)
+    assert O == [[1], [2], [3], [4]]

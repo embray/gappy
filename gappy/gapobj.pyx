@@ -20,6 +20,7 @@ from textwrap import dedent
 
 from cpython.longintrepr cimport py_long, digit, PyLong_SHIFT, _PyLong_New
 from cpython.object cimport Py_EQ, Py_NE, Py_LE, Py_GE, Py_LT, Py_GT, Py_SIZE
+from cysignals.memory cimport sig_malloc, sig_free
 from cysignals.signals cimport sig_on, sig_off
 
 from .gap_includes cimport *
@@ -2211,25 +2212,36 @@ cdef class GapFunction(GapObj):
         b'hello from the shell\n'
         """
         cdef Obj result = NULL
-        cdef Obj arglist
+        cdef Obj *cargs = NULL
+        cdef GapObj arg
+        cdef int idx, nargs
 
         gap = self.parent()
+        nargs = len(args)
 
         try:
             sig_GAP_Enter()
             sig_on()
 
-            for arg in args:
+            cargs = <Obj*>sig_malloc(sizeof(Obj) * nargs)
+
+            for idx in range(nargs):
                 # If one of the arguments with a lazy function, make sure
                 # it is actually resolved to a real function Obj (otherwise
                 # its .value is NULL)
+                arg = <GapObj>gap(args[idx])
+
                 if isinstance(arg, _GapLazyFunction):
                     (<_GapLazyFunction>arg).resolve()
 
-            arglist = make_gap_list(gap, args)
-            result = GAP_CallFuncList(self.value, arglist)
+                cargs[idx] = arg.value
+
+            result = GAP_CallFuncArray(self.value, nargs, cargs)
             sig_off()
         finally:
+            if cargs != NULL:
+                sig_free(cargs)
+
             GAP_Leave()
 
         if result == NULL:
