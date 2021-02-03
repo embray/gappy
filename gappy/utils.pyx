@@ -85,7 +85,7 @@ cpdef get_gap_root(gap_root=None):
     elif sys.platform == 'darwin':
         dylib_name = b'libgap.dylib'
     elif sys.platform == 'cygwin':
-        dylib_name = b'cyggap.dll'
+        dylib_name = b'cyggap-0.dll'
     else:
         # platform not supported
         raise RuntimeError(f'platform not supported by gappy: {sys.platform}')
@@ -97,7 +97,9 @@ cpdef get_gap_root(gap_root=None):
     handle = dlopen(dylib_name, RTLD_NOW | RTLD_GLOBAL)
     if handle is NULL:
         error = dlerror()
-        raise OSError(error.decode(_LOC_ENCODING, 'surrogateescape'))
+        raise OSError(
+            f'could not open the libgap dynamic library {dylib_name}: '
+            f'{error.decode(_LOC_ENCODING, "surrogateescape")}')
 
     if gap_root is None:
         gap_root = os.environ.get('GAP_ROOT')

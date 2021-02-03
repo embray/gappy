@@ -7,6 +7,7 @@ __pycache__/
 ## Python build files
 build/
 gappy/*.so
+gappy/*.dll
 
 ## Python packaging files
 *.dist-info/
