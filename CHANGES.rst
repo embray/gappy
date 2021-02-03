@@ -4,9 +4,20 @@ Changelog
 v0.1.0a1 (unreleased)
 ---------------------
 
+Enhancements
+^^^^^^^^^^^^
+
 * Added LRU cache for functions defined with ``gap.gap_functions``,
   restoring some of the caching functionality from Sage's
   ``Gap.function_factory``.
+
+Bug fixes
+^^^^^^^^^
+
+* Fixed bug in multi-indexing of nested lists.
+
+* Fixed minor formatting difference in the IndexError message when indexing
+  single lists versus multi-indexing nested lists.
 
 * Fixed a bug when using functions defined with ``gap.gap_function`` as
   arguments to another GAP function before they have been called once.

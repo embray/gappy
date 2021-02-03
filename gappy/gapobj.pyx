@@ -2552,7 +2552,7 @@ cdef class GapList(GapObj):
     >>> lst[10]
     Traceback (most recent call last):
     ...
-    IndexError: index out of range.
+    IndexError: index out of range
     """
 
     def __bool__(self):
@@ -2630,7 +2630,7 @@ cdef class GapList(GapObj):
         Multiple indices are allowed à la Numpy arrays for indexing nested
         lists / matrices:
 
-        >>> l = gap.eval('[ [0, 1], [2, 3] ]')
+        >>> l = gap.eval('[ [0, 1], [2, 3], [4, 5] ]')
         >>> l[0, 0]
         0
         >>> l[0, 1]
@@ -2642,6 +2642,8 @@ cdef class GapList(GapObj):
         ...
         IndexError: index out of range
         >>> l[2, 0]
+        4
+        >>> l[3, 0]
         Traceback (most recent call last):
         ...
         IndexError: index out of range
@@ -2654,25 +2656,20 @@ cdef class GapList(GapObj):
         cdef Int len_list
         cdef Obj obj = self.value
 
-        # NOTE: will there ever be more than max_int elements in a list?
-        len_list = <Int>GAP_LenList(obj)
+        if not isinstance(idx, tuple):
+            idx = (idx,)
 
-        if isinstance(idx, tuple):
-            for jdx in idx:
-                if not GAP_IsList(obj):
-                    raise ValueError('too many indices')
-                if jdx < 0:
-                    jdx = len_list + jdx
-                if jdx < 0 or jdx >= len_list:
-                    raise IndexError('index out of range')
-                obj = GAP_ElmList(obj, jdx + 1)
+        for jdx in idx:
+            if not GAP_IsList(obj):
+                raise ValueError('too many indices')
 
-        else:
-            jdx = idx
+            # NOTE: will there ever be more than max_int elements in a list?
+            len_list = <Int>GAP_LenList(obj)
+
             if jdx < 0:
                 jdx = len_list + jdx
             if jdx < 0 or jdx >= len_list:
-                raise IndexError('index out of range.')
+                raise IndexError('index out of range')
             obj = GAP_ElmList(obj, jdx + 1)
 
         return make_any_gap_obj(self.parent(), obj)
