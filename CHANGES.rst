@@ -1,7 +1,7 @@
 Changelog
 =========
 
-v0.1.0a1 (unreleased)
+v0.1.0a1 (2021-02-03)
 ---------------------
 
 Enhancements
