@@ -12,7 +12,6 @@
 #*****************************************************************************
 
 from libc.signal cimport signal, SIGCHLD, SIG_DFL
-from posix.dlfcn cimport dlopen, dlclose, dlerror, RTLD_NOW, RTLD_GLOBAL
 from cpython.exc cimport PyErr_Fetch, PyErr_Restore
 from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from cpython.ref cimport PyObject, Py_XINCREF, Py_XDECREF
@@ -32,28 +31,8 @@ from .gap_globals import common_gap_globals as GAP_GLOBALS
 from .gap_includes cimport *
 from .gapobj cimport *
 from .gmp cimport *
-from .utils import get_gap_memory_pool_size, _SPECIAL_ATTRS
-
-
-cdef extern from "<dlfcn.h>" nogil:
-    # Missing from posix.dlfcn since it's a non-standard GNU extension
-    int dlinfo(void *, int, void *)
-
-
-cdef extern from "<link.h>" nogil:
-    int RTLD_DI_LINKMAP
-    cdef struct link_map:
-        char *l_name
-
-
-# TODO: Linux-specific for now, on MacOS it would by libgap.dylib etc., not
-# sure if dlopen on MacOS will make this replacement automatically or not.
-# It might be nice if libgap-api.h actually included the expected library
-# name as a macro.
-LIBGAP_SONAME = "libgap.so"
-
-_FS_ENCODING = sys.getfilesystemencoding()
-_LOC_ENCODING = locale.getpreferredencoding()
+from .utils import (get_gap_memory_pool_size, get_gap_root, _SPECIAL_ATTRS,
+        _FS_ENCODING)
 
 
 ############################################################################
@@ -220,75 +199,19 @@ MakeImmutable(\$GAPPY_ERROUT);
 
 
 # TODO: Change autoload=True by default
-cdef initialize(gap_root=None, gaprc=None, workspace=None, autoload=False,
-                libgap_soname=None):
+cdef initialize(gap_root=None, gaprc=None, workspace=None, autoload=False):
     """
     Initialize the GAP library, if it hasn't already been initialized.
 
     It is safe to call this multiple times.
     """
-    cdef link_map *lm
-    cdef int ret
-    cdef char *error
 
     global _gap_is_initialized
-    if _gap_is_initialized: return
 
-    if libgap_soname is None:
-        libgap_soname = LIBGAP_SONAME
+    if _gap_is_initialized:
+        return
 
-    cdef void* handle
-    # Hack to ensure that all symbols provided by libgap are loaded into the
-    # global symbol table
-    # Note: we could use RTLD_NOLOAD and avoid the subsequent dlclose() but
-    # this isn't portable
-    handle = dlopen(libgap_soname.encode('ascii'), RTLD_NOW | RTLD_GLOBAL)
-    if handle is NULL:
-        raise RuntimeError(
-                f"Could not dlopen() {libgap_soname} even though it should "
-                "already be loaded!")
-
-    if gap_root is None:
-        gap_root = os.environ.get('GAP_ROOT')
-        if gap_root is None:
-            # Use dlinfo to try to determine the path to libgap.so.  If it is
-            # from within a GAP_ROOT we can use it; otherwise we will not
-            # be able to determine GAP_ROOT
-            ret = dlinfo(handle, RTLD_DI_LINKMAP, &lm)
-            if ret != 0:
-                error = dlerror()
-                raise RuntimeError(
-                    f'Could not dlinfo() {libgap_soname}: '
-                    f'{error.decode(_LOC_ENCODING, "surrogateescape")}; '
-                    f'cannot determine path to GAP_ROOT')
-
-            so_path = lm.l_name.decode(_FS_ENCODING, 'surrogateescape')
-            # if libgap is in GAP_ROOT/.libs/
-            gap_root = os.path.dirname(os.path.dirname(so_path))
-            # On conda and sage (and maybe some other distros) we are in
-            # <prefix>/ and gap is in share/gap
-            # TODO: Add some other paths to try here as we find them
-            for pth in [('.',), ('share', 'gap')]:
-                gap_root = os.path.join(gap_root, *pth)
-                if os.path.exists(os.path.join(gap_root, 'lib', 'init.g')):
-                    break
-            else:
-                gap_root = None
-
-    dlclose(handle)
-
-    # If gap_root is still None we cannot proceed because GAP actually crashes
-    # if we try to do anything without loading GAP's stdlib
-    hint = ('Either pass gap_root when initializing the Gap class, '
-            'or pass it via the GAP_ROOT environment variable.')
-    if gap_root is None:
-        raise RuntimeError(f"Could not determine path to GAP_ROOT.  {hint}")
-    elif not os.path.exists(os.path.join(gap_root, 'lib', 'init.g')):
-        raise RuntimeError(
-            f'GAP_ROOT path {gap_root} does not contain lib/init.g which is '
-            f'needed for GAP to work.  {hint}')
-
-    gap_root = os.path.normpath(gap_root)
+    gap_root = get_gap_root(gap_root=gap_root)
 
     # Define argv variable, which we will pass in to
     # initialize GAP. Note that we must pass define the memory pool
@@ -298,8 +221,8 @@ cdef initialize(gap_root=None, gaprc=None, workspace=None, autoload=False,
 
     argv[0] = ''
     argv[1] = '-l'
-    s = gap_root.encode(_FS_ENCODING, 'surrogateescape')
-    argv[2] = s
+    _gap_root = gap_root.encode(_FS_ENCODING, 'surrogateescape')
+    argv[2] = _gap_root
 
     memory_pool = get_gap_memory_pool_size().encode('ascii')
     argv[3] = '-o'
@@ -372,8 +295,7 @@ cdef initialize(gap_root=None, gaprc=None, workspace=None, autoload=False,
         'gap_root': gap_root,
         'gaprc': gaprc,
         'workspace': workspace,
-        'autoload': autoload,
-        'libgap_soname': libgap_soname
+        'autoload': autoload
     }
 
 
@@ -682,14 +604,13 @@ cdef class Gap:
             gap_root=self._init_kwargs['gap_root'],
             gaprc=self._init_kwargs['gaprc'],
             workspace=self._init_kwargs['workspace'],
-            autoload=self._init_kwargs['autoload'],
-            libgap_soname=self._init_kwargs['libgap_soname']
+            autoload=self._init_kwargs['autoload']
         ))
         _gap_instance = self
         return True
 
     def __init__(self, gap_root=None, gaprc=None, workspace=None,
-                 autoinit=False, autoload=False, libgap_soname=None):
+                 autoinit=False, autoload=False):
         if _gap_is_initialized:
             raise RuntimeError(
                 "the GAP interpreter has already been initialized; only one "
@@ -699,8 +620,7 @@ cdef class Gap:
             'gap_root': gap_root,
             'gaprc': gaprc,
             'workspace': workspace,
-            'autoload': autoload,
-            'libgap_soname': libgap_soname
+            'autoload': autoload
         })
 
         if autoinit:
