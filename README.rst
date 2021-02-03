@@ -173,10 +173,11 @@ Installation
 Prerequisites
 -------------
 
-* Linux-only currently.  Will likely work on MacOS and Cygwin with minimal
-  changes, but it has not been tested yet on these platforms.
+* Supported platforms: Linux, Cygwin.
 
-* Python 3.7 or up with development headers installed.  On Debian-based
+  * Likely works with MacOS and most \*BSD flavors but has not been tested.
+
+* Python 3.6 or up with development headers installed.  On Debian-based
   systems this means:
 
   .. code-block:: shell
@@ -201,9 +202,17 @@ It is possible to install gappy in the usual way using pip:
 However, depending on how GAP is installed, some extra steps may be
 required.  In particular, if you installed GAP from source using the
 typical instructions on the `GAP website
-<https://www.gap-system.org/Download/index.html>`_ you will need to point to
-point to the location of your GAP installation by setting the ``GAP_ROOT``
-environment variable like:
+<https://www.gap-system.org/Download/index.html>`_ you will need to make
+sure the libgap shared library is built by running:
+
+.. code-block:: shell
+
+    $ make install-libgap
+
+in the GAP source directory.
+
+You will also need to point to the location of your GAP installation by
+setting the ``GAP_ROOT`` environment variable like:
 
 .. code-block:: shell
 
@@ -251,6 +260,38 @@ Alternatively, you can create the conda environment using the supplied
 
     The conda package for GAP 4.11 had dependency conflicts with Python 3.7
     so you must use Python 3.8 or above, or GAP 4.10.2 with Python 3.7.
+
+Cygwin installation
+-------------------
+
+Additional notes for installation on Cygwin:
+
+* The dependency ``psutil`` does not support Cygwin.  However, there is an
+  unofficial fork which does at:
+  https://github.com/embray/psutil/tree/cygwin/v3.  You can install it by
+  running:
+
+  .. code-block:: shell
+
+      $ pip install git+https://github.com/embray/psutil.git@cygwin/v3
+
+* The path to the libgap DLL (filename ``cyggap-0.dll``) needs to be on
+  your ``PATH`` environment variable in order for gappy to be importable.
+  To do this you can either copy it from your GAP installation to a standard
+  location like:
+
+  .. code-block:: shell
+
+      $ cp /path/to/gap_root/.libs/cyggap-0.dll /usr/local/bin
+
+  or you can modify your environment to point to where GAP places the built
+  DLL:
+
+  .. code-block:: shell
+
+    $ export PATH="/path/to/gap_root/.libs:$PATH"
+
+  and add this to your ``.profile``.
 
 .. |logo| image:: https://raw.githubusercontent.com/embray/gappy/master/docs/images/gappy-logo.svg.png
     :alt: gappy logo
