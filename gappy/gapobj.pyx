@@ -2196,20 +2196,7 @@ cdef class GapFunction(GapObj):
         ...         print('because Sum needs a list as argument')
         ...     except ValueError:
         ...         pass
-
-        Note, for this test the ``Exec`` call outputs to the system stdout,
-        bypassing Python's ``sys.stdout`` so the output is not picked up by
-        doctest automatically:
-
-        >>> import os, tempfile
-        >>> with tempfile.TemporaryFile() as f:
-        ...     _ = os.dup2(1, f.fileno())
-        ...     gap_exec = gap.eval("Exec")
-        ...     gap_exec('echo hello from the shell')
-        ...     _ = f.seek(0)
-        ...     f.read().rstrip()
         ...
-        b'hello from the shell'
         """
         cdef Obj result = NULL
         cdef Obj *cargs = NULL

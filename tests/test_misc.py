@@ -19,6 +19,14 @@ def test_write_to_file(tmp_path):
     assert gap.StringFile(fname) == message
 
 
+def test_gap_exec(capfd):
+    """A regression test originally from Sage."""
+
+    gap.Exec('echo hello from the shell')
+    stdio = capfd.readouterr()
+    assert stdio.out.rstrip() == 'hello from the shell'
+
+
 def test_gap_function_re():
     """Tests of the regular expression for GAP function declarations."""
 
