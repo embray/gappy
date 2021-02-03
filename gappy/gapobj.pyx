@@ -2207,9 +2207,9 @@ cdef class GapFunction(GapObj):
         ...     gap_exec = gap.eval("Exec")
         ...     gap_exec('echo hello from the shell')
         ...     _ = f.seek(0)
-        ...     f.read()
+        ...     f.read().rstrip()
         ...
-        b'hello from the shell\n'
+        b'hello from the shell'
         """
         cdef Obj result = NULL
         cdef Obj *cargs = NULL
