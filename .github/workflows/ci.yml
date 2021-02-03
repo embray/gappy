@@ -4,20 +4,23 @@ on: ["push", "pull_request"]
 jobs:
   tests:
     name: "Test on Python ${{ matrix.python-version }} with GAP ${{ matrix.gap-version }}"
-    runs-on: "ubuntu-latest"
     defaults:
       run:
         shell: "bash -l {0}"
     strategy:
       fail-fast: false
       matrix:
-        include:
+        platform: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.6", "3.7", "3.8"]
+        gap-version: ["4.10.2", "4.11.0"]
+        exclude:
           - python-version: "3.6"
-            gap-version: "4.10.2"
-          - python-version: "3.7"
-            gap-version: "4.10.2"
-          - python-version: "3.8"
             gap-version: "4.11.0"
+          - python-version: "3.7"
+            gap-version: "4.11.0"
+          - python-version: "3.8"
+            gap-version: "4.10.2"
+    runs-on: "${{ matrix.platform }}"
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v1
