@@ -74,7 +74,10 @@ def test_lazy_function_as_argument():
         def __init__(self, obj):
             self.obj = obj
 
-    gap.register_converter(MyGapFunction, lambda mgf, gap: mgf.obj)
+    @gap.convert_from(MyGapFunction)
+    def my_gap_function_to_gapobj(gap, obj):
+        return obj.obj
+
     wrapped_OnTuples = MyGapFunction(make_gap_function())
     O = gap.Orbit(G, [1], wrapped_OnTuples)
     assert O == [[1], [2], [3], [4]]

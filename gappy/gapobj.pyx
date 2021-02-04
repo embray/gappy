@@ -15,11 +15,16 @@ This document describes the individual wrappers for various GAP objects.
 #                  https://www.gnu.org/licenses/
 # ****************************************************************************
 
+import fractions
 import itertools
+import warnings
+from functools import partial
 from textwrap import dedent
 
+from cpython.list cimport PyList_New, PyList_SET_ITEM
 from cpython.longintrepr cimport py_long, digit, PyLong_SHIFT, _PyLong_New
 from cpython.object cimport Py_EQ, Py_NE, Py_LE, Py_GE, Py_LT, Py_GT, Py_SIZE
+from cpython.ref cimport Py_INCREF
 from cysignals.memory cimport sig_malloc, sig_free
 from cysignals.signals cimport sig_on, sig_off
 
@@ -28,7 +33,7 @@ from .gmp cimport *
 from .core cimport *
 from .exceptions import GAPError
 from .operations import OperationInspector
-from .utils import _SPECIAL_ATTRS
+from .utils import _SPECIAL_ATTRS, _converter_for_type
 
 
 ############################################################################
@@ -460,6 +465,8 @@ cdef class GapObj:
     gappy.exceptions.GAPError: can only evaluate a single statement
     """
 
+    _convert_to_registry = {}
+
     def __cinit__(self):
         """The Cython constructor."""
 
@@ -738,6 +745,11 @@ cdef class GapObj:
         if name in _SPECIAL_ATTRS:
             # Prevent unintended GAP initialization when displaying in IPython
             raise AttributeError(name)
+
+        # Handle converter domains if there are any applicable for this class
+        converter = self._get_converter_for(name)
+        if converter is not None:
+            return partial(converter, self)
 
         gap = self.parent()
         func = getattr(gap, name)
@@ -1288,6 +1300,160 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_obj(self._parent, result)
 
+    @classmethod
+    def convert_to(cls, domain):
+        r"""
+        Decorator allowing `.GapObj` and subclasses thereof to be converted to
+        equivalent Python types.
+
+        E.g. for `.GapObj` subclasses that do not have an equivalent
+        ``.python()`` converter, you can instrument it with your own converter.
+
+        Examples
+        --------
+
+        >>> from gappy.gapobj import GapPermutation
+        >>> class MyPerm:
+        ...     def __init__(self, perm):
+        ...         '''
+        ...         Initialize the permutation from the image of the positive
+        ...         integers under permutation.
+        ...         '''
+        ...         self.perm = perm
+        ...     def __repr__(self):
+        ...         return f'<MyPerm({self.perm!r})>'
+        ...
+        >>> @GapPermutation.convert_to('python')
+        ... def gap_to_myperm(obj):
+        ...     return MyPerm(obj.ListPerm().python())
+        ...
+        >>> perm = gap.eval('(3, 1, 2)')
+        >>> myperm = perm.python()
+        >>> myperm
+        <MyPerm([2, 3, 1])>
+
+        Additionally, you can register new converters for `.GapObj` subclasses
+        that have an existing ``.python()`` method, but in a new "domain".
+        This allows instrumenting the existing `.GapObj` classes (without
+        subclassing them) with new conversion methods.  For example, to add a
+        convert from `GapList`\s to NumPy arrays you might implement something
+        like:
+
+        >>> from gappy.gapobj import GapList
+        >>> import numpy as np
+        >>> @GapList.convert_to('numpy')
+        ... def gap_to_numpy(obj):
+        ...     return np.asarray(obj.python())
+        ...
+        >>> lst = gap([[1, 2, 3], [4, 5, 6]])
+        >>> type(lst)
+        <class 'gappy.gapobj.GapList'>
+        >>> lst.numpy()
+        array([[1, 2, 3],
+               [4, 5, 6]])
+
+        .. warning::
+
+            When picking names for conversion "domains" try not to overlap with
+            existing global functions in GAP, or at least those that may
+            operate on GAP objects of the type being converted.  Otherwise the
+            conversion method will overshadow the GAP method.  Usually picking
+            an all lower-case name (the standard naming scheme for Python
+            recommended by `PEP 8
+            <https://www.python.org/dev/peps/pep-0008/#method-names-and-instance-variables>`_)
+            will suffice, since most GAP globals use CamelCase naming.
+
+            The name should also not overlap a method defined on the class,
+            otherwise the existing method will take precedence.
+
+        .. note::
+
+            Realistically this is an inefficient conversion to NumPy, and a
+            more performant implementation should be implemented in C/Cython
+            and include converters for numeric types as well.  This just
+            demonstrates the basic principle.
+        """
+
+        def decorator(converter):
+            if not callable(converter):
+                # TODO: Maybe check the signature as well?
+                raise ValueError(
+                    f'{cls.__name__} to {domain} converter {converter} must '
+                    f'be callable')
+
+            if cls in cls._convert_to_registry.get(domain, {}):
+                warnings.warn(
+                    f'{cls} already has a registered {domain} converter '
+                    f'{cls._convert_to_registry[domain][cls]}; it will be '
+                    f'replaced by {converter}')
+            elif domain == 'python' and 'python' in cls.__dict__:
+                # Special case for the built-in Python domain
+                raise RuntimeError(
+                    f'{cls} already has a built-in python converter which '
+                    f'cannot be replaced; try registering the converter with '
+                    f'a custom domain instead')
+
+            cls._convert_to_registry.setdefault(domain, {})[cls] = converter
+            return converter
+
+        return decorator
+
+    @classmethod
+    def _get_converter_for(cls, domain):
+        """
+        Helper to get the appropriate domain-specific converter for this
+        class, if any.
+        """
+        # Handle converter domains if there are any applicable for this class
+        if domain in cls._convert_to_registry:
+            registry = cls._convert_to_registry[domain]
+            return _converter_for_type(registry, cls)
+
+        return None
+
+    def python(self):
+        """
+        Convert to an equivalent plain Python type, if one exists.
+
+        Examples
+        --------
+
+        >>> lst = gap.eval('["first",,,"last"]')   # a sparse list
+        >>> lst[0]
+        "first"
+        >>> lst[0].python()
+        'first'
+        >>> lst[1]
+        NULL
+        >>> lst[1].python() is None
+        True
+
+        GAP objects with "obvious" equivalents to Python built-ins have
+        ``.python()`` implementations, whereas others may not:
+
+        >>> cyc = gap.eval('E(3)')
+        >>> type(cyc)
+        <class 'gappy.gapobj.GapCyclotomic'>
+        >>> cyc.python()
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: cannot construct equivalent Python object
+
+        However, you may register a custom converter from `GapCyclotomic` or
+        another `GapObj` subclass to some Python class by using the
+        `GapObj.convert_to` decorator with the "python" domain.  See its
+        documentation for examples.
+        """
+
+        if self.value == NULL:
+            return None
+
+        converter = self._get_converter_for('python')
+        if converter is not None:
+            return converter(self)
+
+        raise NotImplementedError('cannot construct equivalent Python object')
+
     def is_function(self):
         """
         Return whether the wrapped GAP object is a function.
@@ -1544,6 +1710,8 @@ cdef class GapInteger(GapObj):
             mpz_clear(z)
             return x
 
+    python = __int__
+
     def __index__(self):
         r"""
         Tests
@@ -1606,6 +1774,8 @@ cdef class GapFloat(GapObj):
         3.5
         """
         return GAP_ValueMacFloat(self.value)
+
+    python = __float__
 
 
 
@@ -1811,6 +1981,21 @@ cdef class GapRational(GapObj):
     <class 'gappy.gapobj.GapRational'>
     """
 
+    def python(self):
+        """
+        Convert from a GAP rational to a Python `fractions.Fraction`.
+
+        Examples
+        --------
+
+        >>> x = gap.eval('1 / 2')
+        >>> x.python()
+        Fraction(1, 2)
+        """
+
+        return fractions.Fraction(self.NumeratorRat().python(),
+                                  self.DenominatorRat().python())
+
 
 ############################################################################
 ### GapRing ################################################################
@@ -1907,6 +2092,8 @@ cdef class GapBoolean(GapObj):
         """
         return self.value == GAP_True
 
+    python = __bool__
+
 
 ############################################################################
 ### GapString ##############################################################
@@ -1985,6 +2172,8 @@ cdef class GapString(GapObj):
         """
         s = GAP_CSTR_STRING(self.value).decode('utf-8', 'surrogateescape')
         return s
+
+    python = __str__
 
 
 ############################################################################
@@ -2764,6 +2953,60 @@ cdef class GapList(GapObj):
 
         GAP_AssList(obj, jdx + 1, celt.value)
 
+    def python(self):
+        r"""
+        Convert a GAP list to a Python list.
+
+        List elements are converted recusively if possible, though any
+        `GapObj`\s that cannot be converted to Python equivalents will remain
+        as-is.
+
+        Examples
+        --------
+
+        >>> lst = gap.eval('[1, 2, 3, 4, 5]')
+
+        You can convert a `GapList` to `list` like:
+
+        >>> lst2 = list(lst); lst2
+        [1, 2, 3, 4, 5]
+
+        which works since `GapList` is an iterable sequence much like `list`.
+        However, the elements of the `list` are still `GapInteger`\s:
+
+        >>> type(lst2[0])
+        <class 'gappy.gapobj.GapInteger'>
+
+        Whereas `GapList.python` will recursively convert to Python equivalents
+        (by calling ``.python()`` on each element) if possible:
+
+        >>> lst3 = lst.python(); lst3
+        [1, 2, 3, 4, 5]
+        >>> type(lst3[0])
+        <class 'int'>
+        """
+
+        cdef GapObj obj
+        cdef Int idx, len_list
+        cdef list out
+
+        gap = self.parent()
+
+        len_list = <Int>GAP_LenList(self.value)
+        out = PyList_New(len_list)
+
+        for idx in range(len_list):
+            obj = make_any_gap_obj(gap, GAP_ElmList(self.value, idx + 1))
+            try:
+                val = obj.python()
+            except NotImplementedError:
+                val = obj
+
+            Py_INCREF(val)
+            PyList_SET_ITEM(out, idx, val)
+
+        return out
+
 
 ############################################################################
 ### GapPermutation #########################################################
@@ -2862,7 +3105,7 @@ cdef class GapRecord(GapObj):
     We can easily convert a GAP record object into a Python `dict`:
 
     >>> dict(rec)
-    {'b': 456, 'a': 123}
+    {"b": 456, "a": 123}
     >>> type(_)
     <... 'dict'>
 
@@ -2950,7 +3193,7 @@ cdef class GapRecord(GapObj):
         >>> type(iter)
         <class 'generator'>
         >>> sorted(rec)
-        [('a', 123), ('b', 456)]
+        [("a", 123), ("b", 456)]
 
         .. note::
 
@@ -2960,11 +3203,11 @@ cdef class GapRecord(GapObj):
             order was returned by GAP's ``RecNames`` function.
 
             >>> dict(rec)
-            {'b': 456, 'a': 123}
+            {"b": 456, "a": 123}
         """
 
         for name in self._names():
-            yield (str(name), self._getitem(name))
+            yield (name, self._getitem(name))
 
     def __getattr__(self, name):
         r"""
@@ -3027,3 +3270,50 @@ cdef class GapRecord(GapObj):
             return make_any_gap_obj(self.parent(), result)
         finally:
             GAP_Leave()
+
+    def python(self):
+        r"""
+        Convert a GAP record to a Python dict.
+
+        Keys are converted to Python `str`\s and values are converted to their
+        Python equivalents, recusively if possible, though any `GapObj`\s that
+        cannot be converted to Python equivalents will remain as-is.
+
+        Examples
+        --------
+
+        >>> rec = gap.eval('rec( a:= 1, b := 2, c := 3 )')
+
+        You can convert a `GapRecord` to `dict` like:
+
+        >>> dct1 = dict(rec); dct1
+        {"b": 2, "a": 1, "c": 3}
+
+        which works since `GapRecord` is an iterable sequence of ``(key,
+        value)`` pairs, one of the possible constructor values for `dict`.
+        However, the keys and values of the `dict` are still `GapString`\s
+        and `GapInteger`\s respectively:
+
+        >>> type(next(iter(dct1.keys())))
+        <class 'gappy.gapobj.GapString'>
+        >>> type(next(iter(dct1.values())))
+        <class 'gappy.gapobj.GapInteger'>
+
+        Whereas `GapRecord.python` will recursively convert to Python
+        equivalents (by calling ``.python()`` on each element) if possible:
+
+        >>> dct2 = rec.python(); dct2
+        {'b': 2, 'a': 1, 'c': 3}
+        >>> type(next(iter(dct2.keys())))
+        <class 'str'>
+        >>> type(next(iter(dct2.values())))
+        <class 'int'>
+        """
+
+        def try_python(obj):
+            try:
+                return obj.python()
+            except NotImplementedError:
+                return obj
+
+        return {k.python(): try_python(v) for k, v in self}

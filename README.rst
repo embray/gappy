@@ -127,6 +127,17 @@ equivalent Python types in a symmetrical manner:
 
 Likewise for `float`\s, `list`\s, `dict`\s, among others.
 
+You can also call ``obj.python()`` to convert to its equivalent Python type
+if one exists:
+
+.. code-block:: python
+
+    >>> type(one.python())
+    <class 'int'>
+
+To register your own converters for GAP objects to custom Python types, see
+the ``gap.convert_to`` decorator.
+
 Finally, you can execute arbitrary GAP code directly with ``gap.eval``.
 This is often the easiest way to construct more complicated GAP objects,
 especially if you are more familiar with GAP syntax.  The return value of

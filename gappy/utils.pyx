@@ -210,3 +210,34 @@ cpdef virtual_memory_limit():
     if vmax == resource.RLIM_INFINITY:
         vmax = psutil.virtual_memory().total + psutil.swap_memory().total
     return min(vmax, sys.maxsize)
+
+
+def _converter_for_type(registry, type_):
+    """
+    Helper function for determining the most appropriate converter in a
+    type->converter map for the given type.
+
+    First checks the registry for direct type matches, then tries to find the
+    most specific converter for super-classes of the given type.
+    """
+
+    converter = registry.get(type_)
+    if converter is None:
+        candidates = set()
+        for parent_type, conv in registry.items():
+            if issubclass(type_, parent_type):
+                candidates.add(parent_type)
+
+        if candidates:
+            mro = type_.__mro__
+            def sort_key(c):
+                try:
+                    return mro.index(c)
+                except ValueError:
+                    # a virtual subclass, i.e. and ABC; sort these
+                    # lowest
+                    return len(mro)
+
+            converter = min(candidates, key=sort_key)
+
+    return converter

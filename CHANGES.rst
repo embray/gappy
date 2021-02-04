@@ -4,7 +4,30 @@ Changelog
 v0.1.0a3 (unreleased)
 ---------------------
 
-* Nothing changed yet.
+Enhancements
+^^^^^^^^^^^^
+
+* Added ``GapObj.python()`` method for converting a ``GapObj`` to its
+  equivalent type if one exists (it does not always, but it does in the
+  cases where there is an equivalent type built into Python).
+
+  * ``GapList.python()`` and ``GapRecord.python()`` also recursively convert
+    the values they contain to equivalent Python types if possible.
+
+* New interface for registering converters to/from GAP object types:
+
+  * ``Gap.register_converter`` is replaced with the ``Gap.convert_from``
+    decorator.
+
+  * The ``GapObj.convert_to`` decorator can be used to register new
+    conversion methods on ``GapObj``, or specific subclasses thereof.
+
+Bug fixes
+^^^^^^^^^
+
+* When converting a ``GapRecord`` to a ``dict`` with ``dict(rec)`` the
+  keys remain as ``GapString`` instead of ``str``.  This is more consistent
+  with the fact that the values are not converted to Python equivalents.
 
 
 v0.1.0a2 (2021-02-03)
