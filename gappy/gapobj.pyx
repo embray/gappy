@@ -425,7 +425,7 @@ cdef GapObj make_GapObj(parent, Obj obj):
     >>> gap(None)
     Traceback (most recent call last):
     ...
-    AttributeError: 'NoneType' object has no attribute '_gap_init_'
+    AttributeError: 'NoneType' object has no attribute '__gap_eval__'
     """
     cdef GapObj r = GapObj.__new__(GapObj)
     r._initialize(parent, obj)

@@ -41,6 +41,5 @@ cdef class Gap:
     cdef readonly dict _convert_from_registry
     cdef gmp_randstate_t _gmp_state
     cpdef initialize(self)
-    cpdef _from_gap_init(self, x)
     cpdef eval(self, gap_command)
     cpdef get_global(self, variable)

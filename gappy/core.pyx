@@ -629,7 +629,7 @@ cdef class Gap:
     def __call__(self, x):
         r"""
         Construct GapObj instances from a given object that either has a
-        registered converter or a ``_gap_`` or ``_gap_init_`` method.
+        registered converter or a ``__gap__`` or ``__gap_eval__`` method.
 
         Parameters
         ----------
@@ -660,21 +660,21 @@ cdef class Gap:
         >>> gap(None)
         NULL
 
-        A class with a ``_gap_`` method to convert itself to an equivalent
+        A class with a ``__gap__`` method to convert itself to an equivalent
         `~gappy.gapobj.GapObj`; it is also passed the active `Gap` instance:
 
         >>> class MyGroup:
-        ...     def _gap_(self, gap):
+        ...     def __gap__(self, gap):
         ...         return gap.SymmetricGroup(3)
         ...
         >>> gap(MyGroup())
         Sym( [ 1 .. 3 ] )
 
-        A class with a ``_gap_init_`` method; same concept but returns a string
-        containing any arbitrary GAP code for initializing the object:
+        A class with a ``__gap_eval__`` method; same concept but returns a
+        string containing any arbitrary GAP code for initializing the object:
 
         >>> class MyGroup2:
-        ...     def _gap_init_(self):
+        ...     def __gap_eval__(self):
         ...         return 'SymmetricGroup(3)'
         ...
         >>> gap(MyGroup2())
@@ -682,11 +682,10 @@ cdef class Gap:
 
         .. note::
 
-            Both the ``_gap_`` method and any converter function registered
-            with `Gap.register_converter` may return either a
-            `~gappy.gapobj.GapObj` *or* one of the built-in types in
-            `Gap.supported_builtins` which is then in turn converted to the
-            appropriate GAP object.
+            Both the ``__gap__`` method and any converter function registered
+            with `Gap.convert_from` may return either a `~gappy.gapobj.GapObj`
+            *or* one of the built-in types in `Gap.supported_builtins` which is
+            then in turn converted to the appropriate GAP object.
 
         """
         self.initialize()
@@ -721,10 +720,11 @@ cdef class Gap:
                                             type(x))
 
             if converter is None:
-                if hasattr(x, '_gap_'):
-                    ret = x._gap_(self)
-                elif hasattr(x, '_gap_init_'):
-                    ret = self._from_gap_init(x)
+                if hasattr(x, '__gap__'):
+                    ret = x.__gap__(self)
+                elif hasattr(x, '__gap_eval__'):
+                    gap_str = str(x.__gap_eval__())
+                    ret = make_any_gap_obj(self, gap_eval(gap_str))
                 else:
                     raise ValueError(
                         f'could not convert {x} to a GAP object')
@@ -742,14 +742,6 @@ cdef class Gap:
                     f'instance of GapObj or one of {builtins}; '
                     f'got {type(ret).__name__}')
             return ret
-
-    cpdef _from_gap_init(self, x):
-        """
-        Helper for creating `.GapObj`\s from objects with a ``_gap_init_``
-        method.
-        """
-
-        return make_any_gap_obj(self, gap_eval(str(x._gap_init_())))
 
     def convert_from(self, cls):
         """
@@ -900,7 +892,7 @@ cdef class Gap:
         cdef GapObj elem
 
         if not isinstance(gap_command, str):
-            gap_command = str(gap_command._gap_init_())
+            gap_command = str(gap_command.__gap_eval__())
 
         self.initialize()
         elem = make_any_gap_obj(self, gap_eval(gap_command))

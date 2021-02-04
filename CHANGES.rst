@@ -7,6 +7,15 @@ v0.1.0a3 (unreleased)
 Enhancements
 ^^^^^^^^^^^^
 
+* Renamed the special method ``_gap_``, for converting arbitrary Python
+  objects to GAP objects, to ``__gap__`` as inspired by the discussion at
+  https://trac.sagemath.org/ticket/31297#comment:23
+
+  * Likewise, the special method ``_gap_init_`` is now named
+    ``__gap_eval__`` to emphasize that it returns a string to be passed
+    to ``Gap.eval()``.  It still does not take any arguments.
+
+
 * Added ``GapObj.python()`` method for converting a ``GapObj`` to its
   equivalent type if one exists (it does not always, but it does in the
   cases where there is an equivalent type built into Python).
