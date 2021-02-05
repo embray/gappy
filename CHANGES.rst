@@ -15,7 +15,6 @@ Enhancements
     ``__gap_eval__`` to emphasize that it returns a string to be passed
     to ``Gap.eval()``.  It still does not take any arguments.
 
-
 * Added ``GapObj.python()`` method for converting a ``GapObj`` to its
   equivalent type if one exists (it does not always, but it does in the
   cases where there is an equivalent type built into Python).
@@ -30,6 +29,11 @@ Enhancements
 
   * The ``GapObj.convert_to`` decorator can be used to register new
     conversion methods on ``GapObj``, or specific subclasses thereof.
+
+* Added some C-level utility methods on ``GapInteger`` to help convert to
+  different integer types (C long ints and mpz_t, depending on the size of
+  the int).  This helps with more efficient conversion to Sage Integers
+  without having to pass through an intermediary Python ``int``.
 
 Bug fixes
 ^^^^^^^^^

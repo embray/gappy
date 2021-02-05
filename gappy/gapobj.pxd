@@ -10,6 +10,7 @@
 #*****************************************************************************
 
 from .gap_includes cimport Obj, UInt
+from .gmp cimport mpz_t
 
 cdef Obj make_gap_list(parent, lst) except NULL
 cdef Obj make_gap_record(parent, dct) except NULL
@@ -66,6 +67,8 @@ cdef class GapObj:
 
 cdef class GapInteger(GapObj):
     cpdef is_C_int(self)
+    cdef long int to_C_int(self)
+    cdef void to_mpz(self, mpz_t)
 
 cdef class GapFloat(GapObj):
     pass

@@ -23,6 +23,7 @@ cdef extern from "<gmp.h>":
     void *mpz_export(void *, size_t *, int, size_t, int, size_t, const mpz_t)
     size_t mpz_size(const mpz_t)
     size_t mpz_sizeinbase(const mpz_t, int)
+    int mpz_sgn(const mpz_t)
     const mp_limb_t* mpz_limbs_read(const mpz_t)
 
     void gmp_randinit_default(gmp_randstate_t)

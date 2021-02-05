@@ -1642,6 +1642,38 @@ cdef class GapInteger(GapObj):
         """
         return bool(GAP_IsSmallInt(self.value))
 
+    cdef long int to_C_int(self):
+        """Convert a small GAP integer to a C ``long int``."""
+
+        if not GAP_IsSmallInt(self.value):
+            raise OverflowError(
+                f'GAP integer {self} too large to fit in a C long int; '
+                f'use GapInteger.to_mpz instead')
+
+        # This should work, but there should be a function for this; see
+        # https://github.com/gap-system/gap/issues/4208
+        # Previously this used the internal function INT_INTOBJ, but in the
+        # effort to not use internal functions it's replaced with this
+        # instead (which is effectively the same as what INT_INTOBJ does).
+        if <long int>self.value < 0:
+            # ensure arithmetic right-shift; the compiler might optimize
+            # this out but let's see...
+            return ((<long int>self.value) >> 2) | ~(~0 >> 2)
+        else:
+            return <long int>self.value >> 2
+
+    cdef void to_mpz(self, mpz_t z):
+        """Export a GAP integer to an initialized ``mpz_t``."""
+
+        cdef Int size, sign
+        size = GAP_SizeInt(self.value)
+        sign = (size > 0) - (size < 0)
+        # Import limbs from GAP
+        mpz_import(z, size * sign, -1, sizeof(UInt), 0, 0,
+                   GAP_AddrInt(self.value))
+        if sign < 0:
+            mpz_neg(z, z)
+
     def __int__(self):
         r"""
         Convert a GAP integer to a Python `int`.
@@ -1668,46 +1700,29 @@ cdef class GapInteger(GapObj):
         <class 'int'>
         """
 
-        cdef Int size, sign
         cdef size_t nbits
+        cdef int sign
         cdef mpz_t z
+        cdef py_long x
 
         if self.is_C_int():
-            # This should work, but there should be a function for this; see
-            # https://github.com/gap-system/gap/issues/4208
-            # Previously this used the internal function INT_INTOBJ, but in the
-            # effort to not use internal functions it's replaced with this
-            # instead (which is effectively the same as what INT_INTOBJ does).
-            if <Int>self.value < 0:
-                # ensure arithmetic right-shift; the compiler might optimize
-                # this out but let's see...
-                return ((<Int>self.value) >> 2) | ~(~0 >> 2)
-            else:
-                return <Int>self.value >> 2
+            return self.to_C_int()
         else:
             mpz_init(z)
             try:
-                GAP_Enter()
-                size = GAP_SizeInt(self.value)
-                sign = (size > 0) - (size < 0)
-                # Import limbs from GAP
-                mpz_import(z, size * sign, -1, sizeof(UInt), 0, 0,
-                           GAP_AddrInt(self.value))
-            except:
-                mpz_clear(z)
+                self.to_mpz(z)
+                # Determine number of bits needed to represent z
+                nbits = mpz_sizeinbase(z, 2)
+                # Minimum number of limbs needed for the Python int
+                # e.g. if 2**30 we require 31 bits and with PyLong_SHIFT = 30
+                # this returns 2
+                x = _PyLong_New((nbits + PyLong_SHIFT - 1) // PyLong_SHIFT)
+                mpz_export(x.ob_digit, NULL, -1, sizeof(digit), 0,
+                           (sizeof(digit) * 8) - PyLong_SHIFT, z)
+                sign = mpz_sgn(z)
+                x *= sign
             finally:
-                GAP_Leave()
-
-            # Determine number of bits needed to represent z
-            nbits = mpz_sizeinbase(z, 2)
-            # Minimum number of limbs needed for the Python int
-            # e.g. if 2**30 we require 31 bits and with PyLong_SHIFT = 30
-            # this returns 2
-            x = _PyLong_New((nbits + PyLong_SHIFT - 1) // PyLong_SHIFT)
-            mpz_export((<py_long>x).ob_digit, NULL, -1, sizeof(digit), 0,
-                       (sizeof(digit) * 8) - PyLong_SHIFT, z)
-            x *= sign
-            mpz_clear(z)
+                mpz_clear(z)
             return x
 
     python = __int__
