@@ -811,8 +811,8 @@ cdef class Gap:
             if cls in self._convert_from_registry:
                 warnings.warn(
                     f'{cls} already has a registered converter '
-                    f'{self._converter_registry[cls]}; it will be replaced by '
-                    f'{converter}')
+                    f'{self._convert_from_registry[cls]}; it will be '
+                    f'replaced by {converter}')
 
             self._convert_from_registry[cls] = converter
             return converter
