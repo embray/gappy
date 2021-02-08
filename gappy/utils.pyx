@@ -213,12 +213,48 @@ cpdef virtual_memory_limit():
 
 
 def _converter_for_type(registry, type_):
-    """
+    r"""
     Helper function for determining the most appropriate converter in a
     type->converter map for the given type.
 
     First checks the registry for direct type matches, then tries to find the
     most specific converter for super-classes of the given type.
+
+    Examples
+    --------
+
+    If a converter is not defined directly on a `~gappy.gapobj.GapObj`
+    subclass, but is defined on one of its bases, the one from the base
+    will be used:
+
+    >>> from gappy.gapobj import GapObj
+    >>> class Foo:
+    ...     '''Wrapper for GapObjs'''
+    ...     def __init__(self, obj):
+    ...         self.obj = obj
+    ...     def __repr__(self):
+    ...         return f'<Foo({self.obj!r})>'
+    ...
+    >>> @GapObj.convert_to('foo')
+    ... def gapobj_to_foo(obj):
+    ...     return Foo(obj)
+    ...
+
+    Works for `.GapObj`\s that don't have a more specific type:
+
+    >>> S3 = gap.SymmetricGroup(3)
+    >>> type(S3)
+    <class 'gappy.gapobj.GapObj'>
+    >>> S3.foo()
+    <Foo(Sym( [ 1 ... 3 ] ))>
+
+    As well as for `.GapObj` subclasses:
+
+    >>> one = gap(1)
+    >>> type(one)
+    <class 'gappy.gapobj.GapInteger'>
+    >>> one.foo()
+    <Foo(1)>
     """
 
     converter = registry.get(type_)
@@ -238,6 +274,6 @@ def _converter_for_type(registry, type_):
                     # lowest
                     return len(mro)
 
-            converter = min(candidates, key=sort_key)
+            converter = registry[min(candidates, key=sort_key)]
 
     return converter
