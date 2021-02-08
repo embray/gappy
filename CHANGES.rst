@@ -42,6 +42,9 @@ Bug fixes
   keys remain as ``GapString`` instead of ``str``.  This is more consistent
   with the fact that the values are not converted to Python equivalents.
 
+* If an arbitrary GAP error occurs while looking up a global variable with
+  ``Gap.__getattr__`` it is handled and re-raised as an ``AttributeError``.
+
 
 v0.1.0a2 (2021-02-03)
 ---------------------

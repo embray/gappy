@@ -1295,7 +1295,14 @@ cdef class Gap:
             # Prevent unintended GAP initialization when displaying in IPython
             raise AttributeError(name)
 
-        val = self.get_global(name)
+        try:
+            val = self.get_global(name)
+        except GAPError:
+            # If an arbitrary GAP error occurs also raise an AttributeError
+            # but raise the exception from here so that it gets chained with
+            # with the original exception
+            raise AttributeError(f'no GAP global variable bound to {name!r}')
+
         if val is None:
             raise AttributeError(f'no GAP global variable bound to {name!r}')
         return val
