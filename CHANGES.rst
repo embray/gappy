@@ -35,6 +35,8 @@ Enhancements
   the int).  This helps with more efficient conversion to Sage Integers
   without having to pass through an intermediary Python ``int``.
 
+* Install the ``.pyx`` sources so that Cython tracebacks can work better.
+
 Bug fixes
 ^^^^^^^^^
 
