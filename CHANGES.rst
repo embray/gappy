@@ -38,6 +38,9 @@ Enhancements
 * Implemented the ``__invert__`` and ``__neg__`` magic methods for
   ``GapObj``.
 
+* Implemented a default ``__bool__`` for all ``GapObj`` which returns
+  ``False`` if its value is equal to zero.
+
 * Install the ``.pyx`` sources so that Cython tracebacks can work better.
 
 Bug fixes

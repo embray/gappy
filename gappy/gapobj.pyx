@@ -791,6 +791,27 @@ cdef class GapObj:
         finally:
             GAP_Leave()
 
+    def __bool__(self):
+        r"""
+        Default boolean representation of GapObjs returns True unless the
+        object is equal to zero.
+
+        Examples
+        --------
+
+        >>> bool(gap(1))
+        True
+        >>> bool(gap(0))
+        False
+        >>> bool(gap.SymmetricGroup(3))
+        True
+        """
+
+        # TODO: It might be useful to have a cache of small integers
+        # like 0 and 1
+        cdef GapInteger zero = self.parent(0)
+        return not self._compare_equal(zero)
+
     def __repr__(self):
         r"""
         Return a string representation of ``self``.
