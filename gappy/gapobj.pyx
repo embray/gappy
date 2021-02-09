@@ -1300,6 +1300,32 @@ cdef class GapObj:
             GAP_Leave()
         return make_any_gap_obj(self._parent, result)
 
+    def __invert__(self):
+        """
+        Unary inversion operator for applicable GapObjs.
+
+        For objects on which this operation is undefined a `.GAPError` is
+        raised.
+
+        Examples
+        --------
+
+        >>> two = gap(2)
+        >>> ~two
+        1/2
+        >>> a = gap.GF(4).PrimitiveElement(); a
+        Z(2^2)
+        >>> ~a
+        Z(2^2)^2
+        >>> ~gap.CyclicGroup(2)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found! Error, no 1st choice
+        method found for `InverseMutable' on 1 arguments
+        """
+
+        return self.InverseMutable()
+
     @classmethod
     def convert_to(cls, domain):
         r"""
