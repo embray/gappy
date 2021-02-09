@@ -1242,7 +1242,7 @@ cdef class Gap:
         >>> gap
         <Gap(gap_root='...')>
         """
-        return f'<Gap(gap_root={self.gap_root!r})>'
+        return f'<{self.__class__.__name__}(gap_root={self.gap_root!r})>'
 
     def __dir__(self):
         """
