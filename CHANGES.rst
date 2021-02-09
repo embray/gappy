@@ -35,7 +35,8 @@ Enhancements
   the int).  This helps with more efficient conversion to Sage Integers
   without having to pass through an intermediary Python ``int``.
 
-* Implemented the ``__invert__`` magic method for ``GapObj``.
+* Implemented the ``__invert__`` and ``__neg__`` magic methods for
+  ``GapObj``.
 
 * Install the ``.pyx`` sources so that Cython tracebacks can work better.
 

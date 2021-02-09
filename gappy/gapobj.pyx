@@ -1326,6 +1326,33 @@ cdef class GapObj:
 
         return self.InverseMutable()
 
+    def __neg__(self):
+        """
+        Unary negation operator for applicable GapObjs.
+
+        For objects on which this operation is undefined a `.GAPError` is
+        raised.
+
+        Examples
+        --------
+
+        >>> two = gap(2); two
+        2
+        >>> -two
+        -2
+        >>> a = gap.GF(4).PrimitiveElement(); a
+        Z(2^2)
+        >>> -a
+        Z(2^2)
+        >>> -gap.CyclicGroup(2)
+        Traceback (most recent call last):
+        ...
+        gappy.exceptions.GAPError: Error, no method found! Error, no 1st choice
+        method found for `AdditiveInverseMutable' on 1 arguments
+        """
+
+        return self.AdditiveInverseMutable()
+
     @classmethod
     def convert_to(cls, domain):
         r"""
