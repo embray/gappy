@@ -186,6 +186,7 @@ cdef char* _reset_error_output_cmd = r"""\
 \$GAPPY_ERROUT := "";
 MakeReadWriteGlobal("ERROR_OUTPUT");
 ERROR_OUTPUT := OutputTextString(\$GAPPY_ERROUT, false);
+SetPrintFormattingStatus(ERROR_OUTPUT, false);
 MakeReadOnlyGlobal("ERROR_OUTPUT");
 """
 

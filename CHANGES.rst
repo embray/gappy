@@ -4,7 +4,11 @@ Changelog
 v0.1.0a4 (unreleased)
 ---------------------
 
-* Nothing changed yet.
+Enhancements
+^^^^^^^^^^^^
+
+* Prevent needless line-wrapping of exception messages.  This was inspired
+  by similar code in GAP.jl.
 
 
 v0.1.0a3 (2021-02-15)
