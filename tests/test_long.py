@@ -5,6 +5,8 @@ These stress test the garbage collection inside GAP.
 """
 
 
+from random import randint
+
 import pytest
 
 from gappy import gap
@@ -41,3 +43,25 @@ def test_loop_3():
         lst.Add(a ** 2)
         lst.Add(b ** 2)
         lst.Add(b * a)
+
+
+def test_recursion_depth_overflow_on_error():
+    """Regression test for https://github.com/embray/gappy/issues/12"""
+
+    for i in range(0, 5000):
+        rnd = [randint(-10, 10) for i in range(0, randint(0, 7))]
+        # compute the sum in GAP
+        _ = gap.Sum(rnd)
+        try:
+            gap.Sum(*rnd)
+            pytest.fail(
+                'This should have triggered a ValueError'
+                'because Sum needs a list as argument'
+            )
+        except ValueError:
+            pass
+
+        # There's no reason this should ever go very high; 10 is a reasonable
+        # upper-limit but in practice it never seems to go above 8 if this
+        # is fixed properly
+        assert gap.GetRecursionDepth() < 10

@@ -14,8 +14,31 @@ from libc.stdint cimport uintptr_t, uint8_t, uint16_t, uint32_t, uint64_t
 
 
 cdef extern from "gap/libgap-api.h" nogil:
-    """
-    #define sig_GAP_Enter()  {int t = GAP_Enter(); if (!t) sig_error();}
+    r"""
+    /* The recursion_depth stuff is a temporary work-around to
+     * https://github.com/embray/gappy/issues/12 and necessitates some
+     * use of GAP internals; it can go away after GAP 4.12 (we should
+     * maybe do a GAP version check before enabling this hack)
+     */
+    #include "gap/funcs.h"
+    static volatile Int _gappy_recursion_depth = 0;
+    #define sig_GAP_Enter() { \
+        int _gappy_ok = GAP_Enter(); \
+        if (_gappy_ok) { \
+            if (_gappy_recursion_depth == 0) { \
+                _gappy_recursion_depth = GetRecursionDepth(); \
+            } \
+        } else { \
+            sig_error(); \
+        } \
+    }
+    #define sig_GAP_Leave() { \
+        if (_gappy_recursion_depth != 0) { \
+            SetRecursionDepth(_gappy_recursion_depth); \
+            _gappy_recursion_depth = 0; \
+        } \
+        GAP_Leave(); \
+    }
     """
 
     # Basic types
@@ -34,6 +57,7 @@ cdef extern from "gap/libgap-api.h" nogil:
     cdef int GAP_Enter() except 0
     cdef void sig_GAP_Enter()
     cdef void GAP_Leave()
+    cdef void sig_GAP_Leave()
     cdef int GAP_Error_Setjmp() except 0
 
     # Initialization

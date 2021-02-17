@@ -10,6 +10,12 @@ Enhancements
 * Prevent needless line-wrapping of exception messages.  This was inspired
   by similar code in GAP.jl.
 
+Bug Fixes
+^^^^^^^^^
+
+* Fixed segmentation fault that could occur upon all GAPErrors after a
+  large number of errors from GAP have been caught and handled [#12].
+
 
 v0.1.0a3 (2021-02-15)
 ---------------------

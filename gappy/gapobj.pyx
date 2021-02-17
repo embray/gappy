@@ -1318,7 +1318,7 @@ cdef class GapObj:
             result = GAP_POW(self.value, (<GapObj>other).value)
             sig_off()
         finally:
-            GAP_Leave()
+            sig_GAP_Leave()
         return make_any_gap_obj(self._parent, result)
 
     def __invert__(self):
@@ -2462,19 +2462,6 @@ cdef class GapFunction(GapObj):
         ...
         gappy.exceptions.GAPError: Error, no method found!
         Error, no 1st choice method found for `SumOp' on 2 arguments
-
-        >>> from random import randint
-        >>> for i in range(0,100):
-        ...     rnd = [randint(-10, 10) for i in range(0, randint(0, 7))]
-        ...     # compute the sum in GAP
-        ...     _ = gap.Sum(rnd)
-        ...     try:
-        ...         gap.Sum(*rnd)
-        ...         print('This should have triggered a ValueError')
-        ...         print('because Sum needs a list as argument')
-        ...     except ValueError:
-        ...         pass
-        ...
         """
         cdef Obj result = NULL
         cdef Obj *cargs = NULL
@@ -2507,7 +2494,7 @@ cdef class GapFunction(GapObj):
             if cargs != NULL:
                 sig_free(cargs)
 
-            GAP_Leave()
+            sig_GAP_Leave()
 
         if result == NULL:
             # We called a procedure that does not return anything
