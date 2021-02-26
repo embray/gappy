@@ -35,7 +35,7 @@ default_role = 'py:obj'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-        'sphinx.ext.intersphinx',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon'
 ]
 
