@@ -95,21 +95,26 @@ cdef void capture_stdout(Obj func, Obj obj, Obj out):
     # TODO: This is probably needlessly slow, but we might need better
     # support from GAP to improve this...
     try:
-        GAP_Enter()
+        sig_GAP_Enter()
+        sig_on()
         output_text_string = GAP_ValueGlobalVariable("OutputTextString")
         args[0] = out
         args[1] = GAP_True
         stream = GAP_CallFuncArray(output_text_string, 2, args)
+        stream_ok = OpenOutputStream(stream)
+        sig_off()
 
-        if not OpenOutputStream(stream):
+        if not stream_ok:
             raise GAPError("failed to open output capture stream for "
                            "representing GAP object")
 
         args[0] = obj
+        sig_on()
         GAP_CallFuncArray(func, 1, args)
         CloseOutput()
+        sig_off()
     finally:
-        GAP_Leave()
+        sig_GAP_Leave()
 
 
 cdef void gap_obj_repr(Obj obj, Obj out):
@@ -677,14 +682,19 @@ cdef class GapObj:
         gappy.exceptions.GAPError: Error, no method found! Error, no 1st
         choice method found for `in' on 2 arguments
         """
+        cdef bint res
+
         if not isinstance(other, GapObj):
             other = self.parent(other)
 
         try:
-            GAP_Enter()
-            return bool(GAP_IN((<GapObj>other).value, self.value))
+            sig_GAP_Enter()
+            sig_on()
+            res = GAP_IN((<GapObj>other).value, self.value)
+            sig_off()
+            return bool(res)
         finally:
-            GAP_Leave()
+            sig_GAP_Leave()
 
     def __dir__(self):
         """
@@ -1023,16 +1033,19 @@ cdef class GapObj:
         >>> gap(1) == gap(1)   # indirect doctest
         True
         """
+        cdef bint res
+
         if self._compare_by_id:
             return id(self) == id(other)
 
-        sig_on()
         try:
-            GAP_Enter()
-            return GAP_EQ(self.value, other.value)
-        finally:
-            GAP_Leave()
+            sig_GAP_Enter()
+            sig_on()
+            res = GAP_EQ(self.value, other.value)
             sig_off()
+            return res
+        finally:
+            sig_GAP_Leave()
 
     cdef bint _compare_less(self, GapObj other) except -2:
         """
@@ -1046,16 +1059,19 @@ cdef class GapObj:
         >>> gap(1) < gap(2)   # indirect doctest
         True
         """
+        cdef bint res
+
         if self._compare_by_id:
             return id(self) < id(other)
 
-        sig_on()
         try:
-            GAP_Enter()
-            return GAP_LT(self.value, other.value)
-        finally:
-            GAP_Leave()
+            sig_GAP_Enter()
+            sig_on()
+            res = GAP_LT(self.value, other.value)
             sig_off()
+            return res
+        finally:
+            sig_GAP_Leave()
 
     def __add__(left, right):
         # One or the other must be true.
@@ -1091,7 +1107,7 @@ cdef class GapObj:
             result = GAP_SUM(self.value, (<GapObj>right).value)
             sig_off()
         finally:
-            GAP_Leave()
+            sig_GAP_Leave()
         return make_any_gap_obj(self.parent(), result)
 
     def __sub__(left, right):
@@ -1126,7 +1142,7 @@ cdef class GapObj:
             result = GAP_DIFF(self.value, (<GapObj>right).value)
             sig_off()
         finally:
-            GAP_Leave()
+            sig_GAP_Leave()
         return make_any_gap_obj(self.parent(), result)
 
     def __mul__(left, right):
@@ -1162,7 +1178,7 @@ cdef class GapObj:
             result = GAP_PROD(self.value, (<GapObj>right).value)
             sig_off()
         finally:
-            GAP_Leave()
+            sig_GAP_Leave()
         return make_any_gap_obj(self.parent(), result)
 
     def __truediv__(left, right):
@@ -1204,7 +1220,7 @@ cdef class GapObj:
             result = GAP_QUO(self.value, (<GapObj>right).value)
             sig_off()
         finally:
-            GAP_Leave()
+            sig_GAP_Leave()
         return make_any_gap_obj(self.parent(), result)
 
     def __mod__(left, right):
@@ -1238,7 +1254,7 @@ cdef class GapObj:
             result = GAP_MOD(self.value, (<GapObj>right).value)
             sig_off()
         finally:
-            GAP_Leave()
+            sig_GAP_Leave()
         return make_any_gap_obj(self.parent(), result)
 
     def __pow__(left, right, mod):
@@ -2473,7 +2489,6 @@ cdef class GapFunction(GapObj):
 
         try:
             sig_GAP_Enter()
-            sig_on()
 
             cargs = <Obj*>sig_malloc(sizeof(Obj) * nargs)
 
@@ -2488,6 +2503,7 @@ cdef class GapFunction(GapObj):
 
                 cargs[idx] = arg.value
 
+            sig_on()
             result = GAP_CallFuncArray(self.value, nargs, cargs)
             sig_off()
         finally:
@@ -3223,13 +3239,15 @@ cdef class GapRecord(GapObj):
         cdef Obj args[1]
 
         try:
-            GAP_Enter()
+            sig_GAP_Enter()
             RecNames = GAP_ValueGlobalVariable('RecNames')
             args[0] = self.value
+            sig_on()
             names = GAP_CallFuncArray(RecNames, 1, args)
+            sig_off()
             return make_GapList(self.parent(), names)
         finally:
-            GAP_Leave()
+            sig_GAP_Leave()
 
     def __len__(self):
         r"""

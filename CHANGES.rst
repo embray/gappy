@@ -16,6 +16,9 @@ Bug Fixes
 * Fixed segmentation fault that could occur upon all GAPErrors after a
   large number of errors from GAP have been caught and handled [#12].
 
+* Improved error handling around more parts of the code, particularly
+  around any code that can result in executing arbitrary GAP code.
+
 
 v0.1.0a3 (2021-02-15)
 ---------------------
