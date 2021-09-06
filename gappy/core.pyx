@@ -200,7 +200,7 @@ MakeImmutable(\$GAPPY_ERROUT);
 
 
 # TODO: Change autoload=True by default
-cdef initialize(gap_root=None, gaprc=None, workspace=None, autoload=False):
+cdef initialize(gap_root=None, gaprc=None, workspace=None, workspace_valid=False, autoload=False):
     """
     Initialize the GAP library, if it hasn't already been initialized.
 
@@ -246,7 +246,7 @@ cdef initialize(gap_root=None, gaprc=None, workspace=None, autoload=False):
         argv[argc] = '-A'
         argc += 1
 
-    if workspace is not None:
+    if workspace_valid:
         # Try opening the workspace file, raising the appropriate OSError
         # if not found/readable
         workspace = os.path.normpath(workspace)
@@ -605,12 +605,13 @@ cdef class Gap:
             gap_root=self._init_kwargs['gap_root'],
             gaprc=self._init_kwargs['gaprc'],
             workspace=self._init_kwargs['workspace'],
+            workspace_valid=self._init_kwargs['workspace_valid'],
             autoload=self._init_kwargs['autoload']
         ))
         _gap_instance = self
         return True
 
-    def __init__(self, gap_root=None, gaprc=None, workspace=None,
+    def __init__(self, gap_root=None, gaprc=None, workspace=None, workspace_valid=False,
                  autoinit=False, autoload=False):
         if _gap_is_initialized:
             raise RuntimeError(
@@ -621,6 +622,7 @@ cdef class Gap:
             'gap_root': gap_root,
             'gaprc': gaprc,
             'workspace': workspace,
+            'workspace_valid': workspace_valid,
             'autoload': autoload
         })
 
