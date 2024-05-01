@@ -129,20 +129,29 @@ cdef extern from "gap/gasman.h" nogil:
     """
     #define GAP_CollectBags(full) CollectBags(0, full)
     """
-    void GAP_MarkBag "MarkBag" (Obj bag)
+    void GAP_MarkBag(Obj bag)
     UInt GAP_CollectBags(UInt full)
 
 
 cdef extern from "gap/io.h" nogil:
-    UInt OpenOutputStream(Obj stream)
-    UInt CloseOutput()
+    """
+    TypOutputFile output = {0};
+    inline UInt GAP_OpenOutputStream(Obj stream) {
+        return OpenOutputStream(&output, stream);
+    }
+    inline UInt GAP_CloseOutput( ) {
+        return CloseOutput(&output);
+    }
+    """
+    UInt GAP_OpenOutputStream(Obj stream)
+    UInt GAP_CloseOutput()
 
 
 # TODO: Replace this with a GAP_MakeStringWithLen from the public API;
 # see https://github.com/gap-system/gap/issues/4211
 cdef extern from "gap/stringobj.h" nogil:
     """
-    static inline Obj GAP_MakeStringWithLen(char *s, size_t len) {
+    inline Obj GAP_MakeStringWithLen(const char *s, size_t len) {
         Obj ret;
         C_NEW_STRING(ret, len, s);
         return ret;
