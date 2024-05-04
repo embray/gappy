@@ -294,7 +294,7 @@ cdef initialize(gap_root=None, gap_memory=None, gaprc=None, workspace=None, work
     # Return a dict of the final initialization args (after handling defaults)
     return {
         'gap_root': gap_root,
-				'gap_memor': memory_pool,
+				'gap_memory': memory_pool,
         'gaprc': gaprc,
         'workspace': workspace,
         'autoload': autoload
