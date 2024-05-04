@@ -200,7 +200,7 @@ MakeImmutable(\$GAPPY_ERROUT);
 
 
 # TODO: Change autoload=True by default
-cdef initialize(gap_root=None, gaprc=None, workspace=None, workspace_valid=False, autoload=False):
+cdef initialize(gap_root=None, gap_memory=None, gaprc=None, workspace=None, workspace_valid=False, autoload=False):
     """
     Initialize the GAP library, if it hasn't already been initialized.
 
@@ -225,7 +225,7 @@ cdef initialize(gap_root=None, gaprc=None, workspace=None, workspace_valid=False
     _gap_root = gap_root.encode(_FS_ENCODING, 'surrogateescape')
     argv[2] = _gap_root
 
-    memory_pool = get_gap_memory_pool_size().encode('ascii')
+    memory_pool = get_gap_memory_pool_size().encode('ascii') if gap_memory is None else (str(gap_memory)+'m').encode('ascii')
     argv[3] = '-o'
     argv[4] = memory_pool
     argv[5] = '-s'
@@ -294,6 +294,7 @@ cdef initialize(gap_root=None, gaprc=None, workspace=None, workspace_valid=False
     # Return a dict of the final initialization args (after handling defaults)
     return {
         'gap_root': gap_root,
+				'gap_memor': memory_pool,
         'gaprc': gaprc,
         'workspace': workspace,
         'autoload': autoload
@@ -539,6 +540,9 @@ cdef class Gap:
         interpreter.  This should be the path containing the ``lib/`` and
         ``pkg/`` directories for the standard GAP libraries.  Equivalent to
         the ``-l`` command-line argument to ``gap``.
+    gap_memory : 'int'
+        GAP's memory in megabytes.   Equivalent to the ``o`` command-line 
+        argument to ``gap``.
     gaprc : `str` or `pathlib.Path`
         A GAP "runtime config" file containing GAP commands to run immediately
         upon GAP interpreter startup.  Equivalent to passing a GAP file to
@@ -603,6 +607,7 @@ cdef class Gap:
 
         self._init_kwargs.update(initialize(
             gap_root=self._init_kwargs['gap_root'],
+						gap_memory=self._init_kwargs['gap_memory'],
             gaprc=self._init_kwargs['gaprc'],
             workspace=self._init_kwargs['workspace'],
             workspace_valid=self._init_kwargs['workspace_valid'],
@@ -611,7 +616,7 @@ cdef class Gap:
         _gap_instance = self
         return True
 
-    def __init__(self, gap_root=None, gaprc=None, workspace=None, workspace_valid=False,
+    def __init__(self, gap_root=None, gap_memory=None, gaprc=None, workspace=None, workspace_valid=False,
                  autoinit=False, autoload=False):
         if _gap_is_initialized:
             raise RuntimeError(
@@ -620,6 +625,7 @@ cdef class Gap:
 
         self._init_kwargs.update({
             'gap_root': gap_root,
+						'gap_memory': gap_memory,
             'gaprc': gaprc,
             'workspace': workspace,
             'workspace_valid': workspace_valid,
@@ -836,6 +842,13 @@ cdef class Gap:
         """
 
         return self._init_kwargs.get('gap_root')
+
+    @property
+    def gap_memory(self):
+        """
+        GAP's memory in megabytes.
+        """
+        return self._init_kwargs.get('gap_memory')
 
     @property
     def gaprc(self):
