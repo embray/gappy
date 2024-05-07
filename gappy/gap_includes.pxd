@@ -125,27 +125,6 @@ cdef extern from "gap/libgap-api.h" nogil:
     Obj GAP_NewPrecord(Int)
 
 
-cdef extern from "gap/gasman.h" nogil:
-    """
-    #define GAP_CollectBags(full) CollectBags(0, full)
-    """
-    void GAP_MarkBag "MarkBag" (Obj bag)
-    UInt GAP_CollectBags(UInt full)
-
-
-cdef extern from "gap/io.h" nogil:
-    UInt OpenOutputStream(Obj stream)
-    UInt CloseOutput()
-
-
-# TODO: Replace this with a GAP_MakeStringWithLen from the public API;
-# see https://github.com/gap-system/gap/issues/4211
-cdef extern from "gap/stringobj.h" nogil:
-    """
-    static inline Obj GAP_MakeStringWithLen(char *s, size_t len) {
-        Obj ret;
-        C_NEW_STRING(ret, len, s);
-        return ret;
-    }
-    """
-    Obj GAP_MakeStringWithLen(char *, size_t)
+    void GAP_MarkBag (Obj bag)
+    void GAP_CollectBags(UInt)
+    Obj GAP_MakeStringWithLen(const char *, UInt)

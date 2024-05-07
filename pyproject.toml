@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "Cython<3.0.0",
+    "Cython",
     "cysignals",
     "setuptools>=42",
     "setuptools_scm[toml]>=3.4",

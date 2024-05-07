@@ -101,18 +101,18 @@ cdef void capture_stdout(Obj func, Obj obj, Obj out):
         args[0] = out
         args[1] = GAP_True
         stream = GAP_CallFuncArray(output_text_string, 2, args)
-        stream_ok = OpenOutputStream(stream)
+        # stream_ok = OpenOutputStream(stream)
         sig_off()
 
-        if not stream_ok:
-            raise GAPError("failed to open output capture stream for "
-                           "representing GAP object")
+        #if not stream_ok:
+        #    raise GAPError("failed to open output capture stream for "
+        #                   "representing GAP object")
 
         args[0] = obj
-        sig_on()
-        GAP_CallFuncArray(func, 1, args)
-        CloseOutput()
-        sig_off()
+        #sig_on()
+        #GAP_CallFuncArray(func, 1, args)
+        #CloseOutput()
+        #sig_off()
     finally:
         sig_GAP_Leave()
 
@@ -271,16 +271,14 @@ cdef Obj make_gap_string(s) except NULL:
     ``Obj``
         A GAP C ``Obj`` representing a GAP string.
     """
-
-    cdef bytes b
-
+    cdef Obj res
+    cdef UInt slen
     try:
         GAP_Enter()
-        if not isinstance(s, bytes):
-            b = s.encode('utf-8')
-        else:
-            b = s
-        return GAP_MakeStringWithLen(b, len(b))
+        b = s.encode()
+        slen = len(b)
+        res = GAP_MakeStringWithLen(b, slen)
+        return res
     finally:
         GAP_Leave()
 
