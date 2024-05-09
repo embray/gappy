@@ -2,7 +2,7 @@
 requires = [
     "Cython",
     "cysignals",
-    "setuptools>=42",
+    "setuptools>=61.2",
     "setuptools_scm[toml]>=3.4",
     "wheel"
 ]
