@@ -4,6 +4,12 @@ Changelog
 v0.1.0a4 (unreleased)
 ---------------------
 
+Breaking changes
+^^^^^^^^^^^^^^^^
+
+* Dropped support for Python 3.6; Python 3.7+ is officially supported (3.6 may
+  still work but is not tested).
+
 Enhancements
 ^^^^^^^^^^^^
 

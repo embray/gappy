@@ -13,26 +13,26 @@ jobs:
       fail-fast: false
       matrix:
         platform: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.6", "3.7", "3.8"]
+        python-version: ["3.7", "3.8"]
         gap-version: ["4.10.2", "4.11.0"]
         exclude:
-          - python-version: "3.6"
-            gap-version: "4.11.0"
           - python-version: "3.7"
             gap-version: "4.11.0"
           - python-version: "3.8"
             gap-version: "4.10.2"
+          - platform: "macos-latest"
+            python-version: "3.7"
     runs-on: "${{ matrix.platform }}"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v1
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         env:
           # Increase this value to reset cache manually
           CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
           key: "${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ matrix.python-version }}-${{ matrix.gap-version }}"
-      - uses: "conda-incubator/setup-miniconda@v2"
+      - uses: "conda-incubator/setup-miniconda@v3"
         with:
           auto-update-conda: true
           python-version: "${{ matrix.python-version }}"
