@@ -55,7 +55,7 @@ accessed in this way:
 
 .. code-block:: python
 
-    >>> GAPInfo.Version
+    >>> gap.GAPInfo.Version
     "4.dev"
 
 Most basic Python types have direct equivalents in GAP, and can be passed
