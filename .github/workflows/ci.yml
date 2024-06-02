@@ -24,8 +24,8 @@ jobs:
             gap-version: "4.10.2"
     runs-on: "${{ matrix.platform }}"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v1
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         env:
           # Increase this value to reset cache manually
           CACHE_NUMBER: 0
