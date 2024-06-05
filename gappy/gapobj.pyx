@@ -1309,7 +1309,7 @@ cdef class GapObj:
         >>> from cysignals.alarm import alarm, AlarmInterrupt
         >>> a, b = gap.GL(1000, 3).GeneratorsOfGroup(); g = a * b
         >>> try:
-        ...     alarm(0.5); g ^ (2 ^ 10000)
+        ...     alarm(0.5); g ^ (gap(2) ^ 10000)
         ... except AlarmInterrupt:
         ...     print('interrupted long computation')
         ...

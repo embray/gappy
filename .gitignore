@@ -15,6 +15,9 @@ gappy/*.dll
 .eggs/
 dist/
 
+## Local development virtual env
+.venv*
+
 ## setuptools_scm files
 gappy/_version.py
 
