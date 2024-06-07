@@ -13,15 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         platform: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.7", "3.8"]
-        gap-version: ["4.10.2", "4.11.0"]
-        exclude:
-          - python-version: "3.7"
-            gap-version: "4.11.0"
-          - python-version: "3.8"
-            gap-version: "4.10.2"
-          - platform: "macos-latest"
-            python-version: "3.7"
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        gap-version: ["4.12.2", "4.13.0"]
     runs-on: "${{ matrix.platform }}"
     steps:
       - uses: actions/checkout@v4

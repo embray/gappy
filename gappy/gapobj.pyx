@@ -35,6 +35,7 @@ from .exceptions import GAPError
 from .operations import OperationInspector
 from .utils import _SPECIAL_ATTRS, _converter_for_type
 
+from .cpython.pycore_long cimport (ob_digit)
 
 ############################################################################
 ### helper functions to construct lists and records ########################
@@ -101,18 +102,18 @@ cdef void capture_stdout(Obj func, Obj obj, Obj out):
         args[0] = out
         args[1] = GAP_True
         stream = GAP_CallFuncArray(output_text_string, 2, args)
-        stream_ok = OpenOutputStream(stream)
+        # stream_ok = OpenOutputStream(stream)
         sig_off()
 
-        if not stream_ok:
-            raise GAPError("failed to open output capture stream for "
-                           "representing GAP object")
+        #if not stream_ok:
+        #    raise GAPError("failed to open output capture stream for "
+        #                   "representing GAP object")
 
         args[0] = obj
-        sig_on()
-        GAP_CallFuncArray(func, 1, args)
-        CloseOutput()
-        sig_off()
+        #sig_on()
+        #GAP_CallFuncArray(func, 1, args)
+        #CloseOutput()
+        #sig_off()
     finally:
         sig_GAP_Leave()
 
@@ -205,13 +206,13 @@ cdef Obj make_gap_integer(x) except NULL:
 
     if -1 <= size <= 1:
         # Shortcut for smaller ints (up to 30 bits)
-        s = <UInt>((<py_long>x).ob_digit[0])
+        s = <UInt>((ob_digit(<py_long>x))[0])
         limbs = &s
     else:
         # See https://github.com/gap-system/gap/issues/4209
         mpz_init(z)
         mpz_import(z, size * sign, -1, sizeof(digit), 0,
-                   (sizeof(digit) * 8) - PyLong_SHIFT, (<py_long>x).ob_digit)
+                   (sizeof(digit) * 8) - PyLong_SHIFT, ob_digit(<py_long>x))
         do_clear = 1
         if sign < 0:
             mpz_neg(z, z)
@@ -271,16 +272,14 @@ cdef Obj make_gap_string(s) except NULL:
     ``Obj``
         A GAP C ``Obj`` representing a GAP string.
     """
-
-    cdef bytes b
-
+    cdef Obj res
+    cdef UInt slen
     try:
         GAP_Enter()
-        if not isinstance(s, bytes):
-            b = s.encode('utf-8')
-        else:
-            b = s
-        return GAP_MakeStringWithLen(b, len(b))
+        b = s.encode()
+        slen = len(b)
+        res = GAP_MakeStringWithLen(b, slen)
+        return res
     finally:
         GAP_Leave()
 
@@ -1807,7 +1806,7 @@ cdef class GapInteger(GapObj):
                 # e.g. if 2**30 we require 31 bits and with PyLong_SHIFT = 30
                 # this returns 2
                 x = _PyLong_New((nbits + PyLong_SHIFT - 1) // PyLong_SHIFT)
-                mpz_export(x.ob_digit, NULL, -1, sizeof(digit), 0,
+                mpz_export(ob_digit(x), NULL, -1, sizeof(digit), 0,
                            (sizeof(digit) * 8) - PyLong_SHIFT, z)
                 sign = mpz_sgn(z)
                 x *= sign

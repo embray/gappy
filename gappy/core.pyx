@@ -163,7 +163,7 @@ cdef void dereference_obj(Obj obj):
         owned_objects_refcount[wrapped] = refcount - 1
 
 
-cdef void gasman_callback() with gil:
+cdef void gasman_callback() noexcept with gil:
     """
     Callback before each GAP garbage collection
     """
@@ -454,7 +454,7 @@ cdef str extract_errout():
     return msg_py
 
 
-cdef void error_handler() with gil:
+cdef void error_handler() noexcept with gil:
     """
     The gappy error handler.
 
@@ -463,7 +463,7 @@ cdef void error_handler() with gil:
 
     TODO: We should probably prevent re-entering this function if we
     are already handling an error; if there is an error in our stream
-    handling code below it could result in a stack overflow.
+    h/andling code below it could result in a stack overflow.
     """
     cdef PyObject* exc_type = NULL
     cdef PyObject* exc_val = NULL
@@ -1387,8 +1387,9 @@ cdef class Gap:
         >>> gap.collect()
         """
         self.initialize()
-        rc = GAP_CollectBags(1)
-        if rc != 1:
+        try:
+            GAP_CollectBags(1)
+        except:
             raise RuntimeError('Garbage collection failed.')
 
 
