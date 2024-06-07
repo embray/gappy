@@ -101,7 +101,7 @@ cdef void capture_stdout(Obj func, Obj obj, Obj out):
         args[0] = out
         args[1] = GAP_True
         stream = GAP_CallFuncArray(output_text_string, 2, args)
-        stream_ok = OpenOutputStream(stream)
+        stream_ok = GAP_OpenOutputStream(stream)
         sig_off()
 
         if not stream_ok:
@@ -111,7 +111,7 @@ cdef void capture_stdout(Obj func, Obj obj, Obj out):
         args[0] = obj
         sig_on()
         GAP_CallFuncArray(func, 1, args)
-        CloseOutput()
+        GAP_CloseOutput()
         sig_off()
     finally:
         sig_GAP_Leave()
